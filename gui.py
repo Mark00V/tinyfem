@@ -36,6 +36,7 @@ class GUI(tk.Tk):
     CANVAS_COORD_COLOR = '#262626'  # Dark gray
 
     # Fonts
+    STANDARD_FONT_BUTTON_SMALLER = ('Arial', 8)
     STANDARD_FONT_BUTTON_SMALL = ('Arial', 9)
     STANDARD_FONT_BUTTON_MID = ('Arial', 10)
     STANDARD_FONT_BUTTON_BIG = ('Arial', 11)
@@ -103,16 +104,66 @@ class GUI(tk.Tk):
         canvas.create_line(0, height / 2, width, height / 2,
                            fill=GUI.CANVAS_COORD_COLOR, width=1)
 
+        # text_values
+        text_color = '#575757'
+        div_color ='#404040'
+        x_it = 0
+        for x in range(int(width / 2), width, GUI.GRID_SPACE * 2):
+            x_text = x_it/100
+            x_it += GUI.GRID_SPACE * 2
+            if x_text == 0:
+                x_text = 0
+            canvas.create_text(x + 4, height/ 2 + 10, text=x_text, fill=text_color, font=("Helvetica", 6))
+            canvas.create_line(x, height/ 2 + 3, x, height/ 2 - 3, fill=div_color, width=1)
+
+        x_it = 0
+        for x in range(int(width / 2), 0, -GUI.GRID_SPACE * 2):
+            x_text = x_it/100
+            x_it += GUI.GRID_SPACE * 2
+            x_text = '-' + str(x_text)
+            if x_text == '-0.0':
+                x_text = ''
+            canvas.create_text(x + 4, height/ 2 + 10, text=x_text, fill=text_color, font=("Helvetica", 6))
+            canvas.create_line(x, height/ 2 + 3, x, height/ 2 - 3, fill=div_color, width=1)
+
+        y_it = 0
+        for y in range(int(height / 2), height, GUI.GRID_SPACE * 2):
+            y_text = y_it/100
+            y_it += GUI.GRID_SPACE * 2
+            y_text = '-' + str(y_text)
+            if y_text == '-0.0':
+                y_text = ''
+            canvas.create_text(width / 2 + 10, y, text=y_text, fill=text_color, font=("Helvetica", 6))
+            canvas.create_line(width / 2 -3, y, width / 2 +3, y, fill=div_color, width=1)
+
+        y_it = 0
+        for y in range(int(height / 2), 0, -GUI.GRID_SPACE * 2):
+            y_text = y_it/100
+            y_it += GUI.GRID_SPACE * 2
+            y_text = str(y_text)
+            if y_text == '0.0':
+                y_text = ''
+            canvas.create_text(width / 2 + 10, y, text=y_text, fill=text_color, font=("Helvetica", 6))
+            canvas.create_line(width / 2 -3, y, width / 2 +3, y, fill=div_color, width=1)
+
 
 class Geometry(GUI, tk.Toplevel):
 
     def __init__(self, callback_geometry):
 
-
         # Callback geometry to return geometry values to guimain
         self.callback_geometry = callback_geometry
         self.geometry_input = None
+        self.polygons = {'0': {'coordinates': [[0, 0]], 'area_neg_pos': 'Positive'}} # init value
+        self.polygons = {'0': {'coordinates': [[0, 0]], 'area_neg_pos': 'Positive'},
+                         '1': {'coordinates': [[1, 1], [2, 1], [3, 3]], 'area_neg_pos': 'Positive'}} # TEST TODO
+        self.polygon_nodes = [0]
+        self.points = {'0': [0, 0]} # init value
+        self.points = {'0': [0, 1], '1': [2, 3], '2': [2, 3]} # testing todo
         super().__init__()
+
+
+
 
 
 
@@ -151,6 +202,12 @@ class Geometry(GUI, tk.Toplevel):
 
         ##################################################
         # unit selector
+        def update_unit_text(*args):
+            unit_selected = unit_var.get()
+            units_dict = {'m': 'meter', 'mm': 'milimeter', 'km': 'kilometer', 'hm': 'hektometer', 'dam': 'dekameter',
+                          'dm': 'dezimeter', 'cm': 'centimeter'}
+            self.unit_selected.config(text=units_dict[unit_selected])
+
         unit_select_label = tk.Label(self, text="Unit:", font=GUI.STANDARD_FONT_SMALL_BOLD)
         unit_select_label.place(relx=0.835, rely=0.04)
         units = ['m', 'mm', 'km', 'hm', 'dam', 'dm', 'cm']
@@ -161,37 +218,73 @@ class Geometry(GUI, tk.Toplevel):
         dropdown_unit_select.place(relx=0.865, rely=0.034)
         self.unit_selected = tk.Label(self, text='meter', font=GUI.STANDARD_FONT_SMALL)
         self.unit_selected.place(relx=0.92, rely=0.04)
-
-        def update_unit_text(*args):
-            unit_selected = unit_var.get()
-            units_dict = {'m': 'meter', 'mm': 'milimeter', 'km': 'kilometer', 'hm': 'hektometer', 'dam': 'dekameter',
-                          'dm': 'dezimeter', 'cm': 'centimeter'}
-            self.unit_selected.config(text=units_dict[unit_selected])
         unit_var.trace('w', update_unit_text)
         ##################################################
 
         ##################################################
         # Polygon definition
+
+        def update_dropdown_polygon_node_select_poly_info(*args):
+            """
+            updates the dropdown_polygon_node_select optionMenu for the nodes set in the polygon set
+            in dropdown_polygon_select  optionMenu
+            Also updates the instance variable self.polygon_nodes
+            :param args:
+            :return:
+            """
+            active_polygon = self.polygons.get(polygon_select_var.get(), None)
+            self.polygon_nodes = range(0, len(active_polygon['coordinates']))
+            dropdown_polygon_node_select["menu"].delete(0, "end")
+            for option in self.polygon_nodes:
+                dropdown_polygon_node_select["menu"].add_command(label=option, command=tk._setit(polygon_node_var, option))
+            polygon_nodes_text.config(state='normal')
+            polygon_nodes_text.delete('0.0', 'end')  # todo: why the fuck here '0.0' and for add_node_x_entry 0
+            polygon_nodes_text.insert('end', str(active_polygon['coordinates']))
+            polygon_nodes_text.config(state='disabled')
+
+        def update_x_y_entry_polygon_node(*args):
+            """
+            Updates the x and y values for the selected polygon and node
+            :param args:
+            :return:
+            """
+            active_polygon = self.polygons.get(polygon_select_var.get(), None)
+            polygon_nodes = active_polygon['coordinates']
+            active_polygon_node = int(polygon_node_var.get())
+            node_coords = polygon_nodes[active_polygon_node]
+            add_node_x_entry.delete(0, 'end')
+            add_node_x_entry.insert('end', str(node_coords[0]))
+            add_node_y_entry.delete(0, 'end')
+            add_node_y_entry.insert('end', str(node_coords[1]))
+
+        def new_polygon():
+            ...
+
         polygon_def_label = tk.Label(self, text="Define Polygon", font=GUI.STANDARD_FONT_MID_BOLD)
         polygon_def_label.place(relx=widgets_x_start, rely=0.1)
 
         polygon_select_label = tk.Label(self, text="Select Polygon:", font=GUI.STANDARD_FONT_SMALL)
         polygon_select_label.place(relx=widgets_x_start, rely=0.135)
-        polygons = ['None']
+        self.polygon_selection = [elem for elem in self.polygons.keys()]
         polygon_select_var = tk.StringVar()
         polygon_select_var.set('None')
-        dropdown_polygon_select = tk.OptionMenu(self, polygon_select_var, *polygons)
+        dropdown_polygon_select = tk.OptionMenu(self, polygon_select_var, *self.polygon_selection)
         dropdown_polygon_select.config(font=GUI.STANDARD_FONT_SMALL, width=4, height=1)
         dropdown_polygon_select.place(relx=widgets_x_start + 0.075, rely=0.13)
+        polygon_select_var.trace('w', update_dropdown_polygon_node_select_poly_info)
+
+        new_poly_button = tk.Button(self, text="NEW", command=new_polygon,
+                                 width=7, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALL)
+        new_poly_button.place(relx=widgets_x_start + 0.145, rely=0.133)
 
         polygon_node_select_label = tk.Label(self, text="Select Node:", font=GUI.STANDARD_FONT_SMALL)
         polygon_node_select_label.place(relx=widgets_x_start, rely=0.185)
-        polygon_nodes = ['None']
         polygon_node_var = tk.StringVar()
         polygon_node_var.set('None')
-        dropdown_polygon_node_select = tk.OptionMenu(self, polygon_node_var, *polygon_nodes)
+        dropdown_polygon_node_select = tk.OptionMenu(self, polygon_node_var, *self.polygon_nodes)
         dropdown_polygon_node_select.config(font=GUI.STANDARD_FONT_SMALL, width=4, height=1)
         dropdown_polygon_node_select.place(relx=widgets_x_start + 0.075, rely=0.18)
+        polygon_node_var.trace('w', update_x_y_entry_polygon_node)
 
         add_poly_select_label = tk.Label(self, text="Add/Adjust Node:", font=GUI.STANDARD_FONT_SMALL)
         add_poly_select_label.place(relx=widgets_x_start, rely=0.225)
@@ -212,9 +305,20 @@ class Geometry(GUI, tk.Toplevel):
 
         def add_poly_node():
             ...
-        add_poly_node_button = tk.Button(self, text="ADD/ADJUST", command=add_poly_node,
-                                 width=11, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALL)
+
+        def update_poly_node():
+            selected_poly = polygon_select_var.get()
+            selected_node = polygon_node_var.get()
+            x_value = add_node_x_entry.get()
+            y_value = add_node_x_entry.get()
+            area_value = area_neg_pos_var.get()
+
+        add_poly_node_button = tk.Button(self, text="ADD", command=add_poly_node,
+                                 width=11, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALLER)
         add_poly_node_button.place(relx=widgets_x_start + 0.125, rely=0.258)
+        update_poly_node_button = tk.Button(self, text="ADJUST", command=update_poly_node,
+                                 width=11, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALLER)
+        update_poly_node_button.place(relx=widgets_x_start + 0.125, rely=0.289)
 
         polygon_nodes_label = tk.Label(self, text="Polygon Nodes:", font=GUI.STANDARD_FONT_SMALL)
         polygon_nodes_label.place(relx=widgets_x_start, rely=0.30)
@@ -228,57 +332,103 @@ class Geometry(GUI, tk.Toplevel):
         area_neg_pos_label.place(relx=widgets_x_start, rely=0.42)
         area_neg_pos = ['Positive', 'Negative']
         area_neg_pos_var = tk.StringVar()
-        area_neg_pos_var.set(area_neg_pos[1])
+        area_neg_pos_var.set(area_neg_pos[0])
         area_neg_pos_select = tk.OptionMenu(self, area_neg_pos_var, *area_neg_pos)
         area_neg_pos_select.config(font=GUI.STANDARD_FONT_SMALL, width=6, height=1)
         area_neg_pos_select.place(relx=widgets_x_start + 0.04, rely=0.415)
+
+        def delete_polygon():
+            ...
+
+        delete_polygon_button = tk.Button(self, text="DELETE POLY", command=delete_polygon,
+                                 width=14, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALL)
+        delete_polygon_button.place(relx=widgets_x_start, rely=0.465)
         ##################################################
 
         ##################################################
         # Single Point definition
+        def new_point():
+            # check if points already in self.points
+            if not self.points:
+                self.points = {'0': [0, 0]}
+                selected_point = '0'
+            else:
+                selected_point = str(int(max(list(self.points.keys()))) + 1)
+                self.points[selected_point] = [0, 0]
+            points_numbered = range(0, len(self.points))
+            dropdown_single_point_select["menu"].delete(0, "end")
+            for option in points_numbered:
+                dropdown_single_point_select["menu"].add_command(label=option, command=tk._setit(single_point_var, option))
+            single_point_var.set(selected_point)
+
         single_point_def_label = tk.Label(self, text="Define Point", font=GUI.STANDARD_FONT_MID_BOLD)
-        single_point_def_label.place(relx=widgets_x_start, rely=0.5)
+        single_point_def_label.place(relx=widgets_x_start, rely=0.55)
+
+        def update_x_y_select_point(*args):
+            """
+            Updates the x and y values for the selected polygon and node
+            :param args:
+            :return:
+            """
+            selected_point = single_point_var.get()
+            node_coords = self.points[selected_point]
+            add_point_x_entry.delete(0, 'end')
+            add_point_x_entry.insert('end', str(node_coords[0]))
+            add_point_y_entry.delete(0, 'end')
+            add_point_y_entry.insert('end', str(node_coords[1]))
 
         single_point_select_label = tk.Label(self, text="Select Point:", font=GUI.STANDARD_FONT_SMALL)
-        single_point_select_label.place(relx=widgets_x_start, rely=0.535)
-        single_points = ['None']
+        single_point_select_label.place(relx=widgets_x_start, rely=0.585)
         single_point_var = tk.StringVar()
         single_point_var.set('None')
-        dropdown_single_point_select = tk.OptionMenu(self, single_point_var, *single_points)
+        dropdown_single_point_select = tk.OptionMenu(self, single_point_var, *self.points)
         dropdown_single_point_select.config(font=GUI.STANDARD_FONT_SMALL, width=4, height=1)
-        dropdown_single_point_select.place(relx=widgets_x_start + 0.075, rely=0.53)
+        dropdown_single_point_select.place(relx=widgets_x_start + 0.075, rely=0.58)
+        single_point_var.trace('w', update_x_y_select_point)
 
-        add_point_select_label = tk.Label(self, text="Add/Adjust Point:", font=GUI.STANDARD_FONT_SMALL)
-        add_point_select_label.place(relx=widgets_x_start, rely=0.58)
+        new_point_button = tk.Button(self, text="NEW", command=new_point,
+                                 width=7, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALL)
+        new_point_button.place(relx=widgets_x_start + 0.145, rely=0.583)
+
+        add_point_select_label = tk.Label(self, text="Adjust Point:", font=GUI.STANDARD_FONT_SMALL)
+        add_point_select_label.place(relx=widgets_x_start, rely=0.63)
 
         add_point_x_label = tk.Label(self, text="X:", font=GUI.STANDARD_FONT_SMALL)
-        add_point_x_label.place(relx=widgets_x_start, rely=0.615)
+        add_point_x_label.place(relx=widgets_x_start, rely=0.665)
         add_point_x_entry_val = tk.StringVar()
         add_point_x_entry_val.set('0')
         add_point_x_entry = tk.Entry(self, textvariable=add_point_x_entry_val, font=GUI.STANDARD_FONT_SMALL, width=6)
-        add_point_x_entry.place(relx=widgets_x_start + 0.02, rely=0.617)
+        add_point_x_entry.place(relx=widgets_x_start + 0.02, rely=0.667)
 
         add_point_y_label = tk.Label(self, text="Y:", font=GUI.STANDARD_FONT_SMALL)
-        add_point_y_label.place(relx=widgets_x_start + 0.06, rely=0.615)
+        add_point_y_label.place(relx=widgets_x_start + 0.06, rely=0.665)
         add_point_y_entry_val = tk.StringVar()
         add_point_y_entry_val.set('0')
         add_point_y_entry = tk.Entry(self, textvariable=add_point_y_entry_val, font=GUI.STANDARD_FONT_SMALL, width=6)
-        add_point_y_entry.place(relx=widgets_x_start + 0.08, rely=0.617)
+        add_point_y_entry.place(relx=widgets_x_start + 0.08, rely=0.667)
 
-        def add_point():
+        def update_point():
+            """
+            gets the selected point from dropdown and values from x and y field
+            and updates the values for selected point
+            :return:
+            """
+            selected_point = single_point_var.get()
+            new_x = add_point_x_entry_val.get()
+            new_y = add_point_y_entry_val.get()
+            self.points[selected_point] = [new_x, new_y]
+
+        def delete_point():
             ...
-        add_poly_node_button = tk.Button(self, text="ADD/ADJUST", command=add_point,
-                                 width=11, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALL)
-        add_poly_node_button.place(relx=widgets_x_start + 0.125, rely=0.613)
+
+        add_point_button = tk.Button(self, text="ADJUST", command=update_point,
+                                 width=11, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALLER)
+        add_point_button.place(relx=widgets_x_start + 0.125, rely=0.663)
+
+        delete_point_button = tk.Button(self, text="DELETE POINT", command=delete_point,
+                                 width=14, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALL)
+        delete_point_button.place(relx=widgets_x_start, rely=0.83)
         ##################################################
-
-        ##################################################
-        # info field maybe
-        ##################################################
-
-
-
-
 
         ##################################################
         # Add canvas for system visualization - DYNAMIC
@@ -288,11 +438,18 @@ class Geometry(GUI, tk.Toplevel):
         ##################################################
 
         ##################################################
+        button_update_graphics = tk.Button(self, text="UPDATE GRAPHICS", command=self.update_graphics,
+                                 width=22, height=1, font=GUI.STANDARD_FONT_BUTTON_MID)
+        button_update_graphics.place(relx=0.025, rely=0.885)
+
         # Accept Geometry button - returns value for geometry input and destroys window
-        button_clear = tk.Button(self, text="ACCEPT GEOMETRY", command=self.return_geometry,
+        button_accept = tk.Button(self, text="ACCEPT GEOMETRY", command=self.return_geometry,
                                  width=16, height=1, font=GUI.STANDARD_FONT_BUTTON_BIG_BOLD)
-        button_clear.place(relx=0.025, rely=0.925)
+        button_accept.place(relx=0.025, rely=0.935)
         ##################################################
+
+    def update_graphics(self):
+        ...
 
     def save_geometry(self):
         ...
