@@ -1,6 +1,6 @@
 import tkinter as tk
 import tkinter.font as tkFont
-
+import math
 #################################################
 # Other
 AUTHOR = 'Itsame Mario'
@@ -29,6 +29,7 @@ class GUI(tk.Tk):
     CANVAS_SIZE_X = 920  # Needs to be even!
     CANVAS_SIZE_Y = 720  # Needs to be even!
     GRID_SPACE = 10  # Needs to be divisor of CANVAS_SIZE_X and CANVAS_SIZE_Y
+    CANVAS_SCALE_FACTOR = 100
 
     # colors
     CANVAS_BORDER_COLOR = '#5F1010'  # Rosewood
@@ -109,7 +110,7 @@ class GUI(tk.Tk):
         div_color ='#404040'
         x_it = 0
         for x in range(int(width / 2), width, GUI.GRID_SPACE * 2):
-            x_text = x_it/100
+            x_text = x_it/GUI.CANVAS_SCALE_FACTOR
             x_it += GUI.GRID_SPACE * 2
             if x_text == 0:
                 x_text = 0
@@ -118,7 +119,7 @@ class GUI(tk.Tk):
 
         x_it = 0
         for x in range(int(width / 2), 0, -GUI.GRID_SPACE * 2):
-            x_text = x_it/100
+            x_text = x_it/GUI.CANVAS_SCALE_FACTOR
             x_it += GUI.GRID_SPACE * 2
             x_text = '-' + str(x_text)
             if x_text == '-0.0':
@@ -128,7 +129,7 @@ class GUI(tk.Tk):
 
         y_it = 0
         for y in range(int(height / 2), height, GUI.GRID_SPACE * 2):
-            y_text = y_it/100
+            y_text = y_it/GUI.CANVAS_SCALE_FACTOR
             y_it += GUI.GRID_SPACE * 2
             y_text = '-' + str(y_text)
             if y_text == '-0.0':
@@ -138,7 +139,7 @@ class GUI(tk.Tk):
 
         y_it = 0
         for y in range(int(height / 2), 0, -GUI.GRID_SPACE * 2):
-            y_text = y_it/100
+            y_text = y_it/GUI.CANVAS_SCALE_FACTOR
             y_it += GUI.GRID_SPACE * 2
             y_text = str(y_text)
             if y_text == '0.0':
@@ -155,11 +156,11 @@ class Geometry(GUI, tk.Toplevel):
         self.callback_geometry = callback_geometry
         self.geometry_input = None
         self.polygons = {'0': {'coordinates': [[0, 0]], 'area_neg_pos': 'Positive'}} # init value
-        self.polygons = {'0': {'coordinates': [[0, 0]], 'area_neg_pos': 'Positive'},
-                         '1': {'coordinates': [[1, 1], [2, 1], [3, 3]], 'area_neg_pos': 'Positive'}} # TEST TODO
-        self.polygon_nodes = [0]
+        self.polygons = {'0': {'coordinates': [[0, 0], [1, 0.5], [1.5, 1.5], [0.75, 2.0]], 'area_neg_pos': 'Positive'},
+                         '1': {'coordinates': [[-1, -1], [-2, -1], [-3, -3], [-2, -3]], 'area_neg_pos': 'Positive'}} # TEST TODO
+        self.polygon_nodes = [0]  # needed for update for select polygon dropdown (numbers for polygons in list)
         self.points = {'0': [0, 0]} # init value
-        self.points = {'0': [0, 1], '1': [2, 3], '2': [2, 3]} # testing todo
+        self.points = {'0': [0, 1], '1': [2, 3], '2': [-2, 3]} # testing todo
         super().__init__()
 
 
@@ -448,8 +449,53 @@ class Geometry(GUI, tk.Toplevel):
         button_accept.place(relx=0.025, rely=0.935)
         ##################################################
 
+    def transform_node_to_canvas(self, node: list):
+        scale_factor = GUI.CANVAS_SCALE_FACTOR
+        node_x = node[0]
+        node_y = node[1]
+        node_new_x = node_x * scale_factor + GUI.CANVAS_SIZE_X / 2
+        node_new_y = -node_y * scale_factor + GUI.CANVAS_SIZE_Y / 2
+
+        return (node_new_x, node_new_y)
+
     def update_graphics(self):
-        ...
+
+        # draw polygons
+        for polygon_nbr, polygon_data in self.polygons.items():
+
+            color_code_plus = '#7D4C4C'
+            color_code_minus = '#222638'
+            color_code_plus_node = '#5F0F0F'
+            color_code_minus_node = '#3A4571'
+            polygon_nodes = polygon_data['coordinates']
+            polygon_nodes_transformed = [self.transform_node_to_canvas(node) for node in polygon_nodes]
+            polygon_neg_pos = polygon_data['area_neg_pos'] # either 'Positive' or 'Negative'
+            color_code = color_code_plus if polygon_neg_pos == 'Positive' else color_code_minus
+            color_code_node = color_code_plus_node if polygon_neg_pos == 'Positive' else color_code_minus_node
+            self.canvas.create_polygon(polygon_nodes_transformed, fill=color_code, outline='#341010', width=2)
+
+            # add text to polygon, todo: position besser finden
+            middle_node = math.floor(len(polygon_nodes_transformed) / 2)
+            if middle_node == 0:
+                middle_node = 1
+            text = f'Polygon {polygon_nbr}'
+            center_node_approx_x = math.floor(abs((polygon_nodes_transformed[middle_node][0] +
+                                                   polygon_nodes_transformed[0][0]) / 2))
+            center_node_approx_y = math.floor(abs((polygon_nodes_transformed[middle_node][1] +
+                                                   polygon_nodes_transformed[0][1]) / 2))
+            self.canvas.create_text(center_node_approx_x, center_node_approx_y, text=text, fill='#1F1F1F', font=("Helvetica", 7))
+
+            # add nodes
+            for node in polygon_nodes:
+                node = self.transform_node_to_canvas(node)
+                self.canvas.create_oval(node[0] - 3, node[1] - 3, node[0] + 3, node[1] + 3, fill=color_code_node, outline='#1F1F1F', width=1)
+
+        # draw points
+        for point_nbr, node in self.points.items():
+            node = self.transform_node_to_canvas(node)
+            text = f'Point {point_nbr}'
+            self.canvas.create_oval(node[0] - 4, node[1] - 4, node[0] + 4, node[1] + 4, fill='#2D0F0F', outline='#1F1F1F', width=1)
+            self.canvas.create_text(node[0], node[1] - 10, text=text, fill='#1F1F1F', font=("Helvetica", 7))
 
     def save_geometry(self):
         ...
