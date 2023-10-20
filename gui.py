@@ -1,5 +1,4 @@
 import tkinter as tk
-import tkinter.font as tkFont
 import math
 #################################################
 # Other
@@ -37,16 +36,17 @@ class GUI(tk.Tk):
     CANVAS_COORD_COLOR = '#262626'  # Dark gray
 
     # Fonts
-    STANDARD_FONT_BUTTON_SMALLER = ('Arial', 8)
-    STANDARD_FONT_BUTTON_SMALL = ('Arial', 9)
-    STANDARD_FONT_BUTTON_MID = ('Arial', 10)
-    STANDARD_FONT_BUTTON_BIG = ('Arial', 11)
+    STANDARD_FONT_BUTTON_SMALLER = ('Consolas', 8)
+    STANDARD_FONT_BUTTON_SMALL = ('Consolas', 9)
+    STANDARD_FONT_BUTTON_MID = ('Consolas', 10)
+    STANDARD_FONT_BUTTON_BIG = ('Consolas', 11)
     STANDARD_FONT_BUTTON_BIG_BOLD = ('Arial Black', 11)
     STANDARD_FONT_MID = ('Arial', 10)
     STANDARD_FONT_MID_BOLD = ('Arial Black', 10)
     STANDARD_FONT_SMALL = ('Arial', 9)
     STANDARD_FONT_SMALLER = ('Arial', 8)
     STANDARD_FONT_SMALL_BOLD = ('Arial Black', 9)
+    SAVELOAD_FONT = ('Verdana', 10)
 
     def __init__(self):
 
@@ -157,7 +157,8 @@ class Geometry(GUI, tk.Toplevel):
         self.geometry_input = None
         self.polygons = {'0': {'coordinates': [[0, 0]], 'area_neg_pos': 'Positive'}} # init value
         self.polygons = {'0': {'coordinates': [[0, 0], [1, 0.5], [1.5, 1.5], [0.75, 2.0]], 'area_neg_pos': 'Positive'},
-                         '1': {'coordinates': [[-1, -1], [-2, -1], [-3, -3], [-2, -3]], 'area_neg_pos': 'Positive'}} # TEST TODO
+                         '1': {'coordinates': [[-1, -1], [-2, -1], [-3, -3], [-2, -3]], 'area_neg_pos': 'Positive'},
+                         '2': {'coordinates': [[1, -0.5], [3, -1], [3, -3.5], [2, -2.5], [0.5, -4]], 'area_neg_pos': 'Negative'}} # TEST TODO
         self.polygon_nodes = [0]  # needed for update for select polygon dropdown (numbers for polygons in list)
         self.points = {'0': [0, 0]} # init value
         self.points = {'0': [0, 1], '1': [2, 3], '2': [-2, 3]} # testing todo
@@ -192,12 +193,12 @@ class Geometry(GUI, tk.Toplevel):
         # save and load buttons
         # save geometry button
         button_save_geo = tk.Button(self, text="SAVE", command=self.save_geometry,
-                                    font=GUI.STANDARD_FONT_BUTTON_MID, width=10, height=1)
+                                    font=GUI.SAVELOAD_FONT, width=10, height=1)
         button_save_geo.place(relx=widgets_x_start, rely=0.02)
 
         # load geometry button
         button_load_geo = tk.Button(self, text="LOAD", command=self.load_geometry,
-                                    font=GUI.STANDARD_FONT_BUTTON_MID, width=10, height=1)
+                                    font=GUI.SAVELOAD_FONT, width=10, height=1)
         button_load_geo.place(relx=0.1, rely=0.02)
         ##################################################
 
@@ -287,7 +288,7 @@ class Geometry(GUI, tk.Toplevel):
         dropdown_polygon_node_select.place(relx=widgets_x_start + 0.075, rely=0.18)
         polygon_node_var.trace('w', update_x_y_entry_polygon_node)
 
-        add_poly_select_label = tk.Label(self, text="Add/Adjust Node:", font=GUI.STANDARD_FONT_SMALL)
+        add_poly_select_label = tk.Label(self, text="Add/Update Node:", font=GUI.STANDARD_FONT_SMALL)
         add_poly_select_label.place(relx=widgets_x_start, rely=0.225)
 
         add_node_x_label = tk.Label(self, text="X:", font=GUI.STANDARD_FONT_SMALL)
@@ -317,7 +318,7 @@ class Geometry(GUI, tk.Toplevel):
         add_poly_node_button = tk.Button(self, text="ADD", command=add_poly_node,
                                  width=11, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALLER)
         add_poly_node_button.place(relx=widgets_x_start + 0.125, rely=0.258)
-        update_poly_node_button = tk.Button(self, text="ADJUST", command=update_poly_node,
+        update_poly_node_button = tk.Button(self, text="UPDATE", command=update_poly_node,
                                  width=11, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALLER)
         update_poly_node_button.place(relx=widgets_x_start + 0.125, rely=0.289)
 
@@ -341,14 +342,15 @@ class Geometry(GUI, tk.Toplevel):
         def delete_polygon():
             ...
 
-        delete_polygon_button = tk.Button(self, text="DELETE POLY", command=delete_polygon,
-                                 width=14, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALL)
+        delete_polygon_button = tk.Button(self, text="DELETE POLYGON", command=delete_polygon,
+                                 width=16, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALL)
         delete_polygon_button.place(relx=widgets_x_start, rely=0.465)
         ##################################################
 
         ##################################################
         # Single Point definition
         def new_point():
+            dropdown_single_point_select["state"] = "normal"
             # check if points already in self.points
             if not self.points:
                 self.points = {'0': [0, 0]}
@@ -356,11 +358,18 @@ class Geometry(GUI, tk.Toplevel):
             else:
                 selected_point = str(int(max(list(self.points.keys()))) + 1)
                 self.points[selected_point] = [0, 0]
-            points_numbered = range(0, len(self.points))
+            update_point_select_dropdown()
+            single_point_var.set(selected_point)
+
+        def update_point_select_dropdown():
+            """
+            updates the select point dropdown menu
+            :return:
+            """
+            points_numbered = range(0, len(self.points)) if self.points else ['None']
             dropdown_single_point_select["menu"].delete(0, "end")
             for option in points_numbered:
                 dropdown_single_point_select["menu"].add_command(label=option, command=tk._setit(single_point_var, option))
-            single_point_var.set(selected_point)
 
         single_point_def_label = tk.Label(self, text="Define Point", font=GUI.STANDARD_FONT_MID_BOLD)
         single_point_def_label.place(relx=widgets_x_start, rely=0.55)
@@ -372,7 +381,10 @@ class Geometry(GUI, tk.Toplevel):
             :return:
             """
             selected_point = single_point_var.get()
-            node_coords = self.points[selected_point]
+            if selected_point == 'None' or not self.points:
+                node_coords = [0, 0]
+            else:
+                node_coords = self.points[selected_point]
             add_point_x_entry.delete(0, 'end')
             add_point_x_entry.insert('end', str(node_coords[0]))
             add_point_y_entry.delete(0, 'end')
@@ -391,7 +403,7 @@ class Geometry(GUI, tk.Toplevel):
                                  width=7, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALL)
         new_point_button.place(relx=widgets_x_start + 0.145, rely=0.583)
 
-        add_point_select_label = tk.Label(self, text="Adjust Point:", font=GUI.STANDARD_FONT_SMALL)
+        add_point_select_label = tk.Label(self, text="Update Point:", font=GUI.STANDARD_FONT_SMALL)
         add_point_select_label.place(relx=widgets_x_start, rely=0.63)
 
         add_point_x_label = tk.Label(self, text="X:", font=GUI.STANDARD_FONT_SMALL)
@@ -414,21 +426,38 @@ class Geometry(GUI, tk.Toplevel):
             and updates the values for selected point
             :return:
             """
+            if not self.points:
+                return None
             selected_point = single_point_var.get()
             new_x = add_point_x_entry_val.get()
             new_y = add_point_y_entry_val.get()
-            self.points[selected_point] = [new_x, new_y]
+            self.points[selected_point] = [float(new_x), float(new_y)]
 
         def delete_point():
-            ...
+            """
+            deletes specified point in dropdown menu and resorts dict
+            :return:
+            """
+            selected_point = single_point_var.get()
 
-        add_point_button = tk.Button(self, text="ADJUST", command=update_point,
+            if selected_point == 'None':
+                return None
+            del self.points[selected_point]
+            if not self.points:
+                single_point_var.set('None')
+                dropdown_single_point_select["state"] = "disabled"
+                return None
+            self.points = Geometry.resort_keys(self.points)
+            update_point_select_dropdown()
+            single_point_var.set('0')
+
+        add_point_button = tk.Button(self, text="UPDATE", command=update_point,
                                  width=11, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALLER)
         add_point_button.place(relx=widgets_x_start + 0.125, rely=0.663)
 
         delete_point_button = tk.Button(self, text="DELETE POINT", command=delete_point,
                                  width=14, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALL)
-        delete_point_button.place(relx=widgets_x_start, rely=0.83)
+        delete_point_button.place(relx=widgets_x_start, rely=0.71)
         ##################################################
 
         ##################################################
@@ -439,6 +468,7 @@ class Geometry(GUI, tk.Toplevel):
         ##################################################
 
         ##################################################
+        # Update graphics
         button_update_graphics = tk.Button(self, text="UPDATE GRAPHICS", command=self.update_graphics,
                                  width=22, height=1, font=GUI.STANDARD_FONT_BUTTON_MID)
         button_update_graphics.place(relx=0.025, rely=0.885)
@@ -449,7 +479,73 @@ class Geometry(GUI, tk.Toplevel):
         button_accept.place(relx=0.025, rely=0.935)
         ##################################################
 
-    def transform_node_to_canvas(self, node: list):
+        ##################################################
+        # For debugging
+        def debug():
+            print("\n\n")
+            print(f"self.polygons: {self.polygons}")
+            print(f"self.polygon_nodes: {self.polygon_nodes}")
+            print(f"self.points: {self.points}")
+
+        button_debug = tk.Button(self, text="DEBUG", command=debug,
+                                 width=5, height=1, font=GUI.STANDARD_FONT_BUTTON_SMALLER)
+        button_debug.place(relx=0.95, rely=0.01)
+        ##################################################
+
+    @staticmethod  # todo: method might be better going to GUI...
+    def resort_keys(some_dict):
+        """
+        resort the dict (keys: str), if key is missing, assign following keys to it
+        e.g {'1': 1, '3': 3, '4': 4, '5': 5} -> {'1': 1, '2': 3, '3': 4, '4': 5}
+
+        :param some_dict:
+        :return:
+        """
+        # get missing key
+        keys = some_dict.keys()
+        mi_ma = set(range(int(min(keys)), int(max(keys)) + 1))
+        missing_key = list(mi_ma - mi_ma.intersection(set([int(key) for key in keys])))
+        # sort again
+        if not missing_key and min(keys) != '1':
+
+            return dict(sorted(some_dict.items()))
+        else:
+            missing_key = '0' if min(keys) == '1' else missing_key[0]
+            next_key, last_key = int(missing_key) + 1, max([int(key) for key in keys])
+            for key in range(next_key, last_key + 1):
+                some_dict[str(key - 1)] = some_dict[str(key)]
+            del some_dict[str(key)]
+
+            return dict(sorted(some_dict.items()))
+
+    @staticmethod  # todo: method might be better going to GUI...
+    def resort_key(some_dict):
+        """
+        resort the dict (keys: str), if key is missing, assign following keys to it
+        e.g {'1': 1, '3': 3, '4': 4, '5': 5} -> {'1': 1, '2': 3, '3': 4, '4': 5}
+
+        :param some_dict:
+        :return:
+        """
+        # get missing key
+        keys = some_dict.keys()
+        mi_ma = set(range(int(min(keys)), int(max(keys)) + 1))
+        missing_key = list(mi_ma - mi_ma.intersection(set([int(key) for key in keys])))
+        # sort again
+        if not missing_key and min(keys) != '2':
+
+            return dict(sorted(some_dict.items()))
+        else:
+            missing_key = '1' if min(keys) == '2' else missing_key[0]
+            next_key, last_key = int(missing_key) + 1, max([int(key) for key in keys])
+            for key in range(next_key, last_key + 1):
+                some_dict[str(key - 1)] = some_dict[str(key)]
+            del some_dict[str(key)]
+
+            return dict(sorted(some_dict.items()))
+
+    @staticmethod  # todo: method might be better going to GUI...
+    def transform_node_to_canvas(node: list):
         scale_factor = GUI.CANVAS_SCALE_FACTOR
         node_x = node[0]
         node_y = node[1]
@@ -460,6 +556,14 @@ class Geometry(GUI, tk.Toplevel):
 
     def update_graphics(self):
 
+        # delete all
+        all_canvas_elements = self.canvas.find_all()
+        for elem in all_canvas_elements:
+            self.canvas.delete(elem)
+
+        # add grid etc
+        GUI.add_canvas_static_elements(self.canvas)
+
         # draw polygons
         for polygon_nbr, polygon_data in self.polygons.items():
 
@@ -467,8 +571,11 @@ class Geometry(GUI, tk.Toplevel):
             color_code_minus = '#222638'
             color_code_plus_node = '#5F0F0F'
             color_code_minus_node = '#3A4571'
+
             polygon_nodes = polygon_data['coordinates']
-            polygon_nodes_transformed = [self.transform_node_to_canvas(node) for node in polygon_nodes]
+            if len(polygon_nodes) < 3:
+                continue
+            polygon_nodes_transformed = [Geometry.transform_node_to_canvas(node) for node in polygon_nodes]
             polygon_neg_pos = polygon_data['area_neg_pos'] # either 'Positive' or 'Negative'
             color_code = color_code_plus if polygon_neg_pos == 'Positive' else color_code_minus
             color_code_node = color_code_plus_node if polygon_neg_pos == 'Positive' else color_code_minus_node
@@ -479,20 +586,21 @@ class Geometry(GUI, tk.Toplevel):
             if middle_node == 0:
                 middle_node = 1
             text = f'Polygon {polygon_nbr}'
+            color_code_text = '#1F1F1F' if polygon_neg_pos == 'Positive' else '#B1C0C2'
             center_node_approx_x = math.floor(abs((polygon_nodes_transformed[middle_node][0] +
                                                    polygon_nodes_transformed[0][0]) / 2))
             center_node_approx_y = math.floor(abs((polygon_nodes_transformed[middle_node][1] +
                                                    polygon_nodes_transformed[0][1]) / 2))
-            self.canvas.create_text(center_node_approx_x, center_node_approx_y, text=text, fill='#1F1F1F', font=("Helvetica", 7))
+            self.canvas.create_text(center_node_approx_x, center_node_approx_y, text=text, fill=color_code_text, font=("Helvetica", 7))
 
             # add nodes
             for node in polygon_nodes:
-                node = self.transform_node_to_canvas(node)
+                node = Geometry.transform_node_to_canvas(node)
                 self.canvas.create_oval(node[0] - 3, node[1] - 3, node[0] + 3, node[1] + 3, fill=color_code_node, outline='#1F1F1F', width=1)
 
         # draw points
         for point_nbr, node in self.points.items():
-            node = self.transform_node_to_canvas(node)
+            node = Geometry.transform_node_to_canvas(node)
             text = f'Point {point_nbr}'
             self.canvas.create_oval(node[0] - 4, node[1] - 4, node[0] + 4, node[1] + 4, fill='#2D0F0F', outline='#1F1F1F', width=1)
             self.canvas.create_text(node[0], node[1] - 10, text=text, fill='#1F1F1F', font=("Helvetica", 7))
