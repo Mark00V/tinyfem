@@ -234,7 +234,7 @@ class Geometry(tk.Toplevel):
 
         # Callback geometry to return geometry values to guimain
         self.callback_geometry = callback_geometry
-        self.geometry_input = None
+        self.geometry_input = None  # for callback
         self.polygons = {'0': {'coordinates': [], 'area_neg_pos': 'Positive'}}  # init value
         self.polygons = {'0': {'coordinates': [[0, 0], [1, 0.5], [1.5, 1.5], [0.75, 2.0]], 'area_neg_pos': 'Positive'},
                          '1': {'coordinates': [[-1, -1], [-2, -1], [-3, -3], [-2, -3]], 'area_neg_pos': 'Positive'},
@@ -242,7 +242,7 @@ class Geometry(tk.Toplevel):
                                'area_neg_pos': 'Negative'}}  # TEST TODO
         self.polygon_nodes = [0]  # needed for update for select polygon dropdown (numbers for polygons in list)
         self.points = {}  # init value
-        #self.points = {'0': [0, 1], '1': [2, 3], '2': [-2, 3]}  # testing todo
+        self.points = {'0': [0, 1], '1': [2, 3], '2': [-2, 3]}  # testing todo
         super().__init__()
         self.main_window()
 
@@ -251,7 +251,7 @@ class Geometry(tk.Toplevel):
         Creates main window for class Geometry
         :return:
         """
-
+        self.resizable(False, False)
         self.title('TinyFEM - DEFINE GEOMETRY')
         self.geometry(f"{GUIStatics.GEOM_WINDOW_SIZE_X}x{GUIStatics.GEOM_WINDOW_SIZE_Y}")
 
@@ -350,7 +350,6 @@ class Geometry(tk.Toplevel):
             :return:
             """
             active_polygon = self.polygons.get(polygon_select_var.get(), None)
-            print(active_polygon)
             polygon_nodes_text.config(state='normal')
             polygon_nodes_text.delete('0.0', 'end')
             polygon_nodes_text.insert('end', str(active_polygon['coordinates']))
@@ -366,12 +365,18 @@ class Geometry(tk.Toplevel):
             if active_polygon == 'None':
                 return None
             polygon_nodes = active_polygon['coordinates']
-            active_polygon_node = int(polygon_node_var.get())
-            node_coords = polygon_nodes[active_polygon_node]
-            add_node_x_entry.delete(0, 'end')
-            add_node_x_entry.insert('end', str(node_coords[0]))
-            add_node_y_entry.delete(0, 'end')
-            add_node_y_entry.insert('end', str(node_coords[1]))
+            if polygon_node_var.get() == 'None':
+                add_node_x_entry.delete(0, 'end')
+                add_node_x_entry.insert('end', '0')
+                add_node_y_entry.delete(0, 'end')
+                add_node_y_entry.insert('end', '0')
+            else:
+                active_polygon_node = int(polygon_node_var.get())
+                node_coords = polygon_nodes[active_polygon_node]
+                add_node_x_entry.delete(0, 'end')
+                add_node_x_entry.insert('end', str(node_coords[0]))
+                add_node_y_entry.delete(0, 'end')
+                add_node_y_entry.insert('end', str(node_coords[1]))
 
         def new_polygon():
             """
@@ -390,10 +395,6 @@ class Geometry(tk.Toplevel):
                 update_dropdown_polygon_node_select_poly_info()
                 polygon_select_var.set(new_index)
 
-
-
-
-
         polygon_def_label = tk.Label(self, text="Define Polygon", font=GUIStatics.STANDARD_FONT_MID_BOLD)
         polygon_def_label.place(relx=widgets_x_start, rely=0.1)
 
@@ -401,7 +402,7 @@ class Geometry(tk.Toplevel):
         polygon_select_label.place(relx=widgets_x_start, rely=0.135)
         self.polygon_selection = [elem for elem in self.polygons.keys()]
         polygon_select_var = tk.StringVar()
-        polygon_select_var.set('None')
+        polygon_select_var.set('0')
         dropdown_polygon_select = tk.OptionMenu(self, polygon_select_var, *self.polygon_selection)
         dropdown_polygon_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=4, height=1)
         dropdown_polygon_select.place(relx=widgets_x_start + 0.075, rely=0.13)
@@ -608,7 +609,8 @@ class Geometry(tk.Toplevel):
         dropdown_single_point_select = tk.OptionMenu(self, single_point_var, *self.points)
         dropdown_single_point_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=4, height=1)
         dropdown_single_point_select.place(relx=widgets_x_start + 0.075, rely=0.58)
-        dropdown_single_point_select["state"] = "disabled"
+        if not self.points:
+            dropdown_single_point_select["state"] = "disabled"
         single_point_var.trace('w', update_x_y_select_point)
 
         new_point_button = tk.Button(self, text="NEW", command=new_point,
@@ -677,7 +679,39 @@ class Geometry(tk.Toplevel):
         delete_point_button = tk.Button(self, text="DELETE POINT", command=delete_point,
                                         width=14, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
         delete_point_button.place(relx=widgets_x_start, rely=0.71)
+
         ##################################################
+        # clear all button
+        ##################################################
+        def clear_all():
+            # reset to init values
+            self.geometry_input = None
+            self.polygons = {'0': {'coordinates': [], 'area_neg_pos': 'Positive'}}
+            self.polygon_nodes = [0]
+            self.points = {}
+
+            # reset point input
+            update_point_select_dropdown()
+            single_point_var.set('None')
+            dropdown_single_point_select["state"] = "disabled"
+
+            # reset polygon input
+            polygon_select_var.set('0')
+            polygon_node_var.set('None')
+
+            dropdown_polygon_node_select["state"] = "disabled"
+            update_dropdown_polygon_node_select_poly_info()
+
+            # reset canvas
+            all_canvas_elements = self.canvas.find_all()
+            for elem in all_canvas_elements:
+                self.canvas.delete(elem)
+            GUIStatics.add_canvas_static_elements(self.canvas)
+
+
+        button_clear_all = tk.Button(self, text="CLEAR ALL", command=clear_all,
+                                    font=GUIStatics.STANDARD_FONT_BUTTON_MID, width=10, height=1)
+        button_clear_all.place(relx=widgets_x_start + 0.25, rely=0.02)
 
         ##################################################
         # Add canvas for system visualization - DYNAMIC
