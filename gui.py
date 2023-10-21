@@ -235,14 +235,14 @@ class Geometry(tk.Toplevel):
         # Callback geometry to return geometry values to guimain
         self.callback_geometry = callback_geometry
         self.geometry_input = None
-        self.polygons = {'0': {'coordinates': [[0, 0]], 'area_neg_pos': 'Positive'}}  # init value
+        self.polygons = {'0': {'coordinates': [], 'area_neg_pos': 'Positive'}}  # init value
         self.polygons = {'0': {'coordinates': [[0, 0], [1, 0.5], [1.5, 1.5], [0.75, 2.0]], 'area_neg_pos': 'Positive'},
                          '1': {'coordinates': [[-1, -1], [-2, -1], [-3, -3], [-2, -3]], 'area_neg_pos': 'Positive'},
                          '2': {'coordinates': [[1, -0.5], [3, -1], [3, -3.5], [2, -2.5], [0.5, -4]],
                                'area_neg_pos': 'Negative'}}  # TEST TODO
         self.polygon_nodes = [0]  # needed for update for select polygon dropdown (numbers for polygons in list)
-        self.points = {'0': [0, 0]}  # init value
-        self.points = {'0': [0, 1], '1': [2, 3], '2': [-2, 3]}  # testing todo
+        self.points = {}  # init value
+        #self.points = {'0': [0, 1], '1': [2, 3], '2': [-2, 3]}  # testing todo
         super().__init__()
         self.main_window()
 
@@ -318,14 +318,41 @@ class Geometry(tk.Toplevel):
             :param args:
             :return:
             """
+            # updates the polygon selection menu
+            polygons_numbered = range(0, len(self.polygons)) if self.polygons else ['None']
+            dropdown_polygon_select["menu"].delete(0, "end")
+            for option in polygons_numbered:
+                dropdown_polygon_select["menu"].add_command(label=option,
+                                                                 command=tk._setit(polygon_select_var, option))
+            # updates the polygon nodes dropdown menu and the info field for nodes
             active_polygon = self.polygons.get(polygon_select_var.get(), None)
-            self.polygon_nodes = range(0, len(active_polygon['coordinates']))
-            dropdown_polygon_node_select["menu"].delete(0, "end")
-            for option in self.polygon_nodes:
-                dropdown_polygon_node_select["menu"].add_command(label=option,
-                                                                 command=tk._setit(polygon_node_var, option))
+            if active_polygon == 'None':
+                dropdown_polygon_node_select["state"] = "disabled"
+            else:
+                dropdown_polygon_node_select["state"] = "normal"
+            if self.polygons:
+                self.polygon_nodes = range(0, len(active_polygon['coordinates']))
+                dropdown_polygon_node_select["menu"].delete(0, "end")
+                for option in self.polygon_nodes:
+                    dropdown_polygon_node_select["menu"].add_command(label=option,
+                                                                     command=tk._setit(polygon_node_var, option))
+                area_neg_pos_var.set(active_polygon['area_neg_pos'])
+                update_polygon_nodes_info()
+            else:
+                polygon_nodes_text.config(state='normal')
+                polygon_nodes_text.delete('0.0', 'end')
+                polygon_nodes_text.insert('end', 'None')
+                polygon_nodes_text.config(state='disabled')
+
+        def update_polygon_nodes_info():
+            """
+            updates the info field for polygon nodes
+            :return:
+            """
+            active_polygon = self.polygons.get(polygon_select_var.get(), None)
+            print(active_polygon)
             polygon_nodes_text.config(state='normal')
-            polygon_nodes_text.delete('0.0', 'end')  # todo: why the fuck here '0.0' and for add_node_x_entry 0
+            polygon_nodes_text.delete('0.0', 'end')
             polygon_nodes_text.insert('end', str(active_polygon['coordinates']))
             polygon_nodes_text.config(state='disabled')
 
@@ -336,6 +363,8 @@ class Geometry(tk.Toplevel):
             :return:
             """
             active_polygon = self.polygons.get(polygon_select_var.get(), None)
+            if active_polygon == 'None':
+                return None
             polygon_nodes = active_polygon['coordinates']
             active_polygon_node = int(polygon_node_var.get())
             node_coords = polygon_nodes[active_polygon_node]
@@ -345,7 +374,25 @@ class Geometry(tk.Toplevel):
             add_node_y_entry.insert('end', str(node_coords[1]))
 
         def new_polygon():
-            ...
+            """
+            create new polygon on click button NEW
+            :return:
+            """
+            if not self.polygons:
+                self.polygons = {'0': {'coordinates': [], 'area_neg_pos': 'Positive'}}
+                dropdown_polygon_select["state"] = "normal"
+                polygon_select_var.set('0')
+                update_polygon_nodes_info()
+                update_dropdown_polygon_node_select_poly_info()
+            else:
+                new_index = str(1 + int(max(self.polygons.keys())))
+                self.polygons[new_index] = {'coordinates': [], 'area_neg_pos': 'Positive'}
+                update_dropdown_polygon_node_select_poly_info()
+                polygon_select_var.set(new_index)
+
+
+
+
 
         polygon_def_label = tk.Label(self, text="Define Polygon", font=GUIStatics.STANDARD_FONT_MID_BOLD)
         polygon_def_label.place(relx=widgets_x_start, rely=0.1)
@@ -371,6 +418,7 @@ class Geometry(tk.Toplevel):
         dropdown_polygon_node_select = tk.OptionMenu(self, polygon_node_var, *self.polygon_nodes)
         dropdown_polygon_node_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=4, height=1)
         dropdown_polygon_node_select.place(relx=widgets_x_start + 0.075, rely=0.18)
+        dropdown_polygon_node_select["state"] = "disabled"
         polygon_node_var.trace('w', update_x_y_entry_polygon_node)
 
         add_poly_select_label = tk.Label(self, text="Add/Update Node:", font=GUIStatics.STANDARD_FONT_SMALL)
@@ -392,23 +440,61 @@ class Geometry(tk.Toplevel):
                                     font=GUIStatics.STANDARD_FONT_SMALL, width=6)
         add_node_y_entry.place(relx=widgets_x_start + 0.08, rely=0.262)
 
+        def delete_poly_node():
+            active_polygon = polygon_select_var.get()
+            if active_polygon == 'None':
+                return None
+            selected_node = polygon_node_var.get()
+            if selected_node == 'None':
+                return None
+            else:
+                selected_node = int(polygon_node_var.get())
+            del self.polygons[active_polygon]['coordinates'][selected_node]
+            update_polygon_nodes_info()
+            update_dropdown_polygon_node_select_poly_info()
+            self.update_graphics()
+
+
         def add_poly_node():
             """
             When button ADD for polygon is pressed
             :return:
             """
-            ...
+
+            this_polygon = polygon_select_var.get()
+            if this_polygon == 'None':
+                return None
+            dropdown_polygon_node_select["state"] = "normal"
+            polygon_nodes = self.polygons[this_polygon]['coordinates']
+            x_entry = float(add_node_x_entry_val.get())
+            y_entry = float(add_node_y_entry_val.get())
+            polygon_nodes.append([x_entry, y_entry])
+            self.polygons[this_polygon]['coordinates'] = polygon_nodes
+            update_dropdown_polygon_node_select_poly_info()
+            update_polygon_nodes_info()
+            self.update_graphics()
 
         def update_poly_node():
             """
             When button UPDATE for polygon is pressed
             :return:
             """
-            selected_poly = polygon_select_var.get()
+            this_polygon = polygon_select_var.get()
+            if this_polygon == 'None':
+                return None
             selected_node = polygon_node_var.get()
-            x_value = add_node_x_entry.get()
-            y_value = add_node_x_entry.get()
+            if selected_node == 'None':
+                return None
+            else:
+                selected_node = int(polygon_node_var.get())
+            print(this_polygon, selected_node)
+            x_value = float(add_node_x_entry.get())
+            y_value = float(add_node_y_entry.get())
             area_value = area_neg_pos_var.get()
+            self.polygons[this_polygon]['coordinates'][selected_node] = [x_value, y_value]
+            self.polygons[this_polygon]['area_neg_pos'] = area_value
+            update_polygon_nodes_info()
+            self.update_graphics()
 
         add_poly_node_button = tk.Button(self, text="ADD", command=add_poly_node,
                                          width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
@@ -416,6 +502,9 @@ class Geometry(tk.Toplevel):
         update_poly_node_button = tk.Button(self, text="UPDATE", command=update_poly_node,
                                             width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
         update_poly_node_button.place(relx=widgets_x_start + 0.125, rely=0.289)
+        delete_polygon_node_button = tk.Button(self, text="DELETE", command=delete_poly_node,
+                                     width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
+        delete_polygon_node_button.place(relx=widgets_x_start + 0.125, rely=0.228)
 
         polygon_nodes_label = tk.Label(self, text="Polygon Nodes:", font=GUIStatics.STANDARD_FONT_SMALL)
         polygon_nodes_label.place(relx=widgets_x_start, rely=0.30)
@@ -439,7 +528,21 @@ class Geometry(tk.Toplevel):
             When button DELETE POLYGON for polygons is pressed
             :return:
             """
-            ...
+            active_polygon = polygon_select_var.get()
+            if active_polygon != 'None':
+                if len(self.polygons) > 1:
+                    del self.polygons[active_polygon]
+                    self.polygons = GUIStatics.resort_keys(self.polygons)
+                    polygon_select_var.set('0')
+                    update_dropdown_polygon_node_select_poly_info()
+                    self.update_graphics()
+                else:
+                    del self.polygons[active_polygon]
+                    polygon_select_var.set('None')
+                    dropdown_polygon_node_select["state"] = "disabled"
+                    dropdown_polygon_select["state"] = "disabled"
+                    self.update_graphics()
+
 
         delete_polygon_button = tk.Button(self, text="DELETE POLYGON", command=delete_polygon,
                                           width=16, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
@@ -456,7 +559,7 @@ class Geometry(tk.Toplevel):
             """
             dropdown_single_point_select["state"] = "normal"
             # check if points already in self.points
-            if not self.points:
+            if not self.points or self.points == {'None'}:
                 self.points = {'0': [0, 0]}
                 selected_point = '0'
             else:
@@ -464,6 +567,7 @@ class Geometry(tk.Toplevel):
                 self.points[selected_point] = [0, 0]
             update_point_select_dropdown()
             single_point_var.set(selected_point)
+            self.update_graphics()
 
         def update_point_select_dropdown():
             """
@@ -499,9 +603,12 @@ class Geometry(tk.Toplevel):
         single_point_select_label.place(relx=widgets_x_start, rely=0.585)
         single_point_var = tk.StringVar()
         single_point_var.set('None')
+        if not self.points:
+            self.points = {'None'}
         dropdown_single_point_select = tk.OptionMenu(self, single_point_var, *self.points)
         dropdown_single_point_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=4, height=1)
         dropdown_single_point_select.place(relx=widgets_x_start + 0.075, rely=0.58)
+        dropdown_single_point_select["state"] = "disabled"
         single_point_var.trace('w', update_x_y_select_point)
 
         new_point_button = tk.Button(self, text="NEW", command=new_point,
@@ -541,6 +648,7 @@ class Geometry(tk.Toplevel):
             new_x = add_point_x_entry_val.get()
             new_y = add_point_y_entry_val.get()
             self.points[selected_point] = [float(new_x), float(new_y)]
+            self.update_graphics()
 
         def delete_point():
             """
@@ -555,10 +663,12 @@ class Geometry(tk.Toplevel):
             if not self.points:
                 single_point_var.set('None')
                 dropdown_single_point_select["state"] = "disabled"
+                self.update_graphics()
                 return None
             self.points = GUIStatics.resort_keys(self.points)
             update_point_select_dropdown()
             single_point_var.set('0')
+            self.update_graphics()
 
         add_point_button = tk.Button(self, text="UPDATE", command=update_point,
                                      width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
@@ -658,12 +768,13 @@ class Geometry(tk.Toplevel):
                                         outline='#1F1F1F', width=1)
 
         # draw points
-        for point_nbr, node in self.points.items():
-            node = GUIStatics.transform_node_to_canvas(node)
-            text = f'Point {point_nbr}'
-            self.canvas.create_oval(node[0] - 4, node[1] - 4, node[0] + 4, node[1] + 4, fill='#2D0F0F',
-                                    outline='#1F1F1F', width=1)
-            self.canvas.create_text(node[0], node[1] - 10, text=text, fill='#1F1F1F', font=("Helvetica", 7))
+        if self.points != {'None'} and self.points:
+            for point_nbr, node in self.points.items():
+                node = GUIStatics.transform_node_to_canvas(node)
+                text = f'Point {point_nbr}'
+                self.canvas.create_oval(node[0] - 4, node[1] - 4, node[0] + 4, node[1] + 4, fill='#2D0F0F',
+                                        outline='#1F1F1F', width=1)
+                self.canvas.create_text(node[0], node[1] - 10, text=text, fill='#1F1F1F', font=("Helvetica", 7))
 
     def save_geometry(self):
         ...
