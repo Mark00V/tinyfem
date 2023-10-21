@@ -35,17 +35,20 @@ class GUI(tk.Tk):
         self.boundaries = None
         self.nodes = None
         # for development
-        self.regions = {'0': {'coordinates': [(0.1, -0.2), (1.5, -0.2), (1.5, 1.1), (0.0, 1.1)], 'area_neg_pos': 'Positive'},
-         '1': {'coordinates': [(0.6, 0.5), (0.8, 0.8), (0.8, 0.2)], 'area_neg_pos': 'Negative'},
-         '2': {'coordinates': [(1.5, -1.5), (2.5, 0.0), (2.5, 2.5), (1.5, 2.5), (1.5, 1.1), (1.5, -0.2)],
-               'area_neg_pos': 'Positive'}}
-        self.boundaries = {'0': ((0.1, -0.2), (1.5, -0.2)), '1': ((1.5, -0.2), (1.5, 1.1)), '2': ((1.5, 1.1), (0.0, 1.1)),
-         '3': ((0.0, 1.1), (0.1, -0.2)), '4': ((0.6, 0.5), (0.8, 0.8)), '5': ((0.8, 0.8), (0.8, 0.2)),
-         '6': ((0.8, 0.2), (0.6, 0.5)), '7': ((1.5, -1.5), (2.5, 0.0)), '8': ((2.5, 0.0), (2.5, 2.5)),
-         '9': ((2.5, 2.5), (1.5, 2.5)), '10': ((1.5, 2.5), (1.5, 1.1)), '11': ((1.5, -0.2), (1.5, -1.5))}
-        self.nodes = {'0': (0.5, 0.5), '1': (2.0, 0.2), '2': (0.1, -0.2), '3': (1.5, -0.2), '4': (1.5, 1.1), '5': (0.0, 1.1),
-         '6': (0.6, 0.5), '7': (0.8, 0.8), '8': (0.8, 0.2), '9': (1.5, -1.5), '10': (2.5, 0.0), '11': (2.5, 2.5),
-         '12': (1.5, 2.5)}
+        self.regions = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
+                             'area_neg_pos': 'Positive'},
+                       '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive'},
+                       '2': {'coordinates': [(-1.0, 0.0), (0.0, 0.0), (0.0, 0.75), (-1.0, 0.5)],
+                             'area_neg_pos': 'Positive'}}
+        self.boundaries = {'0': ((-4.0, -3.0), (1.0, -2.5)), '1': ((1.0, -2.5), (2.5, 1.0)),
+                          '2': ((2.5, 1.0), (-2.5, 1.0)), '3': ((-2.5, 1.0), (-4.2, -1.5)),
+                          '4': ((-4.2, -1.5), (-4.0, -3.0)), '5': ((2.5, 1.0), (0.0, 3.0)),
+                          '6': ((0.0, 3.0), (-2.5, 1.0)), '7': ((-1.0, 0.0), (0.0, 0.0)),
+                          '8': ((0.0, 0.0), (0.0, 0.75)), '9': ((0.0, 0.75), (-1.0, 0.5)),
+                          '10': ((-1.0, 0.5), (-1.0, 0.0))}
+        self.nodes = {'0': (-3.0, -2.0), '1': (0.0, 1.5), '2': (1.0, -1.0), '3': (-4.0, -3.0), '4': (1.0, -2.5),
+                     '5': (2.5, 1.0), '6': (-2.5, 1.0), '7': (-4.2, -1.5), '8': (0.0, 3.0), '9': (-1.0, 0.0),
+                     '10': (0.0, 0.0), '11': (0.0, 0.75), '12': (-1.0, 0.5)}
 
         super().__init__()
         # Start Main Window
@@ -134,8 +137,8 @@ class GUI(tk.Tk):
         self.text_label.place(relx=0.02, rely=0.965)
 
         # Developing
-        self.animation = False  # todo delete this
-        self.draw_geometry_from_definebcs()  # todo delete this
+        #self.animation = False  # todo delete this
+        #self.draw_geometry_from_definebcs()  # todo delete this
         ##################################################
 
     def create_BC_params(self):
@@ -194,13 +197,52 @@ class GUI(tk.Tk):
             self.canvas.delete(elem)
         GUIStatics.add_canvas_static_elements(self.canvas)
 
+        # draw legend and stats
+        nbr_of_nodes = len(self.nodes.keys())
+        nbr_of_boundaries = len(self.boundaries.keys())
+        nbr_of_regions = len(self.regions.keys())
+        stat_text = f"Regions -R-    : {nbr_of_regions}\n" \
+                    f"Boundaries -B- : {nbr_of_boundaries}\n" \
+                    f"Nodes -N-      : {nbr_of_nodes}"
+        self.canvas.create_text(80, 30, text=stat_text, fill='#21090B',
+                                font=('Courier New', 8))
+
         # draw regions
+        color_code_plus = '#7D4C4C'
+        color_code_minus = '#222638'
         for region_nbr, params in self.regions.items():
             nodes = params['coordinates']
             area_neg_pos = params['area_neg_pos']
-            
+            color_code = color_code_plus if area_neg_pos == 'Positive' else color_code_minus
             nodes = [GUIStatics.transform_node_to_canvas(node) for node in nodes]
-            self.canvas.create_polygon(nodes, fill='gray', outline='#341010', width=2)
+            center_x, center_y = GUIStatics.get_polygon_center(nodes)
+            self.canvas.create_polygon(nodes, fill=color_code, outline='', width=2)
+
+        # text for regions
+        for region_nbr, params in self.regions.items():
+            nodes = params['coordinates']
+            nodes = [GUIStatics.transform_node_to_canvas(node) for node in nodes]
+            center_x, center_y = GUIStatics.get_polygon_center(nodes)
+            text = f'R:{region_nbr}'
+            self.canvas.create_text(center_x, center_y, text=text, fill='white', font=GUIStatics.STANDARD_FONT_SMALLER)
+
+        # draw boundaries
+        for boundary_nbr, nodes in self.boundaries.items():
+            nodes = [GUIStatics.transform_node_to_canvas(node) for node in nodes]
+            sector_start_node = nodes[0]
+            sector_end_node = nodes[1]
+            center_x, center_y = GUIStatics.get_polygon_center(nodes)
+            text = f'B:{boundary_nbr}'
+            self.canvas.create_line(sector_start_node, sector_end_node, fill='#2F1417', width=2, dash=(1, 1), arrow='both', arrowshape=(8, 10, 3))
+            self.canvas.create_text(center_x, center_y, text=text, fill='#420382', font=GUIStatics.STANDARD_FONT_SMALL)
+
+        # draw points
+        for node_nbr, node in self.nodes.items():
+            node = GUIStatics.transform_node_to_canvas(node)
+            text = f'N:{node_nbr}'
+            self.canvas.create_oval(node[0] - 4, node[1] - 4, node[0] + 4, node[1] + 4, fill='#5F0F0F',
+                                    outline='#1F1F1F', width=2, dash=(1, 1))
+            self.canvas.create_text(node[0] - 10, node[1] - 10, text=text, fill='#14380A', font=GUIStatics.STANDARD_FONT_SMALL)
 
 
 

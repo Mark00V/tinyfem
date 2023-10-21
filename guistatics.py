@@ -172,3 +172,20 @@ class GUIStatics:
                 y_text = ''
             canvas.create_text(width / 2 + 10, y, text=y_text, fill=text_color, font=("Helvetica", 6))
             canvas.create_line(width / 2 - 3, y, width / 2 + 3, y, fill=div_color, width=1)
+
+    @staticmethod
+    def get_polygon_center(nodes: list):
+        """
+        get the center of the polygon (approximately)
+        :param nodes:
+        :return:
+        """
+        num_vertices = len(nodes)
+        if num_vertices == 0:
+            return 0, 0  # Default center if there are no vertices
+
+        # Calculate the average x and y coordinates
+        avg_x = sum(x for x, y in nodes) / num_vertices
+        avg_y = sum(y for x, y in nodes) / num_vertices
+
+        return avg_x, avg_y
