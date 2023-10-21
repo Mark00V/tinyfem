@@ -39,7 +39,7 @@ class GUI(tk.Tk):
                              'area_neg_pos': 'Positive'},
                        '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive'},
                        '2': {'coordinates': [(-1.0, 0.0), (0.0, 0.0), (0.0, 0.75), (-1.0, 0.5)],
-                             'area_neg_pos': 'Positive'}}
+                             'area_neg_pos': 'Negative'}}
         self.boundaries = {'0': ((-4.0, -3.0), (1.0, -2.5)), '1': ((1.0, -2.5), (2.5, 1.0)),
                           '2': ((2.5, 1.0), (-2.5, 1.0)), '3': ((-2.5, 1.0), (-4.2, -1.5)),
                           '4': ((-4.2, -1.5), (-4.0, -3.0)), '5': ((2.5, 1.0), (0.0, 3.0)),
@@ -207,15 +207,24 @@ class GUI(tk.Tk):
         self.canvas.create_text(80, 30, text=stat_text, fill='#21090B',
                                 font=('Courier New', 8))
 
-        # draw regions
-        color_code_plus = '#7D4C4C'
-        color_code_minus = '#222638'
+        # draw regions two times so negative areas are above positives
+        color_code_plus = '#B88585'
+        color_code_minus = '#8AC1C6'
         for region_nbr, params in self.regions.items():
             nodes = params['coordinates']
             area_neg_pos = params['area_neg_pos']
+            if area_neg_pos == 'Negative':
+                continue
             color_code = color_code_plus if area_neg_pos == 'Positive' else color_code_minus
             nodes = [GUIStatics.transform_node_to_canvas(node) for node in nodes]
-            center_x, center_y = GUIStatics.get_polygon_center(nodes)
+            self.canvas.create_polygon(nodes, fill=color_code, outline='', width=2)
+        for region_nbr, params in self.regions.items():
+            nodes = params['coordinates']
+            area_neg_pos = params['area_neg_pos']
+            if area_neg_pos == 'Positive':
+                continue
+            color_code = color_code_plus if area_neg_pos == 'Positive' else color_code_minus
+            nodes = [GUIStatics.transform_node_to_canvas(node) for node in nodes]
             self.canvas.create_polygon(nodes, fill=color_code, outline='', width=2)
 
         # text for regions
@@ -223,7 +232,8 @@ class GUI(tk.Tk):
             nodes = params['coordinates']
             nodes = [GUIStatics.transform_node_to_canvas(node) for node in nodes]
             center_x, center_y = GUIStatics.get_polygon_center(nodes)
-            text = f'R:{region_nbr}'
+            area_neg_pos = params['area_neg_pos']
+            text = f'R:{region_nbr}({"+" if area_neg_pos == "Positive" else "-"})'
             self.canvas.create_text(center_x, center_y, text=text, fill='white', font=GUIStatics.STANDARD_FONT_SMALLER)
 
         # draw boundaries

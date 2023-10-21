@@ -190,7 +190,7 @@ if __name__ == '__main__':
     test_input_2 = {
         "polygons": {"0": {"coordinates": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], "area_neg_pos": "Positive"}},
         "points": {"None"}, "units": "m", "other": "None"}
-    test_input_3 = {"polygons": {"0": {"coordinates": [[-4.0, -3.0], [1.0, -2.5], [2.5, 1.0], [-2.5, 1.0], [-4.2, -1.5]], "area_neg_pos": "Positive"}, "1": {"coordinates": [[2.5, 1.0], [0.0, 3.0], [-2.5, 1.0]], "area_neg_pos": "Positive"}, "2": {"coordinates": [[-1.0, 0.0], [0.0, 0.0], [0.0, 0.75], [-1.0, 0.5]], "area_neg_pos": "Positive"}}, "points": {"0": [-3.0, -2.0], "1": [0.0, 1.5], "2": [1.0, -1.0]}, "units": "m", "other": "None"}
+    test_input_3 = {"polygons": {"0": {"coordinates": [[-4.0, -3.0], [1.0, -2.5], [2.5, 1.0], [-2.5, 1.0], [-4.2, -1.5]], "area_neg_pos": "Positive"}, "1": {"coordinates": [[2.5, 1.0], [0.0, 3.0], [-2.5, 1.0]], "area_neg_pos": "Positive"}, "2": {"coordinates": [[-1.0, 0.0], [0.0, 0.0], [0.0, 0.75], [-1.0, 0.5]], "area_neg_pos": "Negative"}}, "points": {"0": [-3.0, -2.0], "1": [0.0, 1.5], "2": [1.0, -1.0]}, "units": "m", "other": "None"}
 
     test_input = test_input_3
     createbcs = CreateBCParams(test_input)
