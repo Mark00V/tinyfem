@@ -1,171 +1,20 @@
 import tkinter as tk
 import math
 from typing import Callable, Any
-
+from tkinter import filedialog
+import json
+from guistatics import GUIStatics
+from definebcs import CreateBCParams
 #################################################
 # Other
 AUTHOR = 'Itsame Mario'
 VERSION_MAJOR = 1
 VERSION_MINOR = 0
 VERSION_PATCH = 0
-
-
 #################################################
 
 
-class GUIStatics:
-    """
-    Define constants and static methods
-    """
-
-    # FONTS
-    # STANDARD_FONT_1_BOLD = tkFont.Font(family="Arial", size=12, weight='bold')
-    # Main Window
-    MAIN_WINDOW_SIZE_X = 1200
-    MAIN_WINDOW_SIZE_Y = 800
-
-    # Geometry Window
-    GEOM_WINDOW_SIZE_X = 1200
-    GEOM_WINDOW_SIZE_Y = 800
-
-    # Standard Canvas Size
-    CANVAS_SIZE_X = 920  # Needs to be even!
-    CANVAS_SIZE_Y = 720  # Needs to be even!
-    GRID_SPACE = 10  # Needs to be divisor of GUIStatics.CANVAS_SIZE_X and GUIStatics.CANVAS_SIZE_Y
-    CANVAS_SCALE_FACTOR = 100
-
-    # colors
-    CANVAS_BORDER_COLOR = '#5F1010'  # Rosewood
-    CANVAS_BG = '#D2D2D2'  # Light gray
-    CANVAS_COORD_COLOR = '#262626'  # Dark gray
-
-    # Fonts
-    STANDARD_FONT_BUTTON_SMALLER = ('Consolas', 8)
-    STANDARD_FONT_BUTTON_SMALL = ('Consolas', 9)
-    STANDARD_FONT_BUTTON_MID = ('Consolas', 10)
-    STANDARD_FONT_BUTTON_BIG = ('Consolas', 11)
-    STANDARD_FONT_BUTTON_BIG_BOLD = ('Arial Black', 11)
-    STANDARD_FONT_MID = ('Arial', 10)
-    STANDARD_FONT_MID_BOLD = ('Arial Black', 10)
-    STANDARD_FONT_SMALL = ('Arial', 9)
-    STANDARD_FONT_SMALLER = ('Arial', 8)
-    STANDARD_FONT_SMALL_BOLD = ('Arial Black', 9)
-    SAVELOAD_FONT = ('Verdana', 10)
-
-    @staticmethod
-    def resort_keys(some_dict: dict) -> dict:
-        """
-        resort the dict (keys: str), if key is missing, assign following keys to it
-        e.g {'1': 1, '3': 3, '4': 4, '5': 5} -> {'1': 1, '2': 3, '3': 4, '4': 5}
-
-        :param some_dict: {'1': 1, '3': 3, '4': 4, '5': 5}
-        :return:
-        """
-
-        # get missing key
-        keys = some_dict.keys()
-        mi_ma = set(range(int(min(keys)), int(max(keys)) + 1))
-        missing_key = list(mi_ma - mi_ma.intersection(set([int(key) for key in keys])))
-        # sort again
-        if not missing_key and min(keys) != '1':
-            return dict(sorted(some_dict.items()))
-        else:
-            missing_key = '0' if min(keys) == '1' else missing_key[0]
-            next_key, last_key = int(missing_key) + 1, max([int(key) for key in keys])
-            for key in range(next_key, last_key + 1):
-                some_dict[str(key - 1)] = some_dict[str(key)]
-            del some_dict[str(key)]
-
-            return dict(sorted(some_dict.items()))
-
-    @staticmethod
-    def transform_node_to_canvas(node: list):
-        """
-        Transforms the coordinates of node from natural coord system to canvas coord system
-        e.g. [1.0, 2.0] -> [300, 200]
-        :param node: [x, y] in natural coordinates
-        :return:
-        """
-
-        scale_factor = GUIStatics.CANVAS_SCALE_FACTOR
-        node_x = node[0]
-        node_y = node[1]
-        node_new_x = node_x * scale_factor + GUIStatics.CANVAS_SIZE_X / 2
-        node_new_y = -node_y * scale_factor + GUIStatics.CANVAS_SIZE_Y / 2
-
-        return node_new_x, node_new_y
-
-    # shared method
-    @staticmethod
-    def add_canvas_static_elements(canvas: tk.Canvas):
-        """
-        Adds coordsystem and grid to a canvas
-        :param canvas:
-        :return:
-        """
-
-        width = GUIStatics.CANVAS_SIZE_X
-        height = GUIStatics.CANVAS_SIZE_Y
-
-        # grid
-        for x in range(GUIStatics.GRID_SPACE, width + GUIStatics.GRID_SPACE, GUIStatics.GRID_SPACE):
-            canvas.create_line(x, 0, x, height, fill="dark gray", width=1)
-        for y in range(GUIStatics.GRID_SPACE, height, GUIStatics.GRID_SPACE):
-            canvas.create_line(0, y, width, y, fill="dark gray", width=1)
-        canvas.create_line(1, 1, width, 1, fill=GUIStatics.CANVAS_BORDER_COLOR, width=4)
-        canvas.create_line(1, 0, 1, height, fill=GUIStatics.CANVAS_BORDER_COLOR, width=6)
-        canvas.create_line(0, height + 1, width, height + 1,
-                           fill=GUIStatics.CANVAS_BORDER_COLOR, width=2)
-        canvas.create_line(width + 1, 0, width + 1, height,
-                           fill=GUIStatics.CANVAS_BORDER_COLOR, width=2)
-
-        # coordinatesystem
-        canvas.create_line(width / 2, 0, width / 2, height,
-                           fill=GUIStatics.CANVAS_COORD_COLOR, width=1)
-        canvas.create_line(0, height / 2, width, height / 2,
-                           fill=GUIStatics.CANVAS_COORD_COLOR, width=1)
-
-        # text_values
-        text_color = '#575757'
-        div_color = '#404040'
-        x_it = 0
-        for x in range(int(width / 2), width, GUIStatics.GRID_SPACE * 2):
-            x_text = x_it / GUIStatics.CANVAS_SCALE_FACTOR
-            x_it += GUIStatics.GRID_SPACE * 2
-            if x_text == 0:
-                x_text = 0
-            canvas.create_text(x + 4, height / 2 + 10, text=x_text, fill=text_color, font=("Helvetica", 6))
-            canvas.create_line(x, height / 2 + 3, x, height / 2 - 3, fill=div_color, width=1)
-
-        x_it = 0
-        for x in range(int(width / 2), 0, -GUIStatics.GRID_SPACE * 2):
-            x_text = x_it / GUIStatics.CANVAS_SCALE_FACTOR
-            x_it += GUIStatics.GRID_SPACE * 2
-            x_text = '-' + str(x_text)
-            if x_text == '-0.0':
-                x_text = ''
-            canvas.create_text(x + 4, height / 2 + 10, text=x_text, fill=text_color, font=("Helvetica", 6))
-            canvas.create_line(x, height / 2 + 3, x, height / 2 - 3, fill=div_color, width=1)
-
-        y_it = 0
-        for y in range(int(height / 2), height, GUIStatics.GRID_SPACE * 2):
-            y_text = y_it / GUIStatics.CANVAS_SCALE_FACTOR
-            y_it += GUIStatics.GRID_SPACE * 2
-            y_text = '-' + str(y_text)
-            if y_text == '-0.0':
-                y_text = ''
-            canvas.create_text(width / 2 + 10, y, text=y_text, fill=text_color, font=("Helvetica", 6))
-            canvas.create_line(width / 2 - 3, y, width / 2 + 3, y, fill=div_color, width=1)
-
-        y_it = 0
-        for y in range(int(height / 2), 0, -GUIStatics.GRID_SPACE * 2):
-            y_text = y_it / GUIStatics.CANVAS_SCALE_FACTOR
-            y_it += GUIStatics.GRID_SPACE * 2
-            y_text = str(y_text)
-            if y_text == '0.0':
-                y_text = ''
-            canvas.create_text(width / 2 + 10, y, text=y_text, fill=text_color, font=("Helvetica", 6))
-            canvas.create_line(width / 2 - 3, y, width / 2 + 3, y, fill=div_color, width=1)
+# todo add window with small description for each module
 
 
 class GUI(tk.Tk):
@@ -200,9 +49,25 @@ class GUI(tk.Tk):
                                            height=1)
         button_define_geometry.place(relx=0.025, rely=0.05)
 
+        # Reformat Boundaryconditions via CreateBCParams todo: THIS IS ONLY NEEDED FOR DEVELOPMENT
+        button_define_geometry = tk.Button(self, text="Format BCs", command=self.create_BC_params, width=20,
+                                           height=1)
+        button_define_geometry.place(relx=0.025, rely=0.25)
+
         # placeholder for text
         self.text_label = tk.Label(self, text="Init")
         self.text_label.place(relx=0.4, rely=0.4)
+
+    def create_BC_params(self):
+        """
+        reformats the geometry for boundary and material parameters assignment via class CreateBCParams
+        :return:
+        """
+        create_params = CreateBCParams(self.geometry_input)
+        regions, boundaries, nodes = create_params.main()
+        print(regions)
+        print(boundaries)
+        print(nodes)
 
     def define_geometry(self):
         """
@@ -217,8 +82,9 @@ class GUI(tk.Tk):
         :param geometry:
         :return:
         """
-        self.geometry_input = str(geometry)
-        self.text_label.config(text=self.geometry_input)
+        self.geometry_input = geometry
+        geometry_input_str = str(geometry)
+        self.text_label.config(text=geometry_input_str)
 
 
 class Geometry(tk.Toplevel):
@@ -236,15 +102,19 @@ class Geometry(tk.Toplevel):
         self.callback_geometry = callback_geometry
         self.geometry_input = None  # for callback
         self.polygons = {'0': {'coordinates': [], 'area_neg_pos': 'Positive'}}  # init value
-        self.polygons = {'0': {'coordinates': [[0, 0], [1, 0.5], [1.5, 1.5], [0.75, 2.0]], 'area_neg_pos': 'Positive'},
-                         '1': {'coordinates': [[-1, -1], [-2, -1], [-3, -3], [-2, -3]], 'area_neg_pos': 'Positive'},
-                         '2': {'coordinates': [[1, -0.5], [3, -1], [3, -3.5], [2, -2.5], [0.5, -4]],
-                               'area_neg_pos': 'Negative'}}  # TEST TODO
+        # self.polygons = {'0': {'coordinates': [[0, 0], [1, 0.5], [1.5, 1.5], [0.75, 2.0]], 'area_neg_pos': 'Positive'},
+        #                  '1': {'coordinates': [[-1, -1], [-2, -1], [-3, -3], [-2, -3]], 'area_neg_pos': 'Positive'},
+        #                  '2': {'coordinates': [[1, -0.5], [3, -1], [3, -3.5], [2, -2.5], [0.5, -4]],
+        #                        'area_neg_pos': 'Negative'}}  # TEST TODO
         self.polygon_nodes = [0]  # needed for update for select polygon dropdown (numbers for polygons in list)
         self.points = {}  # init value
-        self.points = {'0': [0, 1], '1': [2, 3], '2': [-2, 3]}  # testing todo
+        # self.points = {'0': [0, 1], '1': [2, 3], '2': [-2, 3]}  # testing todo
+        self.units = 'm'
+        self.other = 'None'  # json dump does not support None
         super().__init__()
         self.main_window()
+
+
 
     def main_window(self):
         """
@@ -269,15 +139,78 @@ class Geometry(tk.Toplevel):
         ##################################################
         # save and load buttons
         # save geometry button
-        button_save_geo = tk.Button(self, text="SAVE", command=self.save_geometry,
+        def load_geometry():
+            """
+            load geometry from json file
+            :return:
+            """
+
+            file_path = filedialog.askopenfilename(
+                filetypes=[("json Files", "*.json")],
+                title="Open Input File",
+            )
+            if file_path:
+                with open(file_path, "r") as file:
+                    content = file.read()
+                geo_dict = json.loads(content)
+                if geo_dict['points'] == {'None': 'None'}:  # workaround for json dump
+                    geo_dict['points'] = {'None'}
+                self.polygons = geo_dict['polygons']
+                self.points = geo_dict['points']
+                self.units = geo_dict['units']
+                self.other = geo_dict['other']
+                self.geometry_input = {'polygons': self.polygons, 'points': self.points, 'units': self.units,
+                                       'other': self.other}
+
+                # point input
+                update_point_select_dropdown()
+                single_point_var.set('None')
+                if not self.points:
+                    dropdown_single_point_select["state"] = "disabled"
+
+                # polygon input
+                polygon_select_var.set('0')
+                polygon_node_var.set('None')
+                dropdown_polygon_node_select["state"] = "disabled"
+                update_dropdown_polygon_node_select_poly_info()
+                if not self.polygons:
+                    dropdown_polygon_select["state"] = "disabled"
+
+                # reset canvas
+                all_canvas_elements = self.canvas.find_all()
+                for elem in all_canvas_elements:
+                    self.canvas.delete(elem)
+                GUIStatics.add_canvas_static_elements(self.canvas)
+                self.update_graphics()
+
+        def save_geometry():
+            """
+            save geometry data to json file
+            :return:
+            """
+            if self.points == {'None'}:
+                self.points = {'None': 'None'}  # workaround for json dumping
+            self.geometry_input = {'polygons': self.polygons, 'points': self.points, 'units': self.units,
+                                   'other': self.other}
+            print(self.geometry_input)
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".txt",
+                filetypes=[("json Files", "*.json")],
+                title="Save Input As",
+            )
+            if file_path:
+                with open(file_path, "w") as file:
+                    file.write(json.dumps(self.geometry_input))
+            self.points = {'None'}  # workaround for json dumping
+
+        button_save_geo = tk.Button(self, text="SAVE", command=save_geometry,
                                     font=GUIStatics.SAVELOAD_FONT, width=10, height=1)
         button_save_geo.place(relx=widgets_x_start, rely=0.02)
 
         # load geometry button
-        button_load_geo = tk.Button(self, text="LOAD", command=self.load_geometry,
+        button_load_geo = tk.Button(self, text="LOAD", command=load_geometry,
                                     font=GUIStatics.SAVELOAD_FONT, width=10, height=1)
         button_load_geo.place(relx=0.1, rely=0.02)
-
         ##################################################
 
         ##################################################
@@ -292,6 +225,7 @@ class Geometry(tk.Toplevel):
             units_dict = {'m': 'meter', 'mm': 'milimeter', 'km': 'kilometer', 'hm': 'hektometer', 'dam': 'dekameter',
                           'dm': 'dezimeter', 'cm': 'centimeter'}
             self.unit_selected.config(text=units_dict[unit_selected])
+            self.units = unit_selected
 
         unit_select_label = tk.Label(self, text="Unit:", font=GUIStatics.STANDARD_FONT_SMALL_BOLD)
         unit_select_label.place(relx=0.835, rely=0.04)
@@ -326,11 +260,13 @@ class Geometry(tk.Toplevel):
                                                                  command=tk._setit(polygon_select_var, option))
             # updates the polygon nodes dropdown menu and the info field for nodes
             active_polygon = self.polygons.get(polygon_select_var.get(), None)
+            self.polygon_select_var = active_polygon
             if active_polygon == 'None':
                 dropdown_polygon_node_select["state"] = "disabled"
             else:
                 dropdown_polygon_node_select["state"] = "normal"
             if self.polygons:
+                polygon_node_var.set('None')
                 self.polygon_nodes = range(0, len(active_polygon['coordinates']))
                 dropdown_polygon_node_select["menu"].delete(0, "end")
                 for option in self.polygon_nodes:
@@ -362,6 +298,7 @@ class Geometry(tk.Toplevel):
             :return:
             """
             active_polygon = self.polygons.get(polygon_select_var.get(), None)
+            self.polygon_selected = polygon_select_var.get()
             if active_polygon == 'None':
                 return None
             polygon_nodes = active_polygon['coordinates']
@@ -377,6 +314,7 @@ class Geometry(tk.Toplevel):
                 add_node_x_entry.insert('end', str(node_coords[0]))
                 add_node_y_entry.delete(0, 'end')
                 add_node_y_entry.insert('end', str(node_coords[1]))
+            self.update_graphics()
 
         def new_polygon():
             """
@@ -407,6 +345,7 @@ class Geometry(tk.Toplevel):
         dropdown_polygon_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=4, height=1)
         dropdown_polygon_select.place(relx=widgets_x_start + 0.075, rely=0.13)
         polygon_select_var.trace('w', update_dropdown_polygon_node_select_poly_info)
+        self.polygon_selected = polygon_select_var.get()
 
         new_poly_button = tk.Button(self, text="NEW", command=new_polygon,
                                     width=7, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
@@ -467,8 +406,13 @@ class Geometry(tk.Toplevel):
                 return None
             dropdown_polygon_node_select["state"] = "normal"
             polygon_nodes = self.polygons[this_polygon]['coordinates']
-            x_entry = float(add_node_x_entry_val.get())
-            y_entry = float(add_node_y_entry_val.get())
+            try:
+                x_entry = float(add_node_x_entry_val.get().replace(',', '.'))
+                y_entry = float(add_node_x_entry_val.get().replace(',', '.'))
+            except ValueError:
+                # todo: warning window oder so falls text eingegben..
+                x_entry = 0.0
+                y_entry = 0.0
             polygon_nodes.append([x_entry, y_entry])
             self.polygons[this_polygon]['coordinates'] = polygon_nodes
             update_dropdown_polygon_node_select_poly_info()
@@ -484,16 +428,16 @@ class Geometry(tk.Toplevel):
             if this_polygon == 'None':
                 return None
             selected_node = polygon_node_var.get()
+            area_value = area_neg_pos_var.get()
+            self.polygons[this_polygon]['area_neg_pos'] = area_value
+            self.update_graphics()
             if selected_node == 'None':
                 return None
             else:
                 selected_node = int(polygon_node_var.get())
-            print(this_polygon, selected_node)
             x_value = float(add_node_x_entry.get())
             y_value = float(add_node_y_entry.get())
-            area_value = area_neg_pos_var.get()
             self.polygons[this_polygon]['coordinates'][selected_node] = [x_value, y_value]
-            self.polygons[this_polygon]['area_neg_pos'] = area_value
             update_polygon_nodes_info()
             self.update_graphics()
 
@@ -647,9 +591,14 @@ class Geometry(tk.Toplevel):
             selected_point = single_point_var.get()
             if selected_point == 'None':
                 return None
-            new_x = add_point_x_entry_val.get()
-            new_y = add_point_y_entry_val.get()
-            self.points[selected_point] = [float(new_x), float(new_y)]
+            try:
+                new_x = float(add_point_x_entry_val.get().replace(',', '.'))
+                new_y = float(add_point_y_entry_val.get().replace(',', '.'))
+            except ValueError:
+                # todo: warning window oder so falls text eingegben..
+                new_x = 0.0
+                new_y = 0.0
+            self.points[selected_point] = [new_x, new_y]
             self.update_graphics()
 
         def delete_point():
@@ -727,8 +676,57 @@ class Geometry(tk.Toplevel):
                                            width=22, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID)
         button_update_graphics.place(relx=0.025, rely=0.885)
 
+        ##################################################
+        def check_geometry():
+            """
+            Checks compatibility of geometry
+            :return:
+            """
+            # todo: more checks...
+            comp = True
+            for polygon in self.polygons.values():
+                nodes_len = len(polygon['coordinates'])
+                if nodes_len < 3:
+                    comp = False
+
+
+
+            return comp
+
+        def check_geometry_error_window():
+            """
+            error window if geometry is not accepted
+            :return:
+            """
+
+            info_window = tk.Toplevel(self)
+            info_window.title("GEOMETRY ERROR")
+            info_window.configure(bg='#FFB5B5')
+            info_window.geometry(f"300x180")
+            info_window.resizable(False, False)
+            info_str = f"Single points must be inside positive polygons\n" \
+                       f"Positive Polygons must share at least two nodes\n" \
+                       f"All vertices of negative Polygons\n" \
+                       f"must be inside positive Polygons\n" \
+                       f"Polygons must have at least 3 vertices"
+            info_label = tk.Label(info_window, text="GEOMETRY NOT COMPATIBLE:\n", font=("Arial Black", 12), bg='#FFB5B5', fg='#470000')
+            info_label.place(relx=0.025, rely=0.1)
+            info_label = tk.Label(info_window, text=info_str, font=("Arial", 10), bg='#FFB5B5', fg='#470000')
+            info_label.place(relx=0.025, rely=0.3)
+
+        def check_and_accept():
+            """
+            Checks geometry and if compatible returns value to main gui, else error windo
+            :return:
+            """
+
+            if check_geometry():
+                self.return_geometry()
+            else:
+                check_geometry_error_window()
+
         # Accept Geometry button - returns value for geometry input and destroys window
-        button_accept = tk.Button(self, text="ACCEPT GEOMETRY", command=self.return_geometry,
+        button_accept = tk.Button(self, text="ACCEPT GEOMETRY", command=check_and_accept,
                                   width=16, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_BIG_BOLD)
         button_accept.place(relx=0.025, rely=0.935)
 
@@ -741,10 +739,13 @@ class Geometry(tk.Toplevel):
             when button DEBUG is pressed
             :return:
             """
+            geometry_input = {'polygons': self.polygons, 'points': self.points, 'units': self.units,
+                                   'other': self.other}
             print("\n\n")
             print(f"self.polygons: {self.polygons}")
             print(f"self.polygon_nodes: {self.polygon_nodes}")
             print(f"self.points: {self.points}")
+            print(f"self.geometry_input: {geometry_input}")
 
         button_debug = tk.Button(self, text="DEBUG", command=debug,
                                  width=5, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
@@ -757,6 +758,8 @@ class Geometry(tk.Toplevel):
         :return:
         """
 
+        selected_polygon = self.polygon_selected
+
         # delete all
         all_canvas_elements = self.canvas.find_all()
         for elem in all_canvas_elements:
@@ -767,9 +770,12 @@ class Geometry(tk.Toplevel):
 
         # draw polygons
         for polygon_nbr, polygon_data in self.polygons.items():
-
-            color_code_plus = '#7D4C4C'
-            color_code_minus = '#222638'
+            if selected_polygon == polygon_nbr:
+                color_code_plus = '#9C4747'
+                color_code_minus = '#283258'
+            else:
+                color_code_plus = '#7D4C4C'
+                color_code_minus = '#222638'
             color_code_plus_node = '#5F0F0F'
             color_code_minus_node = '#3A4571'
 
@@ -810,11 +816,12 @@ class Geometry(tk.Toplevel):
                                         outline='#1F1F1F', width=1)
                 self.canvas.create_text(node[0], node[1] - 10, text=text, fill='#1F1F1F', font=("Helvetica", 7))
 
-    def save_geometry(self):
-        ...
 
-    def load_geometry(self):
-        ...
+
+
+
+
+
 
     def return_geometry(self):
         """
@@ -823,12 +830,13 @@ class Geometry(tk.Toplevel):
         """
         # todo: check if geometry is valid e.g. polgones have to be connects,
         #  only one polygon can be subtracted, points have to be in valid area, etc.
-        value = 999
-        self.callback_geometry(value)
+        self.geometry_input = {'polygons': self.polygons, 'points': self.points, 'units': self.units, 'other': None}
+
+        self.callback_geometry(self.geometry_input)
         self.destroy()  # closes top window
 
 
 if __name__ == '__main__':
-    # gui = GUI()  # Todo - Develop: For testing main gui
-    gui = Geometry(lambda x: x)  # Todo - Develop: For testing Geometry gui, argument simulates callback
+    gui = GUI()  # Todo - Develop: For testing main gui
+    #gui = Geometry(lambda x: x)  # Todo - Develop: For testing Geometry gui, argument simulates callback
     gui.mainloop()
