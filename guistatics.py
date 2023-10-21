@@ -84,6 +84,23 @@ class GUIStatics:
 
         return node_new_x, node_new_y
 
+    @staticmethod
+    def add_canvas_border(canvas: tk.Canvas):
+        """
+        Creates just the red border for the canvas
+        :param canvas:
+        :return:
+        """
+        width = GUIStatics.CANVAS_SIZE_X
+        height = GUIStatics.CANVAS_SIZE_Y
+
+        canvas.create_line(1, 1, width, 1, fill=GUIStatics.CANVAS_BORDER_COLOR, width=4)
+        canvas.create_line(1, 0, 1, height, fill=GUIStatics.CANVAS_BORDER_COLOR, width=6)
+        canvas.create_line(0, height + 1, width, height + 1,
+                           fill=GUIStatics.CANVAS_BORDER_COLOR, width=2)
+        canvas.create_line(width + 1, 0, width + 1, height,
+                           fill=GUIStatics.CANVAS_BORDER_COLOR, width=2)
+
     # shared method
     @staticmethod
     def add_canvas_static_elements(canvas: tk.Canvas):

@@ -44,6 +44,8 @@ class CreateBCParams:
         self.geometry_input = geometry_input  # Input from class Geometry
         self.polygons = geometry_input["polygons"]  # Polygons from input
         self.points = geometry_input["points"]  # points from input
+        if self.points == {'None'}:  # input from gui, reformat for this class
+            self.points = {}
         self.units = geometry_input["units"]  # units, needed for plotting
         self.other = geometry_input["other"]  # Other stuff, may be needed in future
         self.nodes = None  # All unique nodes
@@ -62,7 +64,6 @@ class CreateBCParams:
         self.create_regions()  # erst region kreiren dami später evtl auch überschneidungen berücichtigt werden können
         self.create_boundaries()
         self.create_nodes()
-        self.debug()
         check_compatibility = self.check_uniqueness()
         if not check_compatibility:
             raise CompatibilityError("COMPATIBILITY ERROR FOR NODES/BOUNDARIES: NOT UNIQUE!")
@@ -186,8 +187,9 @@ if __name__ == '__main__':
         "other": "None"}
     test_input_2 = {
         "polygons": {"0": {"coordinates": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], "area_neg_pos": "Positive"}},
-        "points": {"None": "None"}, "units": "m", "other": "None"}
+        "points": {"None"}, "units": "m", "other": "None"}
 
     test_input = test_input_1
     createbcs = CreateBCParams(test_input)
     createbcs.main()
+    createbcs.debug()
