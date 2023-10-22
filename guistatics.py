@@ -28,7 +28,7 @@ class GUIStatics:
     CANVAS_BG = '#D2D2D2'  # Light gray
     CANVAS_COORD_COLOR = '#262626'  # Dark gray
     WINDOWS_SMALL_BG_COLOR = '#D2D2D2'  # Light gray
-
+    CANVAS_HIGHLIGHT_ELEMENT = '#5F1010'
     # Fonts
     STANDARD_FONT_BUTTON_SMALLER = ('Consolas', 8)
     STANDARD_FONT_BUTTON_SMALL = ('Consolas', 9)
