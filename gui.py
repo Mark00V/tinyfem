@@ -210,16 +210,16 @@ class GUI(tk.Tk):
 
         # Debug
         # Reformat Boundaryconditions via CreateBCParams todo: THIS IS ONLY NEEDED FOR DEVELOPMENT
-        button_define_geometry = tk.Button(self, text="FORM BCS", command=self.create_BC_params, width=10,
+        button_create_bc = tk.Button(self, text="FORM BCS", command=self.create_BC_params, width=10,
                                            height=1, font=('Arial', 6))
-        button_define_geometry.place(relx=0.01, rely=0.01)
-        button_define_geometry = tk.Button(self, text="DEBUG", command=self.debug, width=10,
+        button_create_bc.place(relx=0.01, rely=0.01)
+        button_debug = tk.Button(self, text="DEBUG", command=self.debug, width=10,
                                            height=1, font=('Arial', 6))
-        button_define_geometry.place(relx=0.07, rely=0.01)
+        button_debug.place(relx=0.07, rely=0.01)
 
         # placeholder for text FOR DEVELOPING
-        self.text_label = tk.Label(self, text="Init")
-        self.text_label.place(relx=0.02, rely=0.965)
+        #self.text_label = tk.Label(self, text="Init")
+        #self.text_label.place(relx=0.02, rely=0.965)
 
         # Developing
         self.animation = False  # todo delete this
@@ -230,17 +230,38 @@ class GUI(tk.Tk):
     def window_assign_boundary_conditions(self):
 
         def set_boundary_value():
-            ...
+            boundary_nbr = dropdown_boundary_select_var.get().split('B-')[-1]
+            boundary_type = dropdown_boundary_type_var.get()
+            if boundary_type == 'None' or boundary_nbr == 'None':
+                return None
+            try:
+                value = float(entry_boundary_value.get())
+            except ValueError:
+                value = 0.0
+            self.boundary_parameters[boundary_nbr]['bc']['type'] = boundary_type
+            self.boundary_parameters[boundary_nbr]['bc']['value'] = value
 
         def set_node_value():
-            ...
+            node_number = dropdown_node_select_var.get().split('N-')[-1]
+            try:
+                value = entry_node_value.get()
+            except ValueError:
+                value = 0.0
+            self.node_parameters[node_number]['bc']['value'] = value
 
         def trace_boundary(*args):
+
             last_highlight_element = self.canvas.find_withtag('highlight_element')
             if last_highlight_element:
                 self.canvas.delete(last_highlight_element)
-            boundary_number = dropdown_boundary_select_var.get().split('B-')[-1]
-            nodes = self.boundary_parameters[boundary_number]['coordinates']
+            boundary_nbr = dropdown_boundary_select_var.get().split('B-')[-1]
+            value_set = self.boundary_parameters[boundary_nbr]['bc']['value']
+            type_set = self.boundary_parameters[boundary_nbr]['bc']['type']
+
+            entry_boundary_value.set(str(value_set))
+            if type_set:
+                dropdown_boundary_type_var.set(type_set)
+            nodes = self.boundary_parameters[boundary_nbr]['coordinates']
             self.highlight_element = self.canvas.create_line(GUIStatics.transform_node_to_canvas(nodes[0]),
                                                      GUIStatics.transform_node_to_canvas(nodes[1]),
                                                      width=6, fill=GUIStatics.CANVAS_HIGHLIGHT_ELEMENT, dash=(1, 1), tags='highlight_element')
@@ -280,7 +301,7 @@ class GUI(tk.Tk):
 
         boundary_types = ['Dirichlet', 'Neumann']
         dropdown_boundary_type_var = tk.StringVar()
-        dropdown_boundary_type_var.set('None')
+        dropdown_boundary_type_var.set(boundary_types[0])
         dropdown_boundary_type = tk.OptionMenu(window_bcs, dropdown_boundary_type_var, *boundary_types)
         dropdown_boundary_type.config(font=GUIStatics.STANDARD_FONT_SMALL, width=8, height=1)
         dropdown_boundary_type.place(relx=widgets_x_start + 0.48, rely=0.18)
@@ -288,7 +309,7 @@ class GUI(tk.Tk):
         tk.Label(window_bcs, text="Value:", font=GUIStatics.STANDARD_FONT_SMALL)\
             .place(relx=widgets_x_start + 0.025, rely=0.27)
         entry_boundary_value = tk.StringVar()
-        entry_boundary_value.set('0')
+        entry_boundary_value.set('None')
         entry_boundary_value_field = tk.Entry(window_bcs, textvariable=entry_boundary_value,
                                               font=GUIStatics.STANDARD_FONT_SMALL, width=8)
         entry_boundary_value_field.place(relx=widgets_x_start + 0.025 + 0.15, rely=0.27)
@@ -315,22 +336,54 @@ class GUI(tk.Tk):
             tk.Label(window_bcs, text="Value:", font=GUIStatics.STANDARD_FONT_SMALL) \
                 .place(relx=widgets_x_start + 0.025, rely=0.635)
             entry_node_value = tk.StringVar()
-            entry_node_value.set('0')
-            entry_node_value_field = tk.Entry(window_bcs, textvariable=entry_boundary_value,
+            entry_node_value.set('None')
+            entry_node_value_field = tk.Entry(window_bcs, textvariable=entry_node_value,
                                                   font=GUIStatics.STANDARD_FONT_SMALL, width=8)
             entry_node_value_field.place(relx=widgets_x_start + 0.025 + 0.15, rely=0.635)
-            entry_node_value_field = tk.Button(window_bcs, text="SET VALUE", command=set_boundary_value,
+            entry_node_value_set = tk.Button(window_bcs, text="SET VALUE", command=set_node_value,
                                                   width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
-            entry_node_value_field.place(relx=widgets_x_start + 0.38, rely=0.63)
+            entry_node_value_set.place(relx=widgets_x_start + 0.38, rely=0.63)
+
+        def accept_bcs():
+            """
+
+            :return:
+            """
+            last_highlight_element = self.canvas.find_withtag('highlight_element')
+            if last_highlight_element:
+                self.canvas.delete(last_highlight_element)
+
+            self.text_information_str += '\n\nBoundary Conditions:\n'
+            for boundary_nbr in self.boundary_parameters.keys():
+                boundary_value = self.boundary_parameters[boundary_nbr]['bc']['value']
+                boundary_type = self.boundary_parameters[boundary_nbr]['bc']['type']
+                boundary_type_dict = {'Dirichlet': 'DC', 'Neumann': 'NM'}
+                if boundary_value:
+                    self.text_information_str += f"B-{boundary_nbr}: {boundary_value},{boundary_type_dict[boundary_type]}; | "
+
+            for node_nbr in self.node_parameters.keys():
+                node_value = self.node_parameters[node_nbr]['bc']['value']
+                node_type = self.node_parameters[node_nbr]['bc']['type']
+
+                if node_value:
+                    self.text_information_str += f"N-{node_nbr}: {node_value}; | "
+
+            GUIStatics.update_text_field(self.text_information, self.text_information_str)
+            window_bcs.destroy()  # closes top window
+
+
+        button_accept = tk.Button(window_bcs, text="ACCEPT BCs", command=accept_bcs,
+                                          width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
+        button_accept.place(relx=widgets_x_start + 0.05, rely=0.895)
 
     def create_BC_params(self):
         """
         reformats the geometry for boundary and material parameters assignment via class CreateBCParams
         :return:
         """
-
-        create_params = CreateBCParams(self.geometry_input)
-        regions, boundaries, nodes = create_params.main()
+        if self.geometry_input:
+            create_params = CreateBCParams(self.geometry_input)
+            regions, boundaries, nodes = create_params.main()
 
     def define_geometry(self):
         """
@@ -357,7 +410,7 @@ class GUI(tk.Tk):
         self.geometry_input = geometry
 
         geometry_input_str = str(geometry)  # todo, for testing
-        self.text_label.config(text=geometry_input_str, font=("Helvetica", 6))  # todo, for testing
+        #self.text_label.config(text=geometry_input_str, font=("Helvetica", 6))  # todo, for testing
 
         format_for_params = CreateBCParams(self.geometry_input)
         self.regions, self.boundaries, self.nodes = format_for_params.main()
@@ -486,9 +539,21 @@ class GUI(tk.Tk):
         print(f"self.boundaries = {self.boundaries}")
         print(f"self.nodes = {self.nodes}")
         print(f"self.equation = {self.equation}")
+        print(f"\nself.region_parameters = {self.region_parameters}")
+        print(f"self.boundary_parameters = {self.boundary_parameters}")
+        print(f"self.node_parameters = {self.node_parameters}")
+        print(f"self.calculation_parameters = {self.calculation_parameters}")
 
 
 if __name__ == '__main__':
     gui = GUI()  # Todo - Develop: For testing main gui
     # gui = Geometry(lambda x: x)  # Todo - Develop: For testing Geometry gui, argument simulates callback
     gui.mainloop()
+
+
+
+# structure of boundary conditions variables
+# self.region_parameters = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)], 'area_neg_pos': 'Positive', 'material': {'k': 0, 'c': 0, 'rho': 0}}, '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive', 'material': {'k': 0, 'c': 0, 'rho': 0}}, '2': {'coordinates': [(-1.0, 0.0), (0.0, 0.0), (0.0, 0.75), (-1.0, 0.5)], 'area_neg_pos': 'Negative', 'material': {'k': 0, 'c': 0, 'rho': 0}}}
+# self.boundary_parameters = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5)], 'bc': {'type': None, 'value': None}}, '1': {'coordinates': [(1.0, -2.5), (2.5, 1.0)], 'bc': {'type': None, 'value': None}}, '2': {'coordinates': [(2.5, 1.0), (-2.5, 1.0)], 'bc': {'type': None, 'value': None}}, '3': {'coordinates': [(-2.5, 1.0), (-4.2, -1.5)], 'bc': {'type': None, 'value': None}}, '4': {'coordinates': [(-4.2, -1.5), (-4.0, -3.0)], 'bc': {'type': None, 'value': None}}, '5': {'coordinates': [(2.5, 1.0), (0.0, 3.0)], 'bc': {'type': None, 'value': None}}, '6': {'coordinates': [(0.0, 3.0), (-2.5, 1.0)], 'bc': {'type': None, 'value': None}}, '7': {'coordinates': [(-1.0, 0.0), (0.0, 0.0)], 'bc': {'type': None, 'value': None}}, '8': {'coordinates': [(0.0, 0.0), (0.0, 0.75)], 'bc': {'type': None, 'value': None}}, '9': {'coordinates': [(0.0, 0.75), (-1.0, 0.5)], 'bc': {'type': None, 'value': None}}, '10': {'coordinates': [(-1.0, 0.5), (-1.0, 0.0)], 'bc': {'type': None, 'value': None}}}
+# self.node_parameters = {'0': {'coordinates': (-3.0, -2.0), 'bc': {'type': None, 'value': None}}, '1': {'coordinates': (0.0, 1.5), 'bc': {'type': None, 'value': None}}, '2': {'coordinates': (1.0, -1.0), 'bc': {'type': None, 'value': None}}, '3': {'coordinates': (-4.0, -3.0), 'bc': {'type': None, 'value': None}}, '4': {'coordinates': (1.0, -2.5), 'bc': {'type': None, 'value': None}}, '5': {'coordinates': (2.5, 1.0), 'bc': {'type': None, 'value': None}}, '6': {'coordinates': (-2.5, 1.0), 'bc': {'type': None, 'value': None}}, '7': {'coordinates': (-4.2, -1.5), 'bc': {'type': None, 'value': None}}, '8': {'coordinates': (0.0, 3.0), 'bc': {'type': None, 'value': None}}, '9': {'coordinates': (-1.0, 0.0), 'bc': {'type': None, 'value': None}}, '10': {'coordinates': (0.0, 0.0), 'bc': {'type': None, 'value': None}}, '11': {'coordinates': (0.0, 0.75), 'bc': {'type': None, 'value': None}}, '12': {'coordinates': (-1.0, 0.5), 'bc': {'type': None, 'value': None}}}
+# self.calculation_parameters = {'mesh_density': None, 'freq': None}
