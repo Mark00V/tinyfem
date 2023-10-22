@@ -34,6 +34,8 @@ class GUI(tk.Tk):
         self.regions = None
         self.boundaries = None
         self.nodes = None
+        # definitions for setting BCs, Mats etc.
+        self.equation = 'HE'  # HE for heat equation, HH for hemlholtz equation
         # for development
         self.regions = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
                              'area_neg_pos': 'Positive'},
@@ -122,36 +124,122 @@ class GUI(tk.Tk):
 
         ##################################################
         # Buttons
+        def assign_BCs():
+            self.window_assign_boundary_conditions()
+
+        def assign_materials():
+            ...
+
+        def assign_calc_params():
+            ...
+
+        def create_mesh():
+            ...
+
+        def solve_system():
+            ...
+
         # Button define Geometry
+        tk.Frame(self, height=2, width=230, bg=GUIStatics.CANVAS_BORDER_COLOR)\
+            .place(relx=widgets_x_start, rely=0.08)
         button_define_geometry = tk.Button(self, text="GEOMETRY", command=self.define_geometry, width=12,
                                            font=GUIStatics.STANDARD_FONT_BUTTON_BIG_BOLD, height=1)
-        button_define_geometry.place(relx=0.025, rely=0.05)
+        button_define_geometry.place(relx=widgets_x_start, rely=0.1)
 
+
+        # FEM Parameters
+        GUIStatics.create_divider(self, widgets_x_start, 0.17, 230)
+        tk.Label(self, text="FEM PARAMETERS", font=GUIStatics.STANDARD_FONT_MID_BOLD)\
+            .place(relx=widgets_x_start, rely=0.175)
+
+        # Dropdown select equation
+        tk.Label(self, text="Equation: ", font=GUIStatics.STANDARD_FONT_MID)\
+            .place(relx=widgets_x_start, rely=0.22)
+        equations = ['Heat Equation', 'Helmholtz Equation']
+        var_equations = tk.StringVar()
+        var_equations.set(equations[0])  # default value m
+        dropdown_equation_select = tk.OptionMenu(self, var_equations, *equations)
+        dropdown_equation_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=15, height=1)
+        dropdown_equation_select.place(relx=widgets_x_start + 0.065, rely=0.215)
+
+        # Button Assign Boundary Conditions /Material Parameters / Calculation Parameters
+        self.button_define_bcs = tk.Button(self, text="BOUNDARY CONDITIONS", command=assign_BCs, width=25,
+                                            font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1)
+        self.button_define_bcs.place(relx=widgets_x_start, rely=0.27)
+        self.button_define_materials = tk.Button(self, text="MATERIAL PARAMETERS", command=assign_materials, width=25,
+                                            font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1)
+        self.button_define_materials.place(relx=widgets_x_start, rely=0.27 + 0.045)
+        self.button_define_calc_params = tk.Button(self, text="CALCULATION PARAMETERS", command=assign_calc_params, width=25,
+                                            font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1)
+        self.button_define_calc_params.place(relx=widgets_x_start, rely=0.27 + 0.09)
+        self.button_define_bcs.config(state="disabled")
+        self.button_define_materials.config(state="disabled")
+        self.button_define_calc_params.config(state="disabled")
+
+        # buttons create mesh, solve system
+        GUIStatics.create_divider(self, widgets_x_start, 0.41, 230)
+        self.button_create_mesh = tk.Button(self, text="CREATE\nMESH", command=create_mesh, width=10,
+                                            font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD, height=2)
+        self.button_create_mesh.place(relx=widgets_x_start, rely=0.41 + 0.012)
+        self.button_solve_system = tk.Button(self, text="SOLVE", command=solve_system, width=10,
+                                            font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD, height=2)
+        self.button_solve_system.place(relx=widgets_x_start + 0.1075, rely=0.41 + 0.012)
+        self.button_create_mesh.config(state="disabled")
+        self.button_solve_system.config(state="disabled")
+
+        # info field
+        self.text_information_str = 'None'
+        GUIStatics.create_divider(self, widgets_x_start, 0.5, 230)
+        tk.Label(self, text="Information: ", font=GUIStatics.STANDARD_FONT_MID_BOLD)\
+            .place(relx=widgets_x_start, rely=0.505)
+        self.text_information = tk.Text(self, height=28, width=44, wrap=tk.WORD,
+                                     font=GUIStatics.STANDARD_FONT_SMALLEST, bg='light gray', fg='black')
+        self.text_information.place(relx=widgets_x_start + 0.005, rely=0.54)
+        self.text_information.insert(tk.END, self.text_information_str)
+        self.text_information.config(state='disabled')
+
+        # Debug
         # Reformat Boundaryconditions via CreateBCParams todo: THIS IS ONLY NEEDED FOR DEVELOPMENT
-        button_define_geometry = tk.Button(self, text="Format BCs", command=self.create_BC_params, width=20,
-                                           height=1)
-        button_define_geometry.place(relx=0.025, rely=0.25)
+        button_define_geometry = tk.Button(self, text="FORM BCS", command=self.create_BC_params, width=10,
+                                           height=1, font=('Arial', 6))
+        button_define_geometry.place(relx=0.01, rely=0.01)
+        button_define_geometry = tk.Button(self, text="DEBUG", command=self.debug, width=10,
+                                           height=1, font=('Arial', 6))
+        button_define_geometry.place(relx=0.07, rely=0.01)
 
         # placeholder for text FOR DEVELOPING
         self.text_label = tk.Label(self, text="Init")
         self.text_label.place(relx=0.02, rely=0.965)
 
         # Developing
-        #self.animation = False  # todo delete this
-        #self.draw_geometry_from_definebcs()  # todo delete this
+        self.animation = False  # todo delete this
+        self.draw_geometry_from_definebcs()  # todo delete this
         ##################################################
+
+    def window_assign_boundary_conditions(self):
+        window_bcs = tk.Toplevel(self)
+        window_bcs.title('ASSIGN SYSTEM PARAMETERS')
+        window_bcs.geometry(f"{350}x{500}")
+        window_bcs.resizable(False, False)
+        window_bcs.config(bg=GUIStatics.WINDOWS_SMALL_BG_COLOR)
+
+        widgets_x_start = 0.01
+        GUIStatics.create_divider(window_bcs, widgets_x_start, 0.05, 335)
+
+
+
+
+
+
 
     def create_BC_params(self):
         """
         reformats the geometry for boundary and material parameters assignment via class CreateBCParams
         :return:
         """
-        # todo
+
         create_params = CreateBCParams(self.geometry_input)
         regions, boundaries, nodes = create_params.main()
-        print(regions)
-        print(boundaries)
-        print(nodes)
 
     def define_geometry(self):
         """
@@ -184,6 +272,7 @@ class GUI(tk.Tk):
         self.regions, self.boundaries, self.nodes = format_for_params.main()
         self.draw_geometry_from_definebcs()
 
+
     def draw_geometry_from_definebcs(self):
         """
         draws the formated geometry (boundaries, vertices, regions from class  CreateBCParams
@@ -196,6 +285,21 @@ class GUI(tk.Tk):
         for elem in all_canvas_elements:
             self.canvas.delete(elem)
         GUIStatics.add_canvas_static_elements(self.canvas)
+
+        # enable disabled buttons for bcs, materials, calc parametsr
+        self.button_define_bcs.config(state="normal")
+        self.button_define_materials.config(state="normal")
+        self.button_define_calc_params.config(state="normal")
+
+        # update information field
+        text_regions = [f"{region_nbr}: {values['coordinates']}, ({'+' if values['area_neg_pos'] == 'Positive' else '-'})\n"
+                   for region_nbr, values in self.regions.items()]
+        text_boundaries = [f"{bound_nbr}: {values} | " for bound_nbr, values in self.boundaries.items()]
+        text_nodes = [f"{node_nbr}: {values} | " for node_nbr, values in self.nodes.items()]
+        self.text_information_str = f"Regions:\n" + ''.join(text_regions) \
+                                    + '\nBoundaries:\n' + ''.join(text_boundaries) \
+                                    + '\n\nNodes:\n' + ''.join(text_nodes)
+        GUIStatics.update_text_field(self.text_information, self.text_information_str)
 
         # draw legend and stats
         nbr_of_nodes = len(self.nodes.keys())
@@ -254,7 +358,17 @@ class GUI(tk.Tk):
                                     outline='#1F1F1F', width=2, dash=(1, 1))
             self.canvas.create_text(node[0] - 10, node[1] - 10, text=text, fill='#14380A', font=GUIStatics.STANDARD_FONT_SMALL)
 
-
+    def debug(self):
+        """
+        for debugging
+        :return:
+        """
+        print("\n\n\n------------------DEBUG--------------------")
+        print(f"self.geometry_input: {self.geometry_input}")
+        print(f"self.regions: {self.regions}")
+        print(f"self.boundaries = {self.boundaries}")
+        print(f"self.nodes = {self.nodes}")
+        print(f"self.equation = {self.equation}")
 
 
 

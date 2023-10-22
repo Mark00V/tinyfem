@@ -27,6 +27,7 @@ class GUIStatics:
     CANVAS_BORDER_COLOR = '#5F1010'  # Rosewood
     CANVAS_BG = '#D2D2D2'  # Light gray
     CANVAS_COORD_COLOR = '#262626'  # Dark gray
+    WINDOWS_SMALL_BG_COLOR = '#D2D2D2'  # Light gray
 
     # Fonts
     STANDARD_FONT_BUTTON_SMALLER = ('Consolas', 8)
@@ -34,12 +35,20 @@ class GUIStatics:
     STANDARD_FONT_BUTTON_MID = ('Consolas', 10)
     STANDARD_FONT_BUTTON_BIG = ('Consolas', 11)
     STANDARD_FONT_BUTTON_BIG_BOLD = ('Arial Black', 11)
+    STANDARD_FONT_BUTTON_MID_BOLD = ('Arial Black', 10)
     STANDARD_FONT_MID = ('Arial', 10)
     STANDARD_FONT_MID_BOLD = ('Arial Black', 10)
     STANDARD_FONT_SMALL = ('Arial', 9)
     STANDARD_FONT_SMALLER = ('Arial', 8)
+    STANDARD_FONT_SMALLEST = ('Arial', 7)
     STANDARD_FONT_SMALL_BOLD = ('Arial Black', 9)
     SAVELOAD_FONT = ('Verdana', 10)
+
+    @staticmethod
+    def create_divider(window, x_pos: float, y_pos: float, length: int):
+        div = tk.Frame(window, height=2, width=length, bg=GUIStatics.CANVAS_BORDER_COLOR)\
+            .place(relx=x_pos, rely=y_pos)
+        return div
 
     @staticmethod
     def resort_keys(some_dict: dict) -> dict:
@@ -83,6 +92,13 @@ class GUIStatics:
         node_new_y = -node_y * scale_factor + GUIStatics.CANVAS_SIZE_Y / 2
 
         return node_new_x, node_new_y
+
+    @staticmethod
+    def update_text_field(widget: tk.Text, new_text):
+        widget.config(state='normal')
+        widget.delete('0.0', 'end')
+        widget.insert(tk.END, new_text)
+        widget.config(state='disabled')
 
     @staticmethod
     def add_canvas_border(canvas: tk.Canvas):
