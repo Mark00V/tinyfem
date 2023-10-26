@@ -1,3 +1,12 @@
+"""
+
+TODOs and known bugs:
+ - set region parameters
+ - update info field if new boundary condition, point condition set
+ -
+"""
+
+
 import tkinter as tk
 import math
 from typing import Callable, Any
@@ -138,10 +147,10 @@ class GUI(tk.Tk):
             self.window_assign_boundary_conditions()
 
         def assign_materials():
-            ...
+            self.window_assign_region_conditions()
 
         def assign_calc_params():
-            ...
+            self.window_assign_calculation_params()
 
         def create_mesh():
             ...
@@ -227,7 +236,90 @@ class GUI(tk.Tk):
         self.draw_geometry_from_definebcs()  # todo delete this
         ##################################################
 
+
+    def window_assign_calculation_params(self):
+        """
+        opens top window to assign calculation parameters
+        """
+
+        window_bcs = tk.Toplevel(self)
+        window_bcs.title('ASSIGN CALCULATION PARAMETERS')
+        window_bcs.geometry(f"{350}x{500}")
+        window_bcs.resizable(False, False)
+
+        widgets_x_start = 0.01
+        GUIStatics.create_divider(window_bcs, widgets_x_start, 0.05, 335)
+        tk.Label(window_bcs, text="Calculation Parameters", font=GUIStatics.STANDARD_FONT_MID_BOLD) \
+            .place(relx=widgets_x_start, rely=0.075)
+
+
+
+
+    def window_assign_region_conditions(self):
+        """
+        opens top window to assign region parameters (materials) to regions
+        """
+        def trace_region(*args):
+            ...
+
+        def set_region_values():
+            ...
+
+        window_bcs = tk.Toplevel(self)
+        window_bcs.title('ASSIGN MATERIALS PARAMETERS')
+        window_bcs.geometry(f"{350}x{500}")
+        window_bcs.resizable(False, False)
+
+        widgets_x_start = 0.01
+        GUIStatics.create_divider(window_bcs, widgets_x_start, 0.05, 335)
+        tk.Label(window_bcs, text="Materials", font=GUIStatics.STANDARD_FONT_MID_BOLD) \
+            .place(relx=widgets_x_start, rely=0.075)
+        tk.Label(window_bcs, text="Select Region", font=GUIStatics.STANDARD_FONT_MID) \
+            .place(relx=widgets_x_start + 0.025, rely=0.125)
+
+        regions = [f"R-{nbr}" for nbr in self.region_parameters.keys()]
+        dropdown_region_select_var = tk.StringVar()
+        dropdown_region_select_var.set('None')
+        dropdown_region_select = tk.OptionMenu(window_bcs, dropdown_region_select_var, *regions)
+        dropdown_region_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=8, height=1)
+        dropdown_region_select.place(relx=widgets_x_start + 0.025, rely=0.18)
+        dropdown_region_select_var.trace('w', trace_region)
+
+        tk.Label(window_bcs, text="Material Parameters:", font=GUIStatics.STANDARD_FONT_SMALL)\
+            .place(relx=widgets_x_start + 0.025, rely=0.27)
+
+
+        tk.Label(window_bcs, text="Heat conductivity k [W/mK]:", font=GUIStatics.STANDARD_FONT_SMALL)\
+            .place(relx=widgets_x_start + 0.025, rely=0.33)
+        entry_material_k_value = tk.StringVar()
+        entry_material_k_value.set('0')
+        entry_material_k_value_field = tk.Entry(window_bcs, textvariable=entry_material_k_value,
+                                              font=GUIStatics.STANDARD_FONT_SMALL, width=8)
+        entry_material_k_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.33)
+
+        tk.Label(window_bcs, text="Speed of sound [m/s]:", font=GUIStatics.STANDARD_FONT_SMALL)\
+            .place(relx=widgets_x_start + 0.025, rely=0.38)
+        entry_material_c_value = tk.StringVar()
+        entry_material_c_value.set('0')
+        entry_material_c_value_field = tk.Entry(window_bcs, textvariable=entry_material_c_value,
+                                              font=GUIStatics.STANDARD_FONT_SMALL, width=8)
+        entry_material_c_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.38)
+
+        tk.Label(window_bcs, text="Density [m/s]:", font=GUIStatics.STANDARD_FONT_SMALL)\
+            .place(relx=widgets_x_start + 0.025, rely=0.43)
+        entry_material_rho_value = tk.StringVar()
+        entry_material_rho_value.set('0')
+        entry_material_rho_value_field = tk.Entry(window_bcs, textvariable=entry_material_rho_value,
+                                              font=GUIStatics.STANDARD_FONT_SMALL, width=8)
+        entry_material_rho_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.43)
+
+        entry_materials_values_field = tk.Button(window_bcs, text="SET VALUE", command=set_region_values,
+                                          width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
+        entry_materials_values_field.place(relx=widgets_x_start + 0.025, rely=0.50)
     def window_assign_boundary_conditions(self):
+        """
+        Opens top window to assign boundary conditions
+        """
 
         def set_boundary_value():
             boundary_nbr = dropdown_boundary_select_var.get().split('B-')[-1]
