@@ -259,11 +259,46 @@ class GUI(tk.Tk):
         """
         opens top window to assign region parameters (materials) to regions
         """
+
         def trace_region(*args):
-            ...
+            """
+            trace variable dropdown_region_select_var
+            :param args:
+            :return:
+            """
+            region_nbr = dropdown_region_select_var.get().split('R-')[-1]
+            value_set_k = self.region_parameters[region_nbr]['material']['k']
+            value_set_c = self.region_parameters[region_nbr]['material']['c']
+            value_set_rho = self.region_parameters[region_nbr]['material']['rho']
+            entry_material_k_value.set(str(value_set_k))
+            entry_material_c_value.set(str(value_set_c))
+            entry_material_rho_value.set(str(value_set_rho))
 
         def set_region_values():
-            ...
+            """
+            sets the values for the regions for relevant materials
+            :return:
+            """
+            region_nbr = dropdown_region_select_var.get().split('R-')[-1]
+            entry_k = entry_material_k_value.get()
+            entry_c = entry_material_c_value.get()
+            entry_rho = entry_material_rho_value.get()
+            try:
+                entry_k = float(entry_k)
+            except ValueError:
+                entry_k = 0.0
+            try:
+                entry_c = float(entry_c)
+            except ValueError:
+                entry_c = 0.0
+            try:
+                entry_rho = float(entry_rho)
+            except ValueError:
+                entry_rho = 0.0
+            self.region_parameters[region_nbr]['material']['k'] = entry_k
+            self.region_parameters[region_nbr]['material']['c'] = entry_c
+            self.region_parameters[region_nbr]['material']['rho'] = entry_rho
+
 
         window_bcs = tk.Toplevel(self)
         window_bcs.title('ASSIGN MATERIALS PARAMETERS')
@@ -445,6 +480,7 @@ class GUI(tk.Tk):
             if last_highlight_element:
                 self.canvas.delete(last_highlight_element)
 
+            self.init_information_text_field()
             self.text_information_str += '\n\nBoundary Conditions:\n'
             for boundary_nbr in self.boundary_parameters.keys():
                 boundary_value = self.boundary_parameters[boundary_nbr]['bc']['value']
@@ -517,14 +553,7 @@ class GUI(tk.Tk):
         self.button_define_calc_params.config(state="normal")
 
         # update information field
-        text_regions = [
-            f"{region_nbr}: {values['coordinates']}, ({'+' if values['area_neg_pos'] == 'Positive' else '-'})\n"
-            for region_nbr, values in self.regions.items()]
-        text_boundaries = [f"{bound_nbr}: {values} | " for bound_nbr, values in self.boundaries.items()]
-        text_nodes = [f"{node_nbr}: {values} | " for node_nbr, values in self.nodes.items()]
-        self.text_information_str = f"Regions:\n" + ''.join(text_regions) \
-                                    + '\nBoundaries:\n' + ''.join(text_boundaries) \
-                                    + '\n\nNodes:\n' + ''.join(text_nodes)
+        self.init_information_text_field()
         GUIStatics.update_text_field(self.text_information, self.text_information_str)
 
         # initializes boundary parameters, materials and calculation
@@ -549,6 +578,20 @@ class GUI(tk.Tk):
         self.boundary_parameters = boundary_parameters
         self.node_parameters = node_parameters
         self.calculation_parameters = calculation_parameters
+
+    def init_information_text_field(self):
+        """
+        Initializes the information text field with the geometry provided
+        :return:
+        """
+        text_regions = [
+            f"{region_nbr}: {values['coordinates']}, ({'+' if values['area_neg_pos'] == 'Positive' else '-'})\n"
+            for region_nbr, values in self.regions.items()]
+        text_boundaries = [f"{bound_nbr}: {values} | " for bound_nbr, values in self.boundaries.items()]
+        text_nodes = [f"{node_nbr}: {values} | " for node_nbr, values in self.nodes.items()]
+        self.text_information_str = f"Regions:\n" + ''.join(text_regions) \
+                                    + '\nBoundaries:\n' + ''.join(text_boundaries) \
+                                    + '\n\nNodes:\n' + ''.join(text_nodes)
 
     def draw_geometry_from_definebcs(self):
         """
