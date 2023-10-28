@@ -1,11 +1,17 @@
 """
+Description:
+TODO
 
-TODOs and known bugs:
+TODO:
  - set region parameters
  - update info field if new boundary condition, point condition set
- -
-"""
+ - add window with small description for each module
+ - Docstrings and typehints
 
+TODO:
+ - Codeflow:
+
+"""
 
 import tkinter as tk
 import math
@@ -15,6 +21,7 @@ import json
 from guistatics import GUIStatics
 from definebcs import CreateBCParams
 from geometry import Geometry
+from meshgen import CreateMesh
 import random
 
 #################################################
@@ -26,9 +33,6 @@ VERSION_PATCH = 0
 
 
 #################################################
-
-
-# todo add window with small description for each module
 
 
 class GUI(tk.Tk):
@@ -54,6 +58,7 @@ class GUI(tk.Tk):
         self.calculation_parameters = None  # save calculation parameters, mesh density etc
         # some output for user
         self.text_information_str = ''
+        ##################################################
         # for development
         self.regions = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
                               'area_neg_pos': 'Positive'},
@@ -69,7 +74,8 @@ class GUI(tk.Tk):
         self.nodes = {'0': (-3.0, -2.0), '1': (0.0, 1.5), '2': (1.0, -1.0), '3': (-4.0, -3.0), '4': (1.0, -2.5),
                       '5': (2.5, 1.0), '6': (-2.5, 1.0), '7': (-4.2, -1.5), '8': (0.0, 3.0), '9': (-1.0, 0.0),
                       '10': (0.0, 0.0), '11': (0.0, 0.75), '12': (-1.0, 0.5)}
-
+        # for development
+        ##################################################
         super().__init__()
         # Start Main Window
         self.main_window()
@@ -129,8 +135,8 @@ class GUI(tk.Tk):
             else:
                 return None
 
-        width = GUIStatics.CANVAS_SIZE_X
-        height = GUIStatics.CANVAS_SIZE_Y
+        # width = GUIStatics.CANVAS_SIZE_X
+        # height = GUIStatics.CANVAS_SIZE_Y
         self.canvas = tk.Canvas(self, width=GUIStatics.CANVAS_SIZE_X, height=GUIStatics.CANVAS_SIZE_Y,
                                 bg=GUIStatics.CANVAS_BG)
         self.canvas.place(relx=canvas_x + 0.0075, rely=canvas_y)
@@ -153,7 +159,8 @@ class GUI(tk.Tk):
             self.window_assign_calculation_params()
 
         def create_mesh():
-            ...
+            mesh = CreateMesh(self.region_parameters, self.boundary_parameters,
+                              self.node_parameters, self.calculation_parameters)
 
         def solve_system():
             ...
@@ -171,6 +178,11 @@ class GUI(tk.Tk):
             .place(relx=widgets_x_start, rely=0.175)
 
         # Dropdown select equation
+        def trace_equation(*args):
+            equation_selected = var_equations.get()
+            equation_dict = {'Heat Equation': 'HE', 'Helmholtz Equation': 'HH'}
+            self.equation = equation_dict[equation_selected]
+
         tk.Label(self, text="Equation: ", font=GUIStatics.STANDARD_FONT_MID) \
             .place(relx=widgets_x_start, rely=0.22)
         equations = ['Heat Equation', 'Helmholtz Equation']
@@ -179,6 +191,7 @@ class GUI(tk.Tk):
         dropdown_equation_select = tk.OptionMenu(self, var_equations, *equations)
         dropdown_equation_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=15, height=1)
         dropdown_equation_select.place(relx=widgets_x_start + 0.065, rely=0.215)
+        var_equations.trace('w', trace_equation)
 
         # Button Assign Boundary Conditions /Material Parameters / Calculation Parameters
         self.button_define_bcs = tk.Button(self, text="BOUNDARY CONDITIONS", command=assign_BCs, width=25,
@@ -226,6 +239,8 @@ class GUI(tk.Tk):
                                            height=1, font=('Arial', 6))
         button_debug.place(relx=0.07, rely=0.01)
 
+        ##################################################
+        # Developing
         # placeholder for text FOR DEVELOPING
         #self.text_label = tk.Label(self, text="Init")
         #self.text_label.place(relx=0.02, rely=0.965)
@@ -234,7 +249,9 @@ class GUI(tk.Tk):
         self.animation = False  # todo delete this
         self.init_parameters()  # todo delete this
         self.draw_geometry_from_definebcs()  # todo delete this
+        # Developing
         ##################################################
+
 
 
     def window_assign_calculation_params(self):
@@ -242,16 +259,62 @@ class GUI(tk.Tk):
         opens top window to assign calculation parameters
         """
 
-        window_bcs = tk.Toplevel(self)
-        window_bcs.title('ASSIGN CALCULATION PARAMETERS')
-        window_bcs.geometry(f"{350}x{500}")
-        window_bcs.resizable(False, False)
+
+        def set_freq():
+            """
+
+            :return:
+            """
+            if self.equation == 'HH':
+                self.calculation_parameters['freq'] = entry_freq_var.get()
+
+        window_calc_params = tk.Toplevel(self)
+        window_calc_params.title('ASSIGN CALCULATION PARAMETERS')
+        window_calc_params.geometry(f"{350}x{500}")
+        window_calc_params.resizable(False, False)
 
         widgets_x_start = 0.01
-        GUIStatics.create_divider(window_bcs, widgets_x_start, 0.05, 335)
-        tk.Label(window_bcs, text="Calculation Parameters", font=GUIStatics.STANDARD_FONT_MID_BOLD) \
+        GUIStatics.create_divider(window_calc_params, widgets_x_start, 0.05, 335)
+        tk.Label(window_calc_params, text="Calculation Parameters", font=GUIStatics.STANDARD_FONT_MID_BOLD) \
             .place(relx=widgets_x_start, rely=0.075)
 
+        tk.Label(window_calc_params, text="Mesh Density:", font=GUIStatics.STANDARD_FONT_SMALL) \
+            .place(relx=widgets_x_start + 0.025, rely=0.16)
+
+        density_slider = tk.Scale(window_calc_params, from_=1, to=5, orient=tk.HORIZONTAL,
+                                       label="", font=GUIStatics.STANDARD_FONT_SMALL)
+        density_slider.place(relx=widgets_x_start + 0.325, rely=0.125)
+
+        if self.equation == 'HH':
+            GUIStatics.create_divider(window_calc_params, widgets_x_start, 0.3, 335)
+            tk.Label(window_calc_params, text="Frequency:", font=GUIStatics.STANDARD_FONT_SMALL) \
+                .place(relx=widgets_x_start + 0.025, rely=0.325)
+            entry_freq_var = tk.StringVar()
+            entry_freq_var.set('0')
+            entry_freq_field = tk.Entry(window_calc_params, textvariable=entry_freq_var,
+                                                  font=GUIStatics.STANDARD_FONT_SMALL, width=8)
+            entry_freq_field.place(relx=widgets_x_start + 0.025 + 0.3, rely=0.325)
+            button_freq_set = tk.Button(window_calc_params, text="SET VALUE", command=set_freq,
+                                                  width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
+            button_freq_set.place(relx=widgets_x_start + 0.6, rely=0.325)
+
+        def accept_calcparams():
+            """
+
+            :return:
+            """
+            self.calculation_parameters['mesh_density'] = density_slider.get()
+            self.init_information_text_field()
+            self.text_information_str += '\n\nCalculation Parameters:\n'
+            self.text_information_str += f"Mesh Density: {self.calculation_parameters['mesh_density']}\n"
+            if self.equation == 'HH':
+                self.text_information_str += f"Frequency: {self.calculation_parameters['freq']}\n"
+            GUIStatics.update_text_field(self.text_information, self.text_information_str)
+            window_calc_params.destroy()  # closes top window
+
+        button_accept = tk.Button(window_calc_params, text="ACCEPT PARAMETERs", command=accept_calcparams,
+                                          width=19, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
+        button_accept.place(relx=widgets_x_start + 0.05, rely= 0.895)
 
 
 
@@ -267,12 +330,15 @@ class GUI(tk.Tk):
             :return:
             """
             region_nbr = dropdown_region_select_var.get().split('R-')[-1]
-            value_set_k = self.region_parameters[region_nbr]['material']['k']
-            value_set_c = self.region_parameters[region_nbr]['material']['c']
-            value_set_rho = self.region_parameters[region_nbr]['material']['rho']
-            entry_material_k_value.set(str(value_set_k))
-            entry_material_c_value.set(str(value_set_c))
-            entry_material_rho_value.set(str(value_set_rho))
+            if self.equation == 'HE':
+                value_set_k = self.region_parameters[region_nbr]['material']['k']
+                entry_material_k_value.set(str(value_set_k))
+            elif self.equation == 'HH':
+                value_set_c = self.region_parameters[region_nbr]['material']['c']
+                value_set_rho = self.region_parameters[region_nbr]['material']['rho']
+                entry_material_c_value.set(str(value_set_c))
+                entry_material_rho_value.set(str(value_set_rho))
+
 
         def set_region_values():
             """
@@ -280,30 +346,33 @@ class GUI(tk.Tk):
             :return:
             """
             region_nbr = dropdown_region_select_var.get().split('R-')[-1]
-            entry_k = entry_material_k_value.get()
-            entry_c = entry_material_c_value.get()
-            entry_rho = entry_material_rho_value.get()
-            try:
-                entry_k = float(entry_k)
-            except ValueError:
-                entry_k = 0.0
-            try:
-                entry_c = float(entry_c)
-            except ValueError:
-                entry_c = 0.0
-            try:
-                entry_rho = float(entry_rho)
-            except ValueError:
-                entry_rho = 0.0
-            self.region_parameters[region_nbr]['material']['k'] = entry_k
-            self.region_parameters[region_nbr]['material']['c'] = entry_c
-            self.region_parameters[region_nbr]['material']['rho'] = entry_rho
+            if self.equation == 'HE':
+                entry_k = entry_material_k_value.get()
+                try:
+                    entry_k = float(entry_k)
+                except ValueError:
+                    entry_k = 0.0
+                self.region_parameters[region_nbr]['material']['k'] = entry_k
+            elif self.equation == 'HH':
+                entry_c = entry_material_c_value.get()
+                entry_rho = entry_material_rho_value.get()
+                try:
+                    entry_c = float(entry_c)
+                except ValueError:
+                    entry_c = 0.0
+                try:
+                    entry_rho = float(entry_rho)
+                except ValueError:
+                    entry_rho = 0.0
+                self.region_parameters[region_nbr]['material']['c'] = entry_c
+                self.region_parameters[region_nbr]['material']['rho'] = entry_rho
 
 
         window_bcs = tk.Toplevel(self)
         window_bcs.title('ASSIGN MATERIALS PARAMETERS')
         window_bcs.geometry(f"{350}x{500}")
         window_bcs.resizable(False, False)
+
 
         widgets_x_start = 0.01
         GUIStatics.create_divider(window_bcs, widgets_x_start, 0.05, 335)
@@ -323,34 +392,62 @@ class GUI(tk.Tk):
         tk.Label(window_bcs, text="Material Parameters:", font=GUIStatics.STANDARD_FONT_SMALL)\
             .place(relx=widgets_x_start + 0.025, rely=0.27)
 
+        if self.equation == 'HE':
+            tk.Label(window_bcs, text="Heat conductivity k [W/mK]:", font=GUIStatics.STANDARD_FONT_SMALL)\
+                .place(relx=widgets_x_start + 0.025, rely=0.33)
+            entry_material_k_value = tk.StringVar()
+            entry_material_k_value.set('0')
+            entry_material_k_value_field = tk.Entry(window_bcs, textvariable=entry_material_k_value,
+                                                  font=GUIStatics.STANDARD_FONT_SMALL, width=8)
+            entry_material_k_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.33)
+            pos_y_set_button = 0.33
 
-        tk.Label(window_bcs, text="Heat conductivity k [W/mK]:", font=GUIStatics.STANDARD_FONT_SMALL)\
-            .place(relx=widgets_x_start + 0.025, rely=0.33)
-        entry_material_k_value = tk.StringVar()
-        entry_material_k_value.set('0')
-        entry_material_k_value_field = tk.Entry(window_bcs, textvariable=entry_material_k_value,
-                                              font=GUIStatics.STANDARD_FONT_SMALL, width=8)
-        entry_material_k_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.33)
+        elif self.equation == 'HH':
+            tk.Label(window_bcs, text="Speed of sound [m/s]:", font=GUIStatics.STANDARD_FONT_SMALL)\
+                .place(relx=widgets_x_start + 0.025, rely=0.33)
+            entry_material_c_value = tk.StringVar()
+            entry_material_c_value.set('0')
+            entry_material_c_value_field = tk.Entry(window_bcs, textvariable=entry_material_c_value,
+                                                  font=GUIStatics.STANDARD_FONT_SMALL, width=8)
+            entry_material_c_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.33)
 
-        tk.Label(window_bcs, text="Speed of sound [m/s]:", font=GUIStatics.STANDARD_FONT_SMALL)\
-            .place(relx=widgets_x_start + 0.025, rely=0.38)
-        entry_material_c_value = tk.StringVar()
-        entry_material_c_value.set('0')
-        entry_material_c_value_field = tk.Entry(window_bcs, textvariable=entry_material_c_value,
-                                              font=GUIStatics.STANDARD_FONT_SMALL, width=8)
-        entry_material_c_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.38)
-
-        tk.Label(window_bcs, text="Density [m/s]:", font=GUIStatics.STANDARD_FONT_SMALL)\
-            .place(relx=widgets_x_start + 0.025, rely=0.43)
-        entry_material_rho_value = tk.StringVar()
-        entry_material_rho_value.set('0')
-        entry_material_rho_value_field = tk.Entry(window_bcs, textvariable=entry_material_rho_value,
-                                              font=GUIStatics.STANDARD_FONT_SMALL, width=8)
-        entry_material_rho_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.43)
+            tk.Label(window_bcs, text="Density [m/s]:", font=GUIStatics.STANDARD_FONT_SMALL)\
+                .place(relx=widgets_x_start + 0.025, rely=0.38)
+            entry_material_rho_value = tk.StringVar()
+            entry_material_rho_value.set('0')
+            entry_material_rho_value_field = tk.Entry(window_bcs, textvariable=entry_material_rho_value,
+                                                  font=GUIStatics.STANDARD_FONT_SMALL, width=8)
+            entry_material_rho_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.38)
+            pos_y_set_button = 0.38
 
         entry_materials_values_field = tk.Button(window_bcs, text="SET VALUE", command=set_region_values,
                                           width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
-        entry_materials_values_field.place(relx=widgets_x_start + 0.025, rely=0.50)
+        entry_materials_values_field.place(relx=widgets_x_start + 0.025, rely=pos_y_set_button + 0.075)
+
+        def accept_regions():
+            """
+
+            :return:
+            """
+
+            self.init_information_text_field()
+            self.text_information_str += '\n\nRegion Parameters:\n'
+            for region_nbr in self.region_parameters.keys():
+                region_k = self.region_parameters[region_nbr]['material']['k']
+                region_c = self.region_parameters[region_nbr]['material']['c']
+                region_rho = self.region_parameters[region_nbr]['material']['rho']
+                if self.equation == 'HE':
+                    self.text_information_str += f"R-{region_nbr}: k={region_k}"
+                elif self.equation == 'HH':
+                    self.text_information_str += f"R-{region_nbr}: c={region_c}, rho={region_rho}; | "
+
+            GUIStatics.update_text_field(self.text_information, self.text_information_str)
+            window_bcs.destroy()  # closes top window
+
+        button_accept = tk.Button(window_bcs, text="ACCEPT REGIONs", command=accept_regions,
+                                          width=14, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
+        button_accept.place(relx=widgets_x_start + 0.05, rely= 0.895)
+
     def window_assign_boundary_conditions(self):
         """
         Opens top window to assign boundary conditions
@@ -486,7 +583,7 @@ class GUI(tk.Tk):
                 boundary_value = self.boundary_parameters[boundary_nbr]['bc']['value']
                 boundary_type = self.boundary_parameters[boundary_nbr]['bc']['type']
                 boundary_type_dict = {'Dirichlet': 'DC', 'Neumann': 'NM'}
-                if boundary_value:
+                if boundary_type:
                     self.text_information_str += f"B-{boundary_nbr}: {boundary_value},{boundary_type_dict[boundary_type]}; | "
 
             for node_nbr in self.node_parameters.keys():
@@ -687,7 +784,7 @@ if __name__ == '__main__':
 
 
 
-# structure of boundary conditions variables
+# structure of boundary conditions variables -> used to create mesh and fem calculation
 # self.region_parameters = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)], 'area_neg_pos': 'Positive', 'material': {'k': 0, 'c': 0, 'rho': 0}}, '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive', 'material': {'k': 0, 'c': 0, 'rho': 0}}, '2': {'coordinates': [(-1.0, 0.0), (0.0, 0.0), (0.0, 0.75), (-1.0, 0.5)], 'area_neg_pos': 'Negative', 'material': {'k': 0, 'c': 0, 'rho': 0}}}
 # self.boundary_parameters = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5)], 'bc': {'type': None, 'value': None}}, '1': {'coordinates': [(1.0, -2.5), (2.5, 1.0)], 'bc': {'type': None, 'value': None}}, '2': {'coordinates': [(2.5, 1.0), (-2.5, 1.0)], 'bc': {'type': None, 'value': None}}, '3': {'coordinates': [(-2.5, 1.0), (-4.2, -1.5)], 'bc': {'type': None, 'value': None}}, '4': {'coordinates': [(-4.2, -1.5), (-4.0, -3.0)], 'bc': {'type': None, 'value': None}}, '5': {'coordinates': [(2.5, 1.0), (0.0, 3.0)], 'bc': {'type': None, 'value': None}}, '6': {'coordinates': [(0.0, 3.0), (-2.5, 1.0)], 'bc': {'type': None, 'value': None}}, '7': {'coordinates': [(-1.0, 0.0), (0.0, 0.0)], 'bc': {'type': None, 'value': None}}, '8': {'coordinates': [(0.0, 0.0), (0.0, 0.75)], 'bc': {'type': None, 'value': None}}, '9': {'coordinates': [(0.0, 0.75), (-1.0, 0.5)], 'bc': {'type': None, 'value': None}}, '10': {'coordinates': [(-1.0, 0.5), (-1.0, 0.0)], 'bc': {'type': None, 'value': None}}}
 # self.node_parameters = {'0': {'coordinates': (-3.0, -2.0), 'bc': {'type': None, 'value': None}}, '1': {'coordinates': (0.0, 1.5), 'bc': {'type': None, 'value': None}}, '2': {'coordinates': (1.0, -1.0), 'bc': {'type': None, 'value': None}}, '3': {'coordinates': (-4.0, -3.0), 'bc': {'type': None, 'value': None}}, '4': {'coordinates': (1.0, -2.5), 'bc': {'type': None, 'value': None}}, '5': {'coordinates': (2.5, 1.0), 'bc': {'type': None, 'value': None}}, '6': {'coordinates': (-2.5, 1.0), 'bc': {'type': None, 'value': None}}, '7': {'coordinates': (-4.2, -1.5), 'bc': {'type': None, 'value': None}}, '8': {'coordinates': (0.0, 3.0), 'bc': {'type': None, 'value': None}}, '9': {'coordinates': (-1.0, 0.0), 'bc': {'type': None, 'value': None}}, '10': {'coordinates': (0.0, 0.0), 'bc': {'type': None, 'value': None}}, '11': {'coordinates': (0.0, 0.75), 'bc': {'type': None, 'value': None}}, '12': {'coordinates': (-1.0, 0.5), 'bc': {'type': None, 'value': None}}}
