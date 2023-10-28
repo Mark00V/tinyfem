@@ -286,6 +286,7 @@ class CreateMesh:
 
         return True if np.any(point_is_in_list_q) else False
 
+
     def triangulate_region(self, region):
         """
         Creates seed points for all regions
@@ -333,19 +334,33 @@ class CreateMesh:
         triangles = triangulation.simplices
         # Remove triangulation outside of polygon and inside of negative area
         keep_triangles = []
-        # for idt, triangle in enumerate(triangles):
-        #     triangle_points = np.array([[seed_points[triangle[0]][0], seed_points[triangle[0]][1]],
-        #                                 [seed_points[triangle[1]][0], seed_points[triangle[1]][1]],
-        #                                 [seed_points[triangle[2]][0], seed_points[triangle[2]][1]]])
-        #     center_point = np.mean(triangle_points, axis=0)
+        for idt, triangle in enumerate(triangles):
+            triangle_in_region = False
+            triangle_in_negative_region = False
+            triangle_points = np.array([[seed_points[triangle[0]][0], seed_points[triangle[0]][1]],
+                                        [seed_points[triangle[1]][0], seed_points[triangle[1]][1]],
+                                        [seed_points[triangle[2]][0], seed_points[triangle[2]][1]]])
+            center_point = np.mean(triangle_points, axis=0)
+            # check if triangle in region
+            if CreateMesh.check_vertice_in_polygon_area(center_point, region['coordinates']):
+                triangle_in_region = True
+            # check if triangle in negative region
+            for reg in self.negative_areas:
+                negative_reg_nodes = reg['coordinates']
+                if CreateMesh.check_vertice_in_polygon_area(center_point, negative_reg_nodes):
+                    triangle_in_negative_region = True
 
-        CreateMesh.plot_triangles(seed_points, triangles, self.positive_regions, self.negative_regions)
+            if triangle_in_region and not triangle_in_negative_region:
+                keep_triangles.append(idt)
+        triangles_filtered = triangles[keep_triangles]
+
+        CreateMesh.plot_triangles(seed_points, triangles_filtered, self.positive_regions, self.negative_regions)
 
         ############
         # develop
         # check if nodes in region contains duplicates
         duplicate_check = CreateMesh.check_for_duplicate_nodes_np(seed_points)
-        CreateMesh.plot_polygon_points(seed_points, self.positive_regions, self.negative_regions)  # dev
+        #CreateMesh.plot_polygon_points(seed_points, self.positive_regions, self.negative_regions)  # dev
 
         ###########
 
@@ -399,12 +414,15 @@ class CreateMesh:
             if region['area_neg_pos'] == 'Positive':
                 triangulated_region = self.triangulate_region(region)
 
+        # todo: knotenpunkte an angrenzenden boundaries übereinstimmend?
+        # -> einmal löschen bzw dreiecke der einen region an die andere forcieren
+
 
 
 
 
 if __name__ == '__main__':
-    region_parameters1 = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
+    region_parameters1 = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-2.2, -1.5)],
                                     'area_neg_pos': 'Positive', 'material': {'k': 0, 'c': 0, 'rho': 0}},
                               '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive',
                                     'material': {'k': 0, 'c': 0, 'rho': 0}},
