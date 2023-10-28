@@ -5,6 +5,10 @@ import random
 import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
 import struct  # for checking for duplicates since np.unique not very reliable
+from typing import Union
+import warnings
+import copy
+
 
 class CreateMesh:
 
@@ -52,37 +56,40 @@ class CreateMesh:
         return min_x, min_y, max_x, max_y
 
     @staticmethod
-    def check_vertice_in_polygon_area(point: np.array, polygon: np.array) -> bool:
+    def check_vertice_in_polygon_area(point: Union[list, np.array], polygon: Union[list, np.array]) -> bool:
         """
         Checks if a given point is inside self.polygon:
         returns True if inside polygon, returns False if outside polygon
 
         Args:
-        :param point: np.array([x_coord0, y_coord0])
+        :param point:
         :return: bool
         """
+
         if isinstance(polygon, list):
-            if not np.array_equal(polygon[0], polygon[-1]):
-                np.append(polygon, polygon[0])
+            if polygon[0] != polygon[-1]:
+                polygon.append(polygon[0])
         elif isinstance(polygon, np.ndarray):
             if not np.array_equal(polygon[0], polygon[-1]):
                 polygon = np.append(polygon, polygon[0].reshape(1, -1), axis=0)
-
         polygon_path = mpath.Path(polygon)
         is_inside = polygon_path.contains_point(point)
 
         return is_inside
 
+        return point_on_line
+
     @staticmethod
     def check_vertice_in_polygon_outline(point: np.array, polygon: np.array, tolerance: float) -> bool:
         """
-        Checks if a point is on outline of polygon
+        Checks if a point is on outline of polygon or in close proximity defined by tolerance
         :param point:
         :return: bool
         """
         if isinstance(polygon, list):
-            if not np.array_equal(polygon[0], polygon[-1]):
-                np.append(polygon, polygon[0])
+            if polygon[0] != polygon[-1]:
+                polygon.append(polygon[0])
+            polygon = np.array(polygon)
         elif isinstance(polygon, np.ndarray):
             if not np.array_equal(polygon[0], polygon[-1]):
                 polygon = np.append(polygon, polygon[0].reshape(1, -1), axis=0)
@@ -90,16 +97,33 @@ class CreateMesh:
         point_on_line = False
         for nv, start_point in enumerate(polygon[:-1]):
             end_point = polygon[nv + 1]
+
+            # check if point is close to start or endpoint, if -> True
+            distance_start_point = np.linalg.norm(point - start_point)
+            distance_end_point = np.linalg.norm(point - end_point)
+            if distance_start_point <= tolerance or distance_end_point <= tolerance:
+                return True
+
+            # if point is on line -> True
             direction_vector = end_point - start_point
-            normal_vector = np.array([-direction_vector[1], direction_vector[0]])
-            normal_vector = normal_vector / np.linalg.norm(normal_vector)
+            with warnings.catch_warnings(record=True) as w:
+                normal_vector = np.array([-direction_vector[1], direction_vector[0]])  # todo: manchmal hier runtime warning...
+                normal_vector_ = normal_vector / np.linalg.norm(normal_vector)
+                if w:
+                    for warning in w:
+                        if issubclass(warning.category, RuntimeWarning):
+                            ...
+                            #print(f"RuntimeWarning: {warning.message} for {normal_vector}, {start_point}, {end_point}, {polygon}")
+            first_point_new_rect = np.array(
+                [(start_point[0] - tolerance * normal_vector_[0]), (start_point[1] - tolerance * normal_vector_[1])])
+            second_point_new_rect = np.array(
+                [(end_point[0] - tolerance * normal_vector_[0]), (end_point[1] - tolerance * normal_vector_[1])])
             third_point_new_rect = np.array(
-                [(start_point[0] + tolerance * normal_vector[0]), (start_point[1] + tolerance * normal_vector[1])])
+                [(start_point[0] + tolerance * normal_vector_[0]), (start_point[1] + tolerance * normal_vector_[1])])
             fourth_point_new_rect = np.array(
-                [(end_point[0] + tolerance * normal_vector[0]), (end_point[1] + tolerance * normal_vector[1])])
-            check_polygon = np.array([start_point, end_point, fourth_point_new_rect, third_point_new_rect, start_point])
-            print(check_polygon)
-            CreateMesh.plot_polygon_points(point, check_polygon, None)
+                [(end_point[0] + tolerance * normal_vector_[0]), (end_point[1] + tolerance * normal_vector_[1])])
+            check_polygon = np.array([first_point_new_rect, second_point_new_rect, fourth_point_new_rect,
+                                      third_point_new_rect, first_point_new_rect])
             is_on_line = CreateMesh.check_vertice_in_polygon_area(point, check_polygon)
             if is_on_line:
                 point_on_line = True
@@ -108,25 +132,25 @@ class CreateMesh:
         return point_on_line
 
     @staticmethod
-    def plot_polygon_points(points, regions_pos, regions_neg):
-
-        if regions_neg is not None:
-            for polygon in regions_neg:
-                polygon = [[p[0], p[1]] for p in polygon]
+    def plot_polygon_points(points, regions_pos_, regions_neg_, param=None):
+        regions_pos = copy.deepcopy(regions_pos_)  # otherwise self.region_parameters will be appended!!!!
+        regions_neg = copy.deepcopy(regions_neg_)  # otherwise self.region_parameters will be appended!!!!
+        if regions_pos:
+            for polygon in regions_pos:
                 if polygon[0] != polygon[1]:
                     polygon.append(polygon[0])
                 x_coords_polygon, y_coords_polygon = zip(*polygon)
                 plt.fill(x_coords_polygon, y_coords_polygon, 'r-', alpha=0.6)  # Polygon fill
                 plt.plot(x_coords_polygon, y_coords_polygon, 'r-')  # Polygon outline
 
-        if regions_neg is not None:
+        if regions_neg:
             for polygon in regions_neg:
-                polygon = [[p[0], p[1]] for p in polygon]
                 if polygon[0] != polygon[1]:
                     polygon.append(polygon[0])
                 x_coords_polygon, y_coords_polygon = zip(*polygon)
                 plt.fill(x_coords_polygon, y_coords_polygon, 'b-', alpha=0.6)  # Polygon fill
                 plt.plot(x_coords_polygon, y_coords_polygon, 'b-')  # Polygon outline
+
 
         x_coords_points, y_coords_points = zip(*points)
 
@@ -136,6 +160,36 @@ class CreateMesh:
         plt.xlabel('X')
         plt.ylabel('Y')
         plt.title('Polygon and Points')
+        plt.show()
+
+    @staticmethod
+    def plot_triangles(points, triangles, regions_pos_, regions_neg_, param=None):
+        regions_pos = copy.deepcopy(regions_pos_)  # otherwise self.region_parameters will be appended!!!!
+        regions_neg = copy.deepcopy(regions_neg_)  # otherwise self.region_parameters will be appended!!!!
+        if regions_pos:
+            for polygon in regions_pos:
+                if polygon[0] != polygon[1]:
+                    polygon.append(polygon[0])
+                x_coords_polygon, y_coords_polygon = zip(*polygon)
+                plt.fill(x_coords_polygon, y_coords_polygon, 'r-', alpha=0.6)  # Polygon fill
+                plt.plot(x_coords_polygon, y_coords_polygon, 'r-')  # Polygon outline
+
+        if regions_neg:
+            for polygon in regions_neg:
+                if polygon[0] != polygon[1]:
+                    polygon.append(polygon[0])
+                x_coords_polygon, y_coords_polygon = zip(*polygon)
+                plt.fill(x_coords_polygon, y_coords_polygon, 'b-', alpha=0.6)  # Polygon fill
+                plt.plot(x_coords_polygon, y_coords_polygon, 'b-')  # Polygon outline
+
+
+        plt.triplot(points[:, 0], points[:, 1], triangles, c='gray', label='Mesh')
+        plt.scatter(points[:, 0], points[:, 1], c='b', marker='.', label='Seed Points')
+
+
+        plt.xlabel('X')
+        plt.ylabel('Y')
+        plt.title('Triangulation')
         plt.show()
 
     def get_negative_areas(self):
@@ -179,11 +233,11 @@ class CreateMesh:
                     negative_area_coords = np.array(negative_area['coordinates'])
                     if CreateMesh.check_vertice_in_polygon_area(point, negative_area_coords) \
                             or CreateMesh.check_vertice_in_polygon_outline(point, negative_area_coords,
-                                                                           tolerance=self.density / 2):
+                                                                           tolerance=self.density / 4):
                         point_in_any_negative_area = True
                 point_in_polygon_area = CreateMesh.check_vertice_in_polygon_area(point, region_nodes)
                 point_in_polygon_outline = CreateMesh.check_vertice_in_polygon_outline(point, region_nodes,
-                                                                                       tolerance=self.density / 2)
+                                                                                       tolerance=self.density / 4)
                 if point_in_polygon_area and not point_in_polygon_outline and not point_in_any_negative_area:
                     keep_points.append(idn)
             filtered_seed_points = rect_seed_points[keep_points]
@@ -226,6 +280,12 @@ class CreateMesh:
 
         return outline_vertices
 
+    @staticmethod
+    def point_in_list(point, node_list):
+        point_is_in_list_q = np.all(node_list == point, axis=1)
+
+        return True if np.any(point_is_in_list_q) else False
+
     def triangulate_region(self, region):
         """
         Creates seed points for all regions
@@ -249,6 +309,7 @@ class CreateMesh:
             if neg_inside:
                 seed_points_boundary = self.seed_boundary(reg)
                 seed_points = np.append(seed_points, seed_points_boundary, axis=0)
+                #CreateMesh.plot_polygon_points(seed_points_boundary, self.positive_regions, self.negative_regions)  # dev
 
         # add user defined points
         boundary_nodes = list()
@@ -259,20 +320,35 @@ class CreateMesh:
             boundary_nodes.append(p2)
 
         for node in self.node_parameters.values():
-            # check if node in boundary_parameters, if not -> user defined -> if in region -> add
+            # check if node in boundary_parameters, if not -> user defined -> if in region and not yet seedpoint-> add
             if node['coordinates'] not in boundary_nodes \
-                    and CreateMesh.check_vertice_in_polygon_area(node['coordinates'], region['coordinates']):
+                    and CreateMesh.check_vertice_in_polygon_area(node['coordinates'], region['coordinates']) \
+                    and not CreateMesh.point_in_list(node['coordinates'], seed_points):
                 seed_points = np.append(seed_points, np.array(node['coordinates']).reshape(1, -1), axis=0)
 
-        seed_points = np.unique(seed_points, axis=0)
+        #seed_points = np.unique(seed_points, axis=0) # this should not be necessary if done right!
+
+        # triangulation
+        triangulation = Delaunay(seed_points)
+        triangles = triangulation.simplices
+        # Remove triangulation outside of polygon and inside of negative area
+        keep_triangles = []
+        # for idt, triangle in enumerate(triangles):
+        #     triangle_points = np.array([[seed_points[triangle[0]][0], seed_points[triangle[0]][1]],
+        #                                 [seed_points[triangle[1]][0], seed_points[triangle[1]][1]],
+        #                                 [seed_points[triangle[2]][0], seed_points[triangle[2]][1]]])
+        #     center_point = np.mean(triangle_points, axis=0)
+
+        CreateMesh.plot_triangles(seed_points, triangles, self.positive_regions, self.negative_regions)
 
         ############
         # develop
         # check if nodes in region contains duplicates
         duplicate_check = CreateMesh.check_for_duplicate_nodes_np(seed_points)
-
+        CreateMesh.plot_polygon_points(seed_points, self.positive_regions, self.negative_regions)  # dev
 
         ###########
+
 
     @staticmethod
     def check_for_duplicate_nodes_np(nodes):
@@ -322,15 +398,6 @@ class CreateMesh:
             print("\n\n\n", region)
             if region['area_neg_pos'] == 'Positive':
                 triangulated_region = self.triangulate_region(region)
-                break
-
-
-
-
-
-
-
-
 
 
 
@@ -372,10 +439,3 @@ if __name__ == '__main__':
     createmesh = CreateMesh(*params1)  # Todo - Develop: For testing mesh
     mesh = createmesh.create_mesh()
 
-# p = np.array([[-0.85,  0.  ]])
-# area = np.array([[-1.,    0.  ],
-#  [ 0.,    0.  ],
-#  [ 0.,    0.75],
-#  [-1.,    0.5 ]])
-# res = CreateMesh.check_vertice_in_polygon_outline(p, area, tolerance=0.1)
-# print(res)
