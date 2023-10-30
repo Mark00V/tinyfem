@@ -23,10 +23,11 @@ class CreateMesh:
         self.negative_areas = None  # initialized by get_negative_areas()
 
         #output parameters
-        self.single_nodes = dict()
+        self.single_nodes_dict = None
         self.nodes = None
+        self.boundary_dict = None
         self.triangulation = None
-        self.triangles_region = None
+        self.triangulation_region_dict = None
 
     def create_mesh(self):
         self.normalize_density()
@@ -328,16 +329,24 @@ class CreateMesh:
             region_nodes = np.append(region_nodes, region_nodes[0].reshape(1, -1), axis=0)
 
         outline_vertices = None
-        outline_vertices_pos = np.empty(0)
+        outline_vertices_pos = list()
+        next_pos = 0
         for nv, start_point in enumerate(region_nodes[:-1]):
             end_point = region_nodes[nv + 1]
             line = np.array([start_point, end_point])
             if nv == 0:
-                outline_vertices = self.create_line_vertices(line)[:-1]
-                outline_vertices_pos = np.append(outline_vertices_pos, len(outline_vertices))
+                interpolation = self.create_line_vertices(line)[:-1]
+                outline_vertices = interpolation
+                outline_vertices_pos.append(range(next_pos, len(interpolation) + 1))
+                next_pos += len(interpolation)
             else:
-                outline_vertices = np.append(outline_vertices, self.create_line_vertices(line)[:-1], axis=0)
-                outline_vertices_pos = np.append(outline_vertices_pos, len(outline_vertices))
+                interpolation = self.create_line_vertices(line)[:-1]
+                outline_vertices = np.append(outline_vertices, interpolation, axis=0)
+                if nv < len(region_nodes[:-1]) - 1:
+                    outline_vertices_pos.append(range(next_pos, next_pos + len(interpolation) + 1))
+                else:
+                    outline_vertices_pos.append(list(range(next_pos, next_pos + len(interpolation))) + [outline_vertices_pos[0][0]]) # add first node of first boundary = last node of last boundary
+                next_pos += len(interpolation)
 
         return outline_vertices, outline_vertices_pos
 
@@ -350,8 +359,11 @@ class CreateMesh:
         seed_points_area = self.seed_region(region)
         #CreateMesh.plot_polygon_points(seed_points_area, self.positive_regions, self.negative_regions)  # dev
         seed_points_boundary, outline_vertices_pos = self.seed_boundary(region)
-        outline_vertices_pos += len(seed_points_area)
-
+        for boundary in outline_vertices_pos:
+            print(boundary)
+            for elem in boundary:
+                elem += len(seed_points_area)
+                print(elem)
         #CreateMesh.plot_polygon_points(seed_points_boundary, self.positive_regions, self.negative_regions)  # dev
         seed_points = np.append(seed_points_area, seed_points_boundary, axis=0)
 
@@ -415,7 +427,7 @@ class CreateMesh:
         # check if nodes in region contains duplicates
         # CreateMesh.plot_triangles(seed_points, triangles_filtered, self.positive_regions, self.negative_regions)
         CreateMesh.check_for_duplicate_nodes_np(seed_points)
-        # CreateMesh.plot_polygon_points(seed_points, self.positive_regions, self.negative_regions)  # dev
+        #CreateMesh.plot_polygon_points(seed_points, self.positive_regions, self.negative_regions)  # dev
         ###########
 
         return seed_points, triangles_filtered, outline_vertices_pos
@@ -433,8 +445,6 @@ class CreateMesh:
         nodes_this_complex = [node[0] + 1j * node[1] for node in nodes_this]
         node_pos_to_keep_this = np.where(~np.isin(nodes_this_complex, nodes_previous_complex))[
             0]  # knoten die behalten werden, aber umnummeriert werden für triagnles
-
-
         keep_nodes_this = nodes_this[node_pos_to_keep_this]
 
         for node in nodes_this_complex:
@@ -492,17 +502,31 @@ class CreateMesh:
         CreateMesh.check_for_duplicate_nodes_np(nodes_all)
         CreateMesh.check_for_duplicate_triangles(triangles_all)
         # dev
-        # CreateMesh.plot_polygon_points(nodes_all, self.positive_regions, self.negative_regions)
+        #CreateMesh.plot_polygon_points(nodes_all, self.positive_regions, self.negative_regions)
         #CreateMesh.plot_triangles(nodes_all, triangles_all, self.positive_regions, self.negative_regions)
 
 
         self.nodes = nodes_all
         self.triangulation = triangles_all
-        self.triangles_region = triangle_region_dict
+        self.triangulation_region_dict = triangle_region_dict
+        self.get_single_nodes_pos()
 
 
     def get_single_nodes_pos(self):
-        ...
+        """
+        position of single nodes defined in self.node_parameters
+        TODO: very inefficient...
+        :return:
+        """
+        node_dict = dict()
+        all_nodes_complex = [node[0] + 1j * node[1] for node in self.nodes]
+        for node_nbr, values in self.node_parameters.items():
+            node_complex = values['coordinates'][0] + 1j *values['coordinates'][1]
+            pos_node = np.where(np.isin(all_nodes_complex, node_complex))[0]
+            node_dict[node_nbr] = pos_node[0]
+        self.single_nodes_dict = node_dict
+
+
 
 
 
@@ -511,7 +535,7 @@ class CreateMesh:
 
 
 if __name__ == '__main__':
-    region_parameters1 = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-2.2, -1.5)],
+    region_parameters1 = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
                                     'area_neg_pos': 'Positive', 'material': {'k': 0, 'c': 0, 'rho': 0}},
                               '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive',
                                     'material': {'k': 0, 'c': 0, 'rho': 0}},
