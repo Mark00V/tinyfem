@@ -1,5 +1,10 @@
-import numpy as np
+import math
 
-a = np.array([[11, 12], [21,22]])
-a += 1
-print(a)
+# Define a float value
+my_float = float('nan')
+
+# Check if it is NaN
+if math.isnan(my_float):
+    print("It's NaN")
+else:
+    print("It's not NaN")

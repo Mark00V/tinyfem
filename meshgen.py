@@ -21,9 +21,12 @@ class CreateMesh:
         # mesh creation parameters
         self.density = None  # initialized by normalize_density()
         self.negative_areas = None  # initialized by get_negative_areas()
-        self.nodes = np.empty((0, 2))
+
         #output parameters
         self.single_nodes = dict()
+        self.nodes = None
+        self.triangulation = None
+        self.triangles_region = None
 
     def create_mesh(self):
         self.normalize_density()
@@ -126,7 +129,23 @@ class CreateMesh:
             print("Duplicate coordinates found at indices:", duplicate_indices)
             print("Duplicate coordinates:", nodes[duplicate_indices])
         else:
-            print("No duplicates found!")
+            print("No duplicate coordinates found!")
+
+    @staticmethod
+    def check_for_duplicate_triangles(triangles):
+        """
+
+        :param nodes:
+        :return:
+        """
+        triangles_lst = list()
+        for tri in triangles:
+            tri_ = str(sorted(tri))
+            triangles_lst.append(tri_)
+        if len(triangles) != len(triangles_lst):
+            print("Duplicate triangles found!!!")
+        else:
+            print("No duplicate triangles found")
 
     @staticmethod
     def check_for_duplicate_nodes_struct(nodes):
@@ -170,7 +189,7 @@ class CreateMesh:
 
         plt.scatter(x_coords_points, y_coords_points, color='red', marker='.')
         for nbr, p in enumerate(points):
-            plt.text(p[0], p[1], str(nbr), fontsize=6, ha='center', va='bottom')
+            plt.text(p[0], p[1], str(nbr), fontsize=8, ha='center', va='bottom')
         plt.xlabel('X')
         plt.ylabel('Y')
         plt.title('Polygon and Points')
@@ -391,22 +410,49 @@ class CreateMesh:
                 keep_triangles.append(idt)
         triangles_filtered = triangles[keep_triangles]
 
-        return seed_points, triangles_filtered, outline_vertices_pos
-
         ############
         # develop
         # check if nodes in region contains duplicates
         # CreateMesh.plot_triangles(seed_points, triangles_filtered, self.positive_regions, self.negative_regions)
-        duplicate_check = CreateMesh.check_for_duplicate_nodes_np(seed_points)
-        #CreateMesh.plot_polygon_points(seed_points, self.positive_regions, self.negative_regions)  # dev
+        CreateMesh.check_for_duplicate_nodes_np(seed_points)
+        # CreateMesh.plot_polygon_points(seed_points, self.positive_regions, self.negative_regions)  # dev
         ###########
 
+        return seed_points, triangles_filtered, outline_vertices_pos
+
     @staticmethod
-    def combine_regions(nodes_previous, ouline_vertices_pos):
+    def combine_regions(nodes_previous, nodes_this, triangles_this):
         """
         combines regions with adjacent boundaries
+        todo: sehr schlechter und langsamer algorithmus...
         :return:
         """
+        node_renumbering = dict()
+        triangles_new = copy.deepcopy(triangles_this)
+        nodes_previous_complex = [node[0] + 1j * node[1] for node in nodes_previous]
+        nodes_this_complex = [node[0] + 1j * node[1] for node in nodes_this]
+        node_pos_to_keep_this = np.where(~np.isin(nodes_this_complex, nodes_previous_complex))[
+            0]  # knoten die behalten werden, aber umnummeriert werden für triagnles
+
+
+        keep_nodes_this = nodes_this[node_pos_to_keep_this]
+
+        for node in nodes_this_complex:
+            pos_node = np.where(np.isin(nodes_this_complex, node))[0]
+            pos_node_previous = np.where(np.isin(nodes_previous_complex, node))[0]
+            if len(pos_node_previous) == 1:
+                node_renumbering[pos_node[0]] = pos_node_previous[0]
+
+        c = 0
+        for pos in node_pos_to_keep_this:
+            node_renumbering[pos] = len(nodes_previous) + c
+            c += 1
+
+        for nb_triangle, triangle in enumerate(triangles_new):
+            for nb_pos, pos in enumerate(triangle):
+                triangles_new[nb_triangle, nb_pos] = node_renumbering[pos]
+
+        return keep_nodes_this, triangles_new
 
 
     def triangulate_regions(self):
@@ -421,31 +467,44 @@ class CreateMesh:
                             in self.region_parameters.values() if region['area_neg_pos'] == 'Negative']  # for dev
 
         nodes_all = np.empty((0, 2))
-        nodes_boundary_all = np.empty((0, 2))
         triangles_all = np.empty((0, 3))
-        node_start = 0
 
-        c_pos = 0
-        for region in self.region_parameters.values():
+        triangle_counter = 0
+        triangle_region_dict = dict()
+        c_pos = True
+        for region_nbr, region in self.region_parameters.items():
             print("\n\n\n", region)
             if region['area_neg_pos'] == 'Positive':
                 nodes_region, triangles_region, ouline_vertices_pos = self.triangulate_region(region)  # todo besserer algo für boundaries
-                if c_pos == 0:
+                if c_pos:
                     nodes_all = np.append(nodes_all, nodes_region, axis=0)
+                    triangles_all = np.append(triangles_all, triangles_region, axis=0)
+                    triangle_region_dict[region_nbr] = range(0, len(triangles_region))
+                    triangle_counter += len(triangles_region)
+                    c_pos = False
+                else:
+                    keep_nodes_region, triangles_region_new = CreateMesh.combine_regions(nodes_all, nodes_region, triangles_region)
+                    nodes_all = np.append(nodes_all, keep_nodes_region, axis=0)
+                    triangles_all = np.append(triangles_all, triangles_region_new, axis=0)
+                    triangle_region_dict[region_nbr] = range(triangle_counter, triangle_counter + len(triangles_region))
+                    triangle_counter += len(triangles_region)
+
+        CreateMesh.check_for_duplicate_nodes_np(nodes_all)
+        CreateMesh.check_for_duplicate_triangles(triangles_all)
+        # dev
+        # CreateMesh.plot_polygon_points(nodes_all, self.positive_regions, self.negative_regions)
+        #CreateMesh.plot_triangles(nodes_all, triangles_all, self.positive_regions, self.negative_regions)
 
 
-                #CreateMesh.combine_regions(nodes_all)
-                #print(nodes_boundary)
-                c_pos += 1
+        self.nodes = nodes_all
+        self.triangulation = triangles_all
+        self.triangles_region = triangle_region_dict
 
-                ## todo change index
-                triangles_all = np.append(triangles_all, triangles_region, axis=0)
 
-            #print("nodes", nodes_all)
-            #print("triangles", triangles_all)
+    def get_single_nodes_pos(self):
+        ...
 
-        # todo: knotenpunkte an angrenzenden boundaries übereinstimmend?
-        # -> einmal löschen bzw dreiecke der einen region an die andere forcieren
+
 
 
 
