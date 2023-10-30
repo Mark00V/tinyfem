@@ -8,9 +8,28 @@ import struct  # for checking for duplicates since np.unique not very reliable
 from typing import Union
 import warnings
 import copy
+import time
 
+time_it_dict = dict()
+
+def timing_decorator(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()  # Record the start time
+        result = func(*args, **kwargs)  # Call the original function
+        end_time = time.time()  # Record the end time
+        execution_time = end_time - start_time
+        try:
+            time_it_dict[func.__name__] += execution_time
+        except KeyError:
+            time_it_dict[func.__name__] = execution_time
+        return result
+    return wrapper
 
 class CreateMesh:
+
+
+    # For more printing in Development
+    DEV = False
 
     def __init__(self, region_parameters, boundary_parameters, node_parameters, calculation_parameters):
         # input parameters
@@ -25,15 +44,29 @@ class CreateMesh:
         #output parameters
         self.single_nodes_dict = None
         self.nodes = None
-        self.boundary_dict = None
+        self.boundary_nodes = None
+        self.boundary_nodes_dict = None
         self.triangulation = None
         self.triangulation_region_dict = None
 
+    @timing_decorator
     def create_mesh(self):
+        self.boundary_nodes = list()
         self.normalize_density()
         self.get_negative_areas()
         self.triangulate_regions()
+        self.get_single_nodes_pos()
+        self.get_boundary_nodes_pos()
+        # print("self.nodes:   ", self.nodes)
+        # print("self.single_nodes_dict:   ", self.single_nodes_dict)
+        # print("self.boundary_nodes:   ", self.boundary_nodes)
+        # print("self.boundary_nodes_dict:   ", self.boundary_nodes_dict)
+        # print("self.triangulation:   ", self.triangulation)
+        # print("self.triangulation_region_dict:   ", self.triangulation_region_dict)
 
+        return self.nodes, self.single_nodes_dict, self.boundary_nodes_dict, self.triangulation, self.triangulation_region_dict
+
+    @timing_decorator
     @staticmethod
     def check_vertice_in_polygon_area(point: Union[list, np.array], polygon: Union[list, np.array]) -> bool:
         """
@@ -58,6 +91,7 @@ class CreateMesh:
 
         return point_on_line
 
+    @timing_decorator
     @staticmethod
     def check_vertice_in_polygon_outline(point: np.array, polygon: np.array, tolerance: float) -> bool:
         """
@@ -110,12 +144,14 @@ class CreateMesh:
 
         return point_on_line
 
+    @timing_decorator
     @staticmethod
     def point_in_list(point, node_list):
         point_is_in_list_q = np.all(node_list == point, axis=1)
 
         return True if np.any(point_is_in_list_q) else False
 
+    @timing_decorator
     @staticmethod
     def check_for_duplicate_nodes_np(nodes):
         """
@@ -126,12 +162,14 @@ class CreateMesh:
         complex_coordinates = nodes[:, 0] + 1j * nodes[:, 1]
         unique_complex_coordinates, counts = np.unique(complex_coordinates, return_counts=True)
         duplicate_indices = np.where(counts > 1)[0]
-        if len(unique_complex_coordinates) != len(nodes):
-            print("Duplicate coordinates found at indices:", duplicate_indices)
-            print("Duplicate coordinates:", nodes[duplicate_indices])
-        else:
-            print("No duplicate coordinates found!")
+        if CreateMesh.DEV:
+            if len(unique_complex_coordinates) != len(nodes):
+                print("Duplicate coordinates found at indices:", duplicate_indices)
+                print("Duplicate coordinates:", nodes[duplicate_indices])
+            else:
+                print("No duplicate coordinates found!")
 
+    @timing_decorator
     @staticmethod
     def check_for_duplicate_triangles(triangles):
         """
@@ -143,11 +181,13 @@ class CreateMesh:
         for tri in triangles:
             tri_ = str(sorted(tri))
             triangles_lst.append(tri_)
-        if len(triangles) != len(triangles_lst):
-            print("Duplicate triangles found!!!")
-        else:
-            print("No duplicate triangles found")
+        if CreateMesh.DEV:
+            if len(triangles) != len(triangles_lst):
+                print("Duplicate triangles found!!!")
+            else:
+                print("No duplicate triangles found")
 
+    @timing_decorator
     @staticmethod
     def check_for_duplicate_nodes_struct(nodes):
         """
@@ -161,10 +201,11 @@ class CreateMesh:
             ys = struct.pack('f', p[1])
             ps = f"{xs}{ys}"
             check_list.append(ps)
+        if CreateMesh.DEV:
+            if len(nodes) != len(set(check_list)):
+                print("Duplicates found!")
 
-        if len(nodes) != len(set(check_list)):
-            print("Duplicates found!")
-
+    @timing_decorator
     @staticmethod
     def plot_polygon_points(points, regions_pos_, regions_neg_, param=None):
         regions_pos = copy.deepcopy(regions_pos_)  # otherwise self.region_parameters will be appended!!!!
@@ -196,6 +237,7 @@ class CreateMesh:
         plt.title('Polygon and Points')
         plt.show()
 
+    @timing_decorator
     @staticmethod
     def plot_triangles(points, triangles, regions_pos_, regions_neg_, param=None):
         regions_pos = copy.deepcopy(regions_pos_)  # otherwise self.region_parameters will be appended!!!!
@@ -226,6 +268,7 @@ class CreateMesh:
         plt.title('Triangulation')
         plt.show()
 
+    @timing_decorator
     def normalize_density(self):
         """
         density ist dict mit stufen: 1: sehr grob ... 5: sehr fein
@@ -239,6 +282,7 @@ class CreateMesh:
         density_dict = {1: 1/2, 2: 1/4, 3: 1/10, 4: 1/30, 5: 1/80}
         self.density = density_dict[self.calculation_parameters['mesh_density']]
 
+    @timing_decorator
     def get_min_max_values(self, region):
         """
         ...
@@ -251,6 +295,7 @@ class CreateMesh:
 
         return min_x, min_y, max_x, max_y
 
+    @timing_decorator
     def get_negative_areas(self):
         """
         initializes negative areas
@@ -262,13 +307,12 @@ class CreateMesh:
             if area_neg_pos == 'Negative':
                 self.negative_areas.append(reg)
 
+    @timing_decorator
     def seed_region(self, region):
         """
         Creates seed points for region
         :return:
         """
-
-
 
         if region['area_neg_pos'] == 'Positive':
             region_nodes = np.array(region['coordinates'])
@@ -303,6 +347,7 @@ class CreateMesh:
 
             return filtered_seed_points
 
+    @timing_decorator
     def create_line_vertices(self, line: np.array) -> np.array:
         """
         Creates points on a line specified by line. The number of points is given by density which specifies the average
@@ -318,6 +363,7 @@ class CreateMesh:
 
         return subdivision_points
 
+    @timing_decorator
     def seed_boundary(self, region):
         """
 
@@ -329,27 +375,21 @@ class CreateMesh:
             region_nodes = np.append(region_nodes, region_nodes[0].reshape(1, -1), axis=0)
 
         outline_vertices = None
-        outline_vertices_pos = list()
-        next_pos = 0
         for nv, start_point in enumerate(region_nodes[:-1]):
             end_point = region_nodes[nv + 1]
             line = np.array([start_point, end_point])
             if nv == 0:
-                interpolation = self.create_line_vertices(line)[:-1]
-                outline_vertices = interpolation
-                outline_vertices_pos.append(range(next_pos, len(interpolation) + 1))
-                next_pos += len(interpolation)
+                interpolation = self.create_line_vertices(line)
+                outline_vertices = interpolation[:-1]
+                self.boundary_nodes.append(interpolation)
             else:
-                interpolation = self.create_line_vertices(line)[:-1]
-                outline_vertices = np.append(outline_vertices, interpolation, axis=0)
-                if nv < len(region_nodes[:-1]) - 1:
-                    outline_vertices_pos.append(range(next_pos, next_pos + len(interpolation) + 1))
-                else:
-                    outline_vertices_pos.append(list(range(next_pos, next_pos + len(interpolation))) + [outline_vertices_pos[0][0]]) # add first node of first boundary = last node of last boundary
-                next_pos += len(interpolation)
+                interpolation = self.create_line_vertices(line)
+                outline_vertices = np.append(outline_vertices, interpolation[:-1], axis=0)
+                self.boundary_nodes.append(interpolation)
 
-        return outline_vertices, outline_vertices_pos
+        return outline_vertices
 
+    @timing_decorator
     def triangulate_region(self, region):
         """
         Creates seed points for all regions
@@ -358,12 +398,7 @@ class CreateMesh:
 
         seed_points_area = self.seed_region(region)
         #CreateMesh.plot_polygon_points(seed_points_area, self.positive_regions, self.negative_regions)  # dev
-        seed_points_boundary, outline_vertices_pos = self.seed_boundary(region)
-        for boundary in outline_vertices_pos:
-            print(boundary)
-            for elem in boundary:
-                elem += len(seed_points_area)
-                print(elem)
+        seed_points_boundary = self.seed_boundary(region)
         #CreateMesh.plot_polygon_points(seed_points_boundary, self.positive_regions, self.negative_regions)  # dev
         seed_points = np.append(seed_points_area, seed_points_boundary, axis=0)
 
@@ -376,7 +411,7 @@ class CreateMesh:
                     neg_inside = False
                     break
             if neg_inside:
-                seed_points_boundary, _ = self.seed_boundary(reg)
+                seed_points_boundary = self.seed_boundary(reg)
                 seed_points = np.append(seed_points, seed_points_boundary, axis=0)
                 #CreateMesh.plot_polygon_points(seed_points_boundary, self.positive_regions, self.negative_regions)  # dev
 
@@ -430,8 +465,9 @@ class CreateMesh:
         #CreateMesh.plot_polygon_points(seed_points, self.positive_regions, self.negative_regions)  # dev
         ###########
 
-        return seed_points, triangles_filtered, outline_vertices_pos
+        return seed_points, triangles_filtered
 
+    @timing_decorator
     @staticmethod
     def combine_regions(nodes_previous, nodes_this, triangles_this):
         """
@@ -464,7 +500,7 @@ class CreateMesh:
 
         return keep_nodes_this, triangles_new
 
-
+    @timing_decorator
     def triangulate_regions(self):
         """
 
@@ -483,9 +519,8 @@ class CreateMesh:
         triangle_region_dict = dict()
         c_pos = True
         for region_nbr, region in self.region_parameters.items():
-            print("\n\n\n", region)
             if region['area_neg_pos'] == 'Positive':
-                nodes_region, triangles_region, ouline_vertices_pos = self.triangulate_region(region)  # todo besserer algo für boundaries
+                nodes_region, triangles_region = self.triangulate_region(region)  # todo besserer algo für boundaries
                 if c_pos:
                     nodes_all = np.append(nodes_all, nodes_region, axis=0)
                     triangles_all = np.append(triangles_all, triangles_region, axis=0)
@@ -505,13 +540,11 @@ class CreateMesh:
         #CreateMesh.plot_polygon_points(nodes_all, self.positive_regions, self.negative_regions)
         #CreateMesh.plot_triangles(nodes_all, triangles_all, self.positive_regions, self.negative_regions)
 
-
         self.nodes = nodes_all
         self.triangulation = triangles_all
         self.triangulation_region_dict = triangle_region_dict
-        self.get_single_nodes_pos()
 
-
+    @timing_decorator
     def get_single_nodes_pos(self):
         """
         position of single nodes defined in self.node_parameters
@@ -526,12 +559,37 @@ class CreateMesh:
             node_dict[node_nbr] = pos_node[0]
         self.single_nodes_dict = node_dict
 
+    @timing_decorator
+    def get_boundary_nodes_pos(self):
 
+        all_nodes_complex = [node[0] + 1j * node[1] for node in self.nodes]
 
+        boundary_number_dict =dict()  # dict key=nbr aus self.boundary_parameters values=zugehörige Knotenkoords
+        boundary_pos_val_dict = dict()
+        all_boundary_nodes = self.boundary_nodes
+        for boundary in all_boundary_nodes:
+            fn = boundary[0]
+            ln = boundary[-1]
+            fn_ln_x = np.array([fn[0], ln[0]])
+            fn_ln_y = np.array([fn[1], ln[1]])
+            for nbr, boundary_param in self.boundary_parameters.items():
+                nodes = np.array(boundary_param['coordinates'])
+                x_eq = np.isin(nodes[:, 0], fn_ln_x)
+                y_eq = np.isin(nodes[:, 1], fn_ln_y)
+                if x_eq[0] and x_eq[1] and y_eq[0] and y_eq[1]:
+                    if nbr not in boundary_number_dict.keys():
+                        boundary_number_dict[nbr] = boundary
 
+        for nbr, bnodes in boundary_number_dict.items():
+            for b_node in bnodes:
+                b_node_complex = b_node[0] + 1j * b_node[1]
+                pos_in_all_nodes = np.where(all_nodes_complex == b_node_complex)[0]
+                try:
+                    boundary_pos_val_dict[nbr].append([pos_in_all_nodes[0], b_node])
+                except KeyError:
+                    boundary_pos_val_dict[nbr] = [[pos_in_all_nodes[0], b_node]]
 
-
-
+        self.boundary_nodes_dict = boundary_pos_val_dict
 
 
 if __name__ == '__main__':
@@ -565,8 +623,21 @@ if __name__ == '__main__':
                             '10': {'coordinates': (0.0, 0.0), 'bc': {'type': None, 'value': None}},
                             '11': {'coordinates': (0.0, 0.75), 'bc': {'type': None, 'value': None}},
                             '12': {'coordinates': (-1.0, 0.5), 'bc': {'type': None, 'value': None}}}
-    calculation_parameters1 = {'mesh_density': 1, 'freq': None}
+    calculation_parameters1 = {'mesh_density': 5, 'freq': None}
     params1 = (region_parameters1, boundary_parameters1, node_parameters1, calculation_parameters1)
     createmesh = CreateMesh(*params1)  # Todo - Develop: For testing mesh
-    mesh = createmesh.create_mesh()
+    nodes, single_nodes_dict, boundary_nodes_dict, triangulation, triangulation_region_dict = createmesh.create_mesh()
+
+    # params
+    print(f"\n\n"
+          f"Number of nodes:     {len(nodes)}")
+    print(f"Number of triangles: {len(triangulation)}")
+
+    # timing for dev:
+    print(f"\nTotal execution time          : {time_it_dict['create_mesh']:.4f}")
+
+    print(f"\nTiming of functions: ")
+    time_it_dict = dict(sorted(time_it_dict.items(), key=lambda x: x[1]))
+    for func, exectime in time_it_dict.items():
+        print(f"{str(func)[:29].ljust(30)}: {exectime:.4f}")
 

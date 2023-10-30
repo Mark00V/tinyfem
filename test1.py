@@ -1,10 +1,16 @@
-import math
+# output parameters
+self.single_nodes_dict = None
+self.nodes = None
+self.boundary_nodes = None
+self.boundary_nodes_pos = None
+self.triangulation = None
+self.triangulation_region_dict = None
 
-# Define a float value
-my_float = float('nan')
 
-# Check if it is NaN
-if math.isnan(my_float):
-    print("It's NaN")
-else:
-    print("It's not NaN")
+def create_mesh(self):
+    self.boundary_nodes = list()
+    self.normalize_density()
+    self.get_negative_areas()
+    self.triangulate_regions()
+    self.get_single_nodes_pos()
+    self.get_boundary_nodes_pos()
