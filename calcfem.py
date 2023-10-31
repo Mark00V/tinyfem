@@ -13,6 +13,7 @@ class CalcFEM:
 
     def __init__(self, params_mesh, params_boundaries_materials):
         """
+        Constructor
 
         :param params:
         """
@@ -56,13 +57,58 @@ class CalcFEM:
         self.implement_boundary_conditions()
 
 
-    @staticmethod
-    def implement_boundary_conditions():
-        ...
+    def implement_boundary_conditions(self):
+        """
+
+        :return:
+        """
+
+        # create dirichlet list for implementation of dirichlet boundary conditions
+        dirichlet_list = list()
+        for boundary_nbr, params in self.boundary_parameters.items():
+            bc = params['bc']
+            bc_type = bc['type']
+            bc_value = bc['value']
+            bc_pos_nodes = self.boundary_nodes_dict[boundary_nbr]
+            bc_pos = [elem[0] for elem in bc_pos_nodes]
+            if bc_type == 'Dirichlet':
+                for node in bc_pos:
+                    dirichlet_list += [[node, bc_value]]
+        dirichlet_list = np.array(dirichlet_list)
+        self.implement_dirichlet_condition(dirichlet_list, self.sysarray, self.force_vector)
+
 
     @staticmethod
-    def implement_dirichlet_condition():
-        ...
+    def implement_dirichlet_condition(dirichlet_list: np.array, system_matrix: np.array, force_vector: np.array):
+        """
+
+        :param dirichlet: np.array([[node_nbr, value],[...],...,[...]])
+        :param system_matrix: np.array ([[val_11, val12,...],[val21, val22,...],[val_max_1, ...]])
+        :param force_vector: np.array ([[val_1],[val_2],...])
+        :return:
+        """
+        dirichlet_list_positions = [int(elem[0]) for elem in dirichlet_list]
+        dirichlet_list_values = dirichlet_list[:, 1]
+
+        sysmatrix_orig = np.copy(system_matrix)
+        sysmatrix_adj = np.copy(system_matrix)
+        force_vector_adj = np.copy(force_vector)
+
+        # sysmatrix
+        for position, _ in dirichlet_list:
+            sysmatrix_adj[:, int(position)] = 0
+            sysmatrix_adj[int(position), :] = 0
+            sysmatrix_adj[int(position), int(position)] = 1
+
+        # force vector
+        force_vector_adj = force_vector_adj - np.dot(sysmatrix_orig[:, dirichlet_list_positions], dirichlet_list_values)
+        for pos, value in dirichlet_list:
+            force_vector_adj[int(pos)] = value
+
+        # Dev
+        # CalcFEM.print_matrix(sysmatrix_adj)
+        # CalcFEM.print_matrix(force_vector_adj)
+
 
     def create_force_vector(self):
         maxnode = len(self.nodes_mesh_gen)
