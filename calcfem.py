@@ -7,7 +7,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import math
 from typing import List, Tuple, Union
 from scipy.sparse import coo_matrix
-
+import copy
 
 class CalcFEM:
 
@@ -55,12 +55,18 @@ class CalcFEM:
         # implement boundary conditions
         self.implement_boundary_conditions()
 
+
+    @staticmethod
+    def implement_boundary_conditions():
+        ...
+
+    @staticmethod
+    def implement_dirichlet_condition():
+        ...
+
     def create_force_vector(self):
         maxnode = len(self.nodes_mesh_gen)
         self.force_vector = np.zeros(maxnode, dtype=np.single)
-
-    def implement_boundary_conditions(self):
-        ...
     
     def calc_system_matrices(self):
         """
@@ -136,6 +142,41 @@ class CalcFEM:
             if elemmass is not None:  # since it might be a np.array
                 self.all_element_matrices_mass[idx] = elemmass
 
+
+    @staticmethod
+    def print_matrix(matrix: Union[np.array, list]):
+        """
+        Prints matrix
+        :param matrix: [[val1, val2, val3],[val4,...],[...]], either np.array or list
+        """
+
+        if not isinstance(matrix[0], np.ndarray):
+            if len(matrix) < 50:
+                print("[", end='')
+                for idx, val in enumerate(matrix):
+                    if idx < len(matrix) - 1:
+                        print(f"+{abs(val):.2f}," if val >= 0 else f"-{abs(val):.2f},", end='')
+                    else:
+                        print(f"+{abs(val):.2f}" if val >= 0 else f"-{abs(val):.2f}", end='')
+                print("]")
+
+        else:
+            if len(matrix) < 50:
+                print("[", end='\n')
+                for idx, elem in enumerate(matrix):
+                    print("[", end='')
+                    for idy, val in enumerate(elem):
+                        if val == 0:
+                            val_str = '_____'
+                        else:
+                            val_str = f"+{abs(val):.2f}" if val >= 0 else f"-{abs(val):.2f}"
+                        if idy < len(elem) - 1:
+                            print(f"{val_str},", end='')
+                        elif idy >= len(elem) - 1 and idx < len(matrix) - 1:
+                            print(f"{val_str}],", end='\n')
+                        else:
+                            print(f"{val_str}]", end='\n')
+                print("]")
 
 
 if __name__ == '__main__':
