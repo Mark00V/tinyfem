@@ -35,6 +35,8 @@ class CalcFEM:
         self.syssteifarray = None
         self.sysmassarray = None
         self.sysarray = None
+        self.sysmatrix_diri = None  # Systemmatrix after implementing Dirichlet Cond
+        self.force_vector_diri = None  # Force Vector after implementing Dirichlet Cond
 
     def calc_fem(self):
         """
@@ -42,6 +44,7 @@ class CalcFEM:
         implements boundary conditions, solves linear system
         :return:
         """
+        print(self.triangulation)
         self.equation = self.calculation_parameters['equation']  # either HE (HeatEquation) or HH (HelmHoltz)
 
         # calculate element matrices
@@ -56,6 +59,16 @@ class CalcFEM:
         # implement boundary conditions
         self.implement_boundary_conditions()
 
+        self.print_matrix(self.sysmatrix_diri)
+        self.print_matrix(self.force_vector_diri)
+
+        # Solve the system
+        #self.solve_linear_system()
+
+
+    def solve_linear_system(self):
+
+        self.solution = np.linalg.solve(self.sysmatrix_diri, self.force_vector_diri)
 
     def implement_boundary_conditions(self):
         """
@@ -75,7 +88,7 @@ class CalcFEM:
                 for node in bc_pos:
                     dirichlet_list += [[node, bc_value]]
         dirichlet_list = np.array(dirichlet_list)
-        self.implement_dirichlet_condition(dirichlet_list, self.sysarray, self.force_vector)
+        self.sysmatrix_diri, self.force_vector_diri = self.implement_dirichlet_condition(dirichlet_list, self.sysarray, self.force_vector)
 
 
     @staticmethod
@@ -108,6 +121,8 @@ class CalcFEM:
         # Dev
         # CalcFEM.print_matrix(sysmatrix_adj)
         # CalcFEM.print_matrix(force_vector_adj)
+
+        return sysmatrix_adj, force_vector_adj
 
 
     def create_force_vector(self):
@@ -185,6 +200,7 @@ class CalcFEM:
             elif self.equation == 'HH':
                 elemsteif, elemmass = ElementMatrices.calc_2d_triangular_acoustic_p1(c, rho, nodes)
             self.all_element_matrices_steif[idx] = elemsteif
+            print(elemsteif)
             if elemmass is not None:  # since it might be a np.array
                 self.all_element_matrices_mass[idx] = elemmass
 
@@ -238,7 +254,7 @@ if __name__ == '__main__':
             '0': {'coordinates': [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)], 'area_neg_pos': 'Positive',
                   'material'   : {'k': 1.0, 'c': 0, 'rho': 0}},
             '1': {'coordinates': [(0.0, 1.0), (1.0, 1.0), (1.0, 2.0)], 'area_neg_pos': 'Positive',
-                  'material'   : {'k': 2.0, 'c': 0, 'rho': 0}}}
+                  'material'   : {'k': 3.0, 'c': 0, 'rho': 0}}}
     calcfem.boundary_parameters = {'0': {'coordinates': [(0.0, 0.0), (1.0, 0.0)], 'bc': {'type': None, 'value': None}},
                                 '1': {'coordinates': [(1.0, 0.0), (1.0, 1.0)], 'bc': {'type': None, 'value': None}},
                                 '2': {'coordinates': [(1.0, 1.0), (0.0, 1.0)], 'bc': {'type': None, 'value': None}},
