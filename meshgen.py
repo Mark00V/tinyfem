@@ -537,8 +537,8 @@ class CreateMesh:
         CreateMesh.check_for_duplicate_nodes_np(nodes_all)
         CreateMesh.check_for_duplicate_triangles(triangles_all)
         # dev
-        #CreateMesh.plot_polygon_points(nodes_all, self.positive_regions, self.negative_regions)
-        #CreateMesh.plot_triangles(nodes_all, triangles_all, self.positive_regions, self.negative_regions)
+        # CreateMesh.plot_polygon_points(nodes_all, self.positive_regions, self.negative_regions)
+        # CreateMesh.plot_triangles(nodes_all, triangles_all, self.positive_regions, self.negative_regions)
 
         self.nodes = nodes_all
         self.triangulation = triangles_all
@@ -623,7 +623,7 @@ if __name__ == '__main__':
                             '10': {'coordinates': (0.0, 0.0), 'bc': {'type': None, 'value': None}},
                             '11': {'coordinates': (0.0, 0.75), 'bc': {'type': None, 'value': None}},
                             '12': {'coordinates': (-1.0, 0.5), 'bc': {'type': None, 'value': None}}}
-    calculation_parameters1 = {'mesh_density': 5, 'freq': None}
+    calculation_parameters1 = {'mesh_density': 1, 'freq': None}
     params1 = (region_parameters1, boundary_parameters1, node_parameters1, calculation_parameters1)
     createmesh = CreateMesh(*params1)  # Todo - Develop: For testing mesh
     nodes, single_nodes_dict, boundary_nodes_dict, triangulation, triangulation_region_dict = createmesh.create_mesh()

@@ -23,6 +23,8 @@ from definebcs import CreateBCParams
 from geometry import Geometry
 from meshgen import CreateMesh
 import random
+import threading
+import time
 
 #################################################
 # Other
@@ -51,11 +53,18 @@ class GUI(tk.Tk):
         self.boundaries = None
         self.nodes = None
         # definitions for setting BCs, Mats etc. init in init_parameters() when geometry was created
-        self.equation = 'HH'  # HE for heat equation, HH for hemlholtz equation
+        self.equation = 'HE'  # HE for heat equation, HH for hemlholtz equation
         self.region_parameters = None  # saves materials, area_neg_pos, nodes, number for regions
         self.boundary_parameters = None  # saves dirichlet/neumann/robin values and setting, nodes, number for boundaries
         self.node_parameters = None  # saves node number, coords, neumann value for nodes
         self.calculation_parameters = None  # save calculation parameters, mesh density etc
+        # output from CreateMesh after clicking button Create Mesh
+        self.nodes_mesh_gen = None
+        self.single_nodes_dict = None
+        self.boundary_nodes_dict = None
+        self.triangulation = None
+        self.triangulation_region_dict = None
+
         # some output for user
         self.text_information_str = ''
         ##################################################
@@ -159,8 +168,46 @@ class GUI(tk.Tk):
             self.window_assign_calculation_params()
 
         def create_mesh():
-            mesh = CreateMesh(self.region_parameters, self.boundary_parameters,
-                              self.node_parameters, self.calculation_parameters)
+
+            def thread_create_mesh():
+                mesh = CreateMesh(self.region_parameters, self.boundary_parameters,
+                                  self.node_parameters, self.calculation_parameters)
+                mesh_generator_output = mesh.create_mesh()
+                self.nodes_mesh_gen = mesh_generator_output[0]
+                self.single_nodes_dict = mesh_generator_output[1]
+                self.boundary_nodes_dict = mesh_generator_output[2]
+                self.triangulation = mesh_generator_output[3]
+                self.triangulation_region_dict = mesh_generator_output[4]
+
+            window_create_mesh_wait = tk.Toplevel(self)
+            window_create_mesh_wait.title('CREATING MESH')
+            window_create_mesh_wait.geometry(f"{200}x{150}")
+            window_create_mesh_wait.resizable(False, False)
+            tk.Label(window_create_mesh_wait, text="Creating Mesh...\nPlease Wait",
+                                                     font=GUIStatics.STANDARD_FONT_MID_BOLD).place(relx=0.15, rely=0.1)
+            window_create_mesh_wait_label = tk.Label(window_create_mesh_wait, text="",
+                                                     font=GUIStatics.STANDARD_FONT_MID_BOLD)
+            window_create_mesh_wait_label.place(relx=0.35, rely=0.6)
+
+            thread_mesh = threading.Thread(target=thread_create_mesh)
+            thread_mesh.start()
+
+            def update_wait_label():
+                wait_text = ''
+                while thread_mesh.is_alive():
+                    if wait_text == '.....':
+                        wait_text = ''
+                    wait_text += '.'
+                    window_create_mesh_wait_label.config(text=wait_text)
+                    time.sleep(0.5)
+                window_create_mesh_wait.destroy()
+
+            update_thread = threading.Thread(target=update_wait_label)
+            update_thread.start()
+            button_define_geometry.config(state='normal')
+
+        def show_mesh():
+            self.draw_mesh_from_mesh_output()
 
         def solve_system():
             ...
@@ -171,6 +218,11 @@ class GUI(tk.Tk):
         button_define_geometry = tk.Button(self, text="GEOMETRY", command=self.define_geometry, width=12,
                                            font=GUIStatics.STANDARD_FONT_BUTTON_BIG_BOLD, height=1)
         button_define_geometry.place(relx=widgets_x_start, rely=0.1)
+
+        # Button show Mesh
+        button_define_geometry = tk.Button(self, text="SHOW MESH", command=show_mesh, width=12,
+                                           font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1, state='disabled')
+        button_define_geometry.place(relx=0.25, rely=0.035)
 
         # FEM Parameters
         GUIStatics.create_divider(self, widgets_x_start, 0.17, 230)
@@ -245,7 +297,7 @@ class GUI(tk.Tk):
         #self.text_label = tk.Label(self, text="Init")
         #self.text_label.place(relx=0.02, rely=0.965)
 
-        # Developing
+        # Developing -> uncomment self.regions etc. in init!
         self.animation = False  # todo delete this
         self.init_parameters()  # todo delete this
         self.draw_geometry_from_definebcs()  # todo delete this
@@ -311,6 +363,7 @@ class GUI(tk.Tk):
                 self.text_information_str += f"Frequency: {self.calculation_parameters['freq']}\n"
             GUIStatics.update_text_field(self.text_information, self.text_information_str)
             window_calc_params.destroy()  # closes top window
+            self.button_create_mesh.config(state="normal")
 
         button_accept = tk.Button(window_calc_params, text="ACCEPT PARAMETERs", command=accept_calcparams,
                                           width=19, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
@@ -760,6 +813,60 @@ class GUI(tk.Tk):
             self.canvas.create_text(node[0] - 10, node[1] - 10, text=text, fill='#14380A',
                                     font=GUIStatics.STANDARD_FONT_SMALL)
 
+    def draw_mesh_from_mesh_output(self):
+        all_canvas_elements = self.canvas.find_all()
+        for elem in all_canvas_elements:
+            self.canvas.delete(elem)
+        GUIStatics.add_canvas_static_elements(self.canvas)
+
+        # draw regions two times so negative areas are above positives
+        color_code_plus = '#B8A8A8'
+        color_code_minus = '#A8B3B8'
+        color_code_outline_plus = '#261D1D'
+        color_code_outline_minus = '#272634'
+        for region_nbr, params in self.regions.items():
+            nodes = params['coordinates']
+            area_neg_pos = params['area_neg_pos']
+            if area_neg_pos == 'Negative':
+                continue
+            color_code = color_code_plus if area_neg_pos == 'Positive' else color_code_minus
+            nodes = [GUIStatics.transform_node_to_canvas(node) for node in nodes]
+            self.canvas.create_polygon(nodes, fill=color_code, outline=color_code_outline_plus, width=2)
+        for region_nbr, params in self.regions.items():
+            nodes = params['coordinates']
+            area_neg_pos = params['area_neg_pos']
+            if area_neg_pos == 'Positive':
+                continue
+            color_code = color_code_plus if area_neg_pos == 'Positive' else color_code_minus
+            nodes = [GUIStatics.transform_node_to_canvas(node) for node in nodes]
+            self.canvas.create_polygon(nodes, fill=color_code, outline=color_code_outline_minus, width=2)
+
+        # draw nodes
+        if len(self.nodes_mesh_gen) < 1000:
+            for node in self.nodes_mesh_gen:
+                node_transformed = GUIStatics.transform_node_to_canvas(node)
+                nx, ny = node_transformed[0], node_transformed[1]
+                self.canvas.create_oval(nx-2, ny-2, nx+2, ny+2, fill="gray")
+
+        # draw elements
+        for triangle in self.triangulation:
+            p0 = int(triangle[0])
+            p1 = int(triangle[1])
+            p2 = int(triangle[2])
+
+            n0 = GUIStatics.transform_node_to_canvas(self.nodes_mesh_gen[p0])
+            n1 = GUIStatics.transform_node_to_canvas(self.nodes_mesh_gen[p1])
+            n2 = GUIStatics.transform_node_to_canvas(self.nodes_mesh_gen[p2])
+            self.canvas.create_line(n0, n1, fill="#380303")
+            self.canvas.create_line(n1, n2, fill="#380303")
+            self.canvas.create_line(n2, n0, fill="#380303")
+
+        # draw legend and stats
+        stat_text = f"Nodes    : {len(self.nodes_mesh_gen)}\n" \
+                    f"Elements : {len(self.triangulation)}\n"
+        self.canvas.create_text(80, 30, text=stat_text, fill='#21090B',
+                                font=('Courier New', 8))
+
     def debug(self):
         """
         for debugging
@@ -771,10 +878,17 @@ class GUI(tk.Tk):
         print(f"self.boundaries = {self.boundaries}")
         print(f"self.nodes = {self.nodes}")
         print(f"self.equation = {self.equation}")
+
         print(f"\nself.region_parameters = {self.region_parameters}")
         print(f"self.boundary_parameters = {self.boundary_parameters}")
         print(f"self.node_parameters = {self.node_parameters}")
         print(f"self.calculation_parameters = {self.calculation_parameters}")
+
+        print(f"self.nodes_mesh_gen = {self.nodes_mesh_gen}")
+        print(f"self.single_nodes_dict = {self.single_nodes_dict}")
+        print(f"self.boundary_nodes_dict = {self.boundary_nodes_dict}")
+        print(f"self.triangulation = {self.triangulation}")
+        print(f"self.triangulation_region_dict = {self.triangulation_region_dict}")
 
 
 if __name__ == '__main__':
