@@ -25,6 +25,7 @@ from meshgen import CreateMesh
 import random
 import threading
 import time
+from calcfem import CalcFEM
 
 #################################################
 # Other
@@ -69,20 +70,20 @@ class GUI(tk.Tk):
         self.text_information_str = ''
         ##################################################
         # for development
-        self.regions = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
-                              'area_neg_pos': 'Positive'},
-                        '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive'},
-                        '2': {'coordinates': [(-1.0, 0.0), (0.0, 0.0), (0.0, 0.75), (-1.0, 0.5)],
-                              'area_neg_pos': 'Negative'}}
-        self.boundaries = {'0': ((-4.0, -3.0), (1.0, -2.5)), '1': ((1.0, -2.5), (2.5, 1.0)),
-                           '2': ((2.5, 1.0), (-2.5, 1.0)), '3': ((-2.5, 1.0), (-4.2, -1.5)),
-                           '4': ((-4.2, -1.5), (-4.0, -3.0)), '5': ((2.5, 1.0), (0.0, 3.0)),
-                           '6': ((0.0, 3.0), (-2.5, 1.0)), '7': ((-1.0, 0.0), (0.0, 0.0)),
-                           '8': ((0.0, 0.0), (0.0, 0.75)), '9': ((0.0, 0.75), (-1.0, 0.5)),
-                           '10': ((-1.0, 0.5), (-1.0, 0.0))}
-        self.nodes = {'0': (-3.0, -2.0), '1': (0.0, 1.5), '2': (1.0, -1.0), '3': (-4.0, -3.0), '4': (1.0, -2.5),
-                      '5': (2.5, 1.0), '6': (-2.5, 1.0), '7': (-4.2, -1.5), '8': (0.0, 3.0), '9': (-1.0, 0.0),
-                      '10': (0.0, 0.0), '11': (0.0, 0.75), '12': (-1.0, 0.5)}
+        # self.regions = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
+        #                       'area_neg_pos': 'Positive'},
+        #                 '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive'},
+        #                 '2': {'coordinates': [(-1.0, 0.0), (0.0, 0.0), (0.0, 0.75), (-1.0, 0.5)],
+        #                       'area_neg_pos': 'Negative'}}
+        # self.boundaries = {'0': ((-4.0, -3.0), (1.0, -2.5)), '1': ((1.0, -2.5), (2.5, 1.0)),
+        #                    '2': ((2.5, 1.0), (-2.5, 1.0)), '3': ((-2.5, 1.0), (-4.2, -1.5)),
+        #                    '4': ((-4.2, -1.5), (-4.0, -3.0)), '5': ((2.5, 1.0), (0.0, 3.0)),
+        #                    '6': ((0.0, 3.0), (-2.5, 1.0)), '7': ((-1.0, 0.0), (0.0, 0.0)),
+        #                    '8': ((0.0, 0.0), (0.0, 0.75)), '9': ((0.0, 0.75), (-1.0, 0.5)),
+        #                    '10': ((-1.0, 0.5), (-1.0, 0.0))}
+        # self.nodes = {'0': (-3.0, -2.0), '1': (0.0, 1.5), '2': (1.0, -1.0), '3': (-4.0, -3.0), '4': (1.0, -2.5),
+        #               '5': (2.5, 1.0), '6': (-2.5, 1.0), '7': (-4.2, -1.5), '8': (0.0, 3.0), '9': (-1.0, 0.0),
+        #               '10': (0.0, 0.0), '11': (0.0, 0.75), '12': (-1.0, 0.5)}
         # for development
         ##################################################
         super().__init__()
@@ -210,7 +211,10 @@ class GUI(tk.Tk):
             self.draw_mesh_from_mesh_output()
 
         def solve_system():
-            ...
+            params_mesh = (self.nodes_mesh_gen, self.single_nodes_dict, self.boundary_nodes_dict, self.triangulation, self.triangulation_region_dict)
+            params_boundaries_materials = (self.region_parameters, self.boundary_parameters, self.node_parameters, self.calculation_parameters)
+            calcfem = CalcFEM(params_mesh, params_boundaries_materials)
+
 
         # Button define Geometry
         tk.Frame(self, height=2, width=230, bg=GUIStatics.CANVAS_BORDER_COLOR) \
@@ -298,9 +302,9 @@ class GUI(tk.Tk):
         #self.text_label.place(relx=0.02, rely=0.965)
 
         # Developing -> uncomment self.regions etc. in init!
-        self.animation = False  # todo delete this
-        self.init_parameters()  # todo delete this
-        self.draw_geometry_from_definebcs()  # todo delete this
+        #self.animation = False  # todo delete this
+        #self.init_parameters()  # todo delete this
+        #self.draw_geometry_from_definebcs()  # todo delete this
         # Developing
         ##################################################
 
@@ -337,6 +341,7 @@ class GUI(tk.Tk):
                                        label="", font=GUIStatics.STANDARD_FONT_SMALL)
         density_slider.place(relx=widgets_x_start + 0.325, rely=0.125)
 
+
         if self.equation == 'HH':
             GUIStatics.create_divider(window_calc_params, widgets_x_start, 0.3, 335)
             tk.Label(window_calc_params, text="Frequency:", font=GUIStatics.STANDARD_FONT_SMALL) \
@@ -364,6 +369,7 @@ class GUI(tk.Tk):
             GUIStatics.update_text_field(self.text_information, self.text_information_str)
             window_calc_params.destroy()  # closes top window
             self.button_create_mesh.config(state="normal")
+            self.calculation_parameters['equation'] = self.equation
 
         button_accept = tk.Button(window_calc_params, text="ACCEPT PARAMETERs", command=accept_calcparams,
                                           width=19, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
@@ -723,7 +729,7 @@ class GUI(tk.Tk):
         for node_nbr, node in self.nodes.items():
             coordinates = node
             node_parameters[node_nbr] = {'coordinates': coordinates, 'bc': {'type': None, 'value': None}}
-        calculation_parameters = {'mesh_density': None, 'freq': None}
+        calculation_parameters = {'mesh_density': None, 'freq': None, 'equation': 'HE'}
         self.region_parameters = region_parameters
         self.boundary_parameters = boundary_parameters
         self.node_parameters = node_parameters
