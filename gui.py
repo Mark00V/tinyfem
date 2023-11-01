@@ -55,7 +55,7 @@ class GUI(tk.Tk):
         self.boundaries = None
         self.nodes = None
         # definitions for setting BCs, Mats etc. init in init_parameters() when geometry was created
-        self.equation = 'HE'  # HE for heat equation, HH for hemlholtz equation
+        self.equation = None  # HE for heat equation, HH for hemlholtz equation
         self.region_parameters = None  # saves materials, area_neg_pos, nodes, number for regions
         self.boundary_parameters = None  # saves dirichlet/neumann/robin values and setting, nodes, number for boundaries
         self.node_parameters = None  # saves node number, coords, neumann value for nodes
@@ -157,7 +157,7 @@ class GUI(tk.Tk):
         animate()
 
         ##################################################
-
+        self.equation = 'HE'
         ##################################################
         # Buttons
         def assign_BCs():
@@ -219,7 +219,6 @@ class GUI(tk.Tk):
             calcfem = CalcFEM(params_mesh, params_boundaries_materials)
             self.solution = calcfem.calc_fem()
             ShowSolution(self.solution, self.nodes_mesh_gen, self.triangulation)  # opens window for solution
-
         # Button define Geometry
         tk.Frame(self, height=2, width=230, bg=GUIStatics.CANVAS_BORDER_COLOR) \
             .place(relx=widgets_x_start, rely=0.08)
@@ -510,21 +509,6 @@ class GUI(tk.Tk):
         button_accept = tk.Button(window_bcs, text="ACCEPT REGIONs", command=accept_regions,
                                           width=14, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
         button_accept.place(relx=widgets_x_start + 0.05, rely= 0.895)
-
-    def window_solution(self):
-        """
-        window for solution
-        :return:
-        """
-
-        window_sol = tk.Toplevel(self)
-        window_sol.title('SOLUTION')
-        self.geometry(f"{GUIStatics.MAIN_WINDOW_SIZE_X}x{GUIStatics.MAIN_WINDOW_SIZE_Y}")
-        window_sol.resizable(False, False)
-
-
-
-
 
     def window_assign_boundary_conditions(self):
         """

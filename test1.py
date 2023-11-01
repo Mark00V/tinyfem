@@ -1,11 +1,4 @@
-import numpy as np
+f = 12.947838
 
-region_parameters = {'0': {'coordinates': [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0), (0.0, 0.0)], 'area_neg_pos': 'Positive', 'material': {'k': 0, 'c': 0, 'rho': 0}}, '1': {'coordinates': [(0.0, 1.0), (1.0, 1.0), (1.0, 2.0), (0.0, 1.0)], 'area_neg_pos': 'Positive', 'material': {'k': 0, 'c': 0, 'rho': 0}}}
-boundary_parameters = {'0': {'coordinates': [(0.0, 0.0), (1.0, 0.0)], 'bc': {'type': None, 'value': None}}, '1': {'coordinates': [(1.0, 0.0), (1.0, 1.0)], 'bc': {'type': None, 'value': None}}, '2': {'coordinates': [(1.0, 1.0), (0.0, 1.0)], 'bc': {'type': None, 'value': None}}, '3': {'coordinates': [(0.0, 1.0), (0.0, 0.0)], 'bc': {'type': None, 'value': None}}, '4': {'coordinates': [(1.0, 1.0), (1.0, 2.0)], 'bc': {'type': None, 'value': None}}, '5': {'coordinates': [(1.0, 2.0), (0.0, 1.0)], 'bc': {'type': None, 'value': None}}}
-node_parameters = {'0': {'coordinates': (0.5, 0.5), 'bc': {'type': None, 'value': None}}, '1': {'coordinates': (0.0, 0.0), 'bc': {'type': None, 'value': None}}, '2': {'coordinates': (1.0, 0.0), 'bc': {'type': None, 'value': None}}, '3': {'coordinates': (1.0, 1.0), 'bc': {'type': None, 'value': None}}, '4': {'coordinates': (0.0, 1.0), 'bc': {'type': None, 'value': None}}, '5': {'coordinates': (1.0, 2.0), 'bc': {'type': None, 'value': None}}}
-calculation_parameters = {'mesh_density': 1, 'freq': None, 'equation': 'HE'}
-nodes_mesh_gen = np.array([np.array([0.5, 0.5]), np.array([0., 0.]), np.array([0.5, 0. ]), np.array([1., 0.]), np.array([1. , 0.5]), np.array([1., 1.]), np.array([0.5, 1. ]), np.array([0., 1.]), np.array([0. , 0.5]), np.array([1. , 1.5]), np.array([1., 2.]), np.array([0.5, 1.5])])
-single_nodes_dict = {'0': 0, '1': 1, '2': 3, '3': 5, '4': 7, '5': 10}
-boundary_nodes_dict = {'0': [[1, np.array([0., 0.])], [2, np.array([0.5, 0. ])], [3, np.array([1., 0.])]], '1': [[3, np.array([1., 0.])], [4, np.array([1. , 0.5])], [5, np.array([1., 1.])]], '2': [[5, np.array([1., 1.])], [6, np.array([0.5, 1. ])], [7, np.array([0., 1.])]], '3': [[7, np.array([0., 1.])], [8, np.array([0. , 0.5])], [1, np.array([0., 0.])]], '4': [[5, np.array([1., 1.])], [9, np.array([1. , 1.5])], [10, np.array([1., 2.])]], '5': [[10, np.array([1., 2.])], [11, np.array([0.5, 1.5])], [7, np.array([0., 1.])]]}
-triangulation = np.array([np.array([2., 4., 0.]), np.array([4., 2., 3.]), np.array([4., 6., 0.]), np.array([6., 4., 5.]), np.array([8., 2., 0.]), np.array([2., 8., 1.]), np.array([6., 8., 0.]), np.array([8., 6., 7.]), np.array([ 6., 11.,  7.]), np.array([11.,  9., 10.]), np.array([ 6.,  9., 11.]), np.array([9., 6., 5.])])
-triangulation_region_dict = {'0': range(0, 8), '1': range(8, 12)}
+f_s = f"{f:.4f}".ljust(10)
+print(f"x{f_s}x")
