@@ -37,6 +37,34 @@ class CalcFEM:
         self.sysarray = None
         self.sysmatrix_diri = None  # Systemmatrix after implementing Dirichlet Cond
         self.force_vector_diri = None  # Force Vector after implementing Dirichlet Cond
+        self.solution = None
+
+        # development
+        self.file_path_dev = 'output_gui_4_calcfem_' + '2' + '.txt'
+
+    def develop_print_input(self):
+        print("\n\n\n------------------DEBUG--------------------")
+        print(f"self.equation = {self.equation}")
+
+        print(f"\nself.region_parameters = {self.region_parameters}")
+        print(f"self.boundary_parameters = {self.boundary_parameters}")
+        print(f"self.node_parameters = {self.node_parameters}")
+        print(f"self.calculation_parameters = {self.calculation_parameters}")
+
+        print(f"self.nodes_mesh_gen = {self.nodes_mesh_gen}")
+        print(f"self.single_nodes_dict = {self.single_nodes_dict}")
+        print(f"self.boundary_nodes_dict = {self.boundary_nodes_dict}")
+        print(f"self.triangulation = {self.triangulation}")
+        print(f"self.triangulation_region_dict = {self.triangulation_region_dict}")
+
+    def develop(self):
+        """
+        loads data for development
+        :return:
+        """
+        with open(self.file_path_dev, 'r') as f:
+            content = f.read()
+        exec(content)
 
     def calc_fem(self):
         """
@@ -44,7 +72,9 @@ class CalcFEM:
         implements boundary conditions, solves linear system
         :return:
         """
-        print(self.triangulation)
+
+
+        # set equation
         self.equation = self.calculation_parameters['equation']  # either HE (HeatEquation) or HH (HelmHoltz)
 
         # calculate element matrices
@@ -61,10 +91,43 @@ class CalcFEM:
 
         self.print_matrix(self.sysmatrix_diri)
         self.print_matrix(self.force_vector_diri)
-
+        self.develop_print_input()
         # Solve the system
-        #self.solve_linear_system()
+        self.solve_linear_system()
+        print(self.solution)
 
+        # plot solution
+        self.plot_solution(self.solution, self.nodes_mesh_gen, self.triangulation)
+
+    @staticmethod
+    def plot_solution(solution, all_points, triangles):
+        """
+        Plots the solution via matplotlib
+        """
+
+
+        dataz = np.real(solution)
+        values = dataz
+        aspectxy = 1
+        triang_mpl = tri.Triangulation(all_points[:, 0], all_points[:, 1], triangles)
+
+        fig, ax = plt.subplots(figsize=(12, 8))
+
+        ax.set_title('solution')
+        ax.set_xlabel('x [m]')
+        ax.set_ylabel('y [m]')
+        ax.set_aspect(aspectxy)
+
+        contour = ax.tricontourf(triang_mpl, values, cmap='viridis', levels=20)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.2)
+        cbar = fig.colorbar(contour, cax=cax)
+
+        ax.scatter(all_points[:, 0], all_points[:, 1], c=values, cmap='viridis', marker='.',
+                             edgecolors='w', s=10)
+        ax.triplot(triang_mpl, 'w-', linewidth=0.1)
+
+        plt.show()
 
     def solve_linear_system(self):
 
@@ -77,7 +140,7 @@ class CalcFEM:
         """
 
         # create dirichlet list for implementation of dirichlet boundary conditions
-        dirichlet_list = list()
+        dirichlet_dict = dict()
         for boundary_nbr, params in self.boundary_parameters.items():
             bc = params['bc']
             bc_type = bc['type']
@@ -86,8 +149,12 @@ class CalcFEM:
             bc_pos = [elem[0] for elem in bc_pos_nodes]
             if bc_type == 'Dirichlet':
                 for node in bc_pos:
-                    dirichlet_list += [[node, bc_value]]
-        dirichlet_list = np.array(dirichlet_list)
+                    try:
+                        dirichlet_dict[node] = (dirichlet_dict[node] + bc_value) / 2
+                    except KeyError:
+                        dirichlet_dict[node] = bc_value
+        dirichlet_list = np.array([[key, val] for key, val in dirichlet_dict.items()])
+
         self.sysmatrix_diri, self.force_vector_diri = self.implement_dirichlet_condition(dirichlet_list, self.sysarray, self.force_vector)
 
 
@@ -100,6 +167,7 @@ class CalcFEM:
         :param force_vector: np.array ([[val_1],[val_2],...])
         :return:
         """
+
         dirichlet_list_positions = [int(elem[0]) for elem in dirichlet_list]
         dirichlet_list_values = dirichlet_list[:, 1]
 
@@ -151,7 +219,7 @@ class CalcFEM:
                     ztb = int(alloc_mat[ielem, b])
                     self.syssteifarray[zta, ztb] = self.syssteifarray[zta, ztb] + elesteifmat[a, b]
                     self.sysmassarray[zta, ztb] = self.sysmassarray[zta, ztb] + elemassmat[a, b]
-
+            print(elesteifmat)
         if self.equation == 'HE':
             self.sysarray = self.syssteifarray
         elif self.equation == 'HH':  # todo: include in elementmatrices
@@ -187,7 +255,7 @@ class CalcFEM:
             k = materials['k']
             c = materials['c']
             rho = materials['rho']
-            p1, p2, p3 = triangle[0], triangle[1], triangle[2]
+            p1, p2, p3 = int(triangle[0]), int(triangle[1]), int(triangle[2])
             x1 = self.nodes_mesh_gen[p1][0]
             y1 = self.nodes_mesh_gen[p1][1]
             x2 = self.nodes_mesh_gen[p2][0]
@@ -200,7 +268,6 @@ class CalcFEM:
             elif self.equation == 'HH':
                 elemsteif, elemmass = ElementMatrices.calc_2d_triangular_acoustic_p1(c, rho, nodes)
             self.all_element_matrices_steif[idx] = elemsteif
-            print(elemsteif)
             if elemmass is not None:  # since it might be a np.array
                 self.all_element_matrices_mass[idx] = elemmass
 
@@ -243,32 +310,32 @@ class CalcFEM:
 
 if __name__ == '__main__':
     calcfem = CalcFEM((0,0,0,0,0), (0,0,0,0))  # Develop
-
-    calcfem.nodes_mesh_gen = [[0.5, 0.5], [0.,  0. ], [0.5, 0. ], [1.,  0. ], [1.,  0.5], [1.,  1. ], [0.5, 1. ], [0.,  1. ], [0.,  0.5], [1.,  1.5], [1.,  2. ], [0.5, 1.5]]
-    calcfem.single_nodes_dict = {'0': 1, '1': 3, '2': 5, '3': 7, '4': 10}
-    calcfem.boundary_nodes_dict = {'0': [[1, np.array([0., 0.])], [2, np.array([0.5, 0. ])], [3, np.array([1., 0.])]], '1': [[3, np.array([1., 0.])], [4, np.array([1. , 0.5])], [5, np.array([1., 1.])]], '2': [[5, np.array([1., 1.])], [6, np.array([0.5, 1. ])], [7, np.array([0., 1.])]], '3': [[7, np.array([0., 1.])], [8, np.array([0. , 0.5])], [1, np.array([0., 0.])]], '4': [[5, np.array([1., 1.])], [9, np.array([1. , 1.5])], [10, np.array([1., 2.])]], '5': [[10, np.array([1., 2.])], [11, np.array([0.5, 1.5])], [7, np.array([0., 1.])]]}
-    calcfem.triangulation = np.array([[2,4,0],[4,2,3],[4,6,0],[6,4,5],[8,2,0],[2,8,1],[6,8,0],[8,6,7],[6,11,7],[11,9,10],[6,9,11],[9,6,5]])
-    calcfem.triangulation_region_dict = {'0': range(0, 8), '1': range(8, 12)}
-    calcfem.calculation_parameters = {'mesh_density': 1, 'freq': None, 'equation': 'HE'}
-    calcfem.region_parameters = {
-            '0': {'coordinates': [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)], 'area_neg_pos': 'Positive',
-                  'material'   : {'k': 1.0, 'c': 0, 'rho': 0}},
-            '1': {'coordinates': [(0.0, 1.0), (1.0, 1.0), (1.0, 2.0)], 'area_neg_pos': 'Positive',
-                  'material'   : {'k': 3.0, 'c': 0, 'rho': 0}}}
-    calcfem.boundary_parameters = {'0': {'coordinates': [(0.0, 0.0), (1.0, 0.0)], 'bc': {'type': None, 'value': None}},
-                                '1': {'coordinates': [(1.0, 0.0), (1.0, 1.0)], 'bc': {'type': None, 'value': None}},
-                                '2': {'coordinates': [(1.0, 1.0), (0.0, 1.0)], 'bc': {'type': None, 'value': None}},
-                                '3': {'coordinates': [(0.0, 1.0), (0.0, 0.0)],
-                                      'bc'         : {'type': 'Dirichlet', 'value': 3.0}},
-                                '4': {'coordinates': [(1.0, 1.0), (1.0, 2.0)],
-                                      'bc'         : {'type': 'Dirichlet', 'value': 4.0}},
-                                '5': {'coordinates': [(1.0, 2.0), (0.0, 1.0)], 'bc': {'type': None, 'value': None}}}
-    calcfem.node_parameters = {'0': {'coordinates': (0.5, 0.5), 'bc': {'type': None, 'value': None}},
-                            '1': {'coordinates': (0.0, 0.0), 'bc': {'type': None, 'value': None}},
-                            '2': {'coordinates': (1.0, 0.0), 'bc': {'type': None, 'value': None}},
-                            '3': {'coordinates': (1.0, 1.0), 'bc': {'type': None, 'value': None}},
-                            '4': {'coordinates': (0.0, 1.0), 'bc': {'type': None, 'value': None}},
-                            '5': {'coordinates': (1.0, 2.0), 'bc': {'type': None, 'value': None}}}
-    calcfem.calculation_parameters = {'mesh_density': 1, 'freq': None, 'equation': 'HE'}
+    calcfem.develop()  # read date via exec(!)
+    # calcfem.nodes_mesh_gen = [[0.5, 0.5], [0.,  0. ], [0.5, 0. ], [1.,  0. ], [1.,  0.5], [1.,  1. ], [0.5, 1. ], [0.,  1. ], [0.,  0.5], [1.,  1.5], [1.,  2. ], [0.5, 1.5]]
+    # calcfem.single_nodes_dict = {'0': 1, '1': 3, '2': 5, '3': 7, '4': 10}
+    # calcfem.boundary_nodes_dict = {'0': [[1, np.array([0., 0.])], [2, np.array([0.5, 0. ])], [3, np.array([1., 0.])]], '1': [[3, np.array([1., 0.])], [4, np.array([1. , 0.5])], [5, np.array([1., 1.])]], '2': [[5, np.array([1., 1.])], [6, np.array([0.5, 1. ])], [7, np.array([0., 1.])]], '3': [[7, np.array([0., 1.])], [8, np.array([0. , 0.5])], [1, np.array([0., 0.])]], '4': [[5, np.array([1., 1.])], [9, np.array([1. , 1.5])], [10, np.array([1., 2.])]], '5': [[10, np.array([1., 2.])], [11, np.array([0.5, 1.5])], [7, np.array([0., 1.])]]}
+    # calcfem.triangulation = np.array([[2,4,0],[4,2,3],[4,6,0],[6,4,5],[8,2,0],[2,8,1],[6,8,0],[8,6,7],[6,11,7],[11,9,10],[6,9,11],[9,6,5]])
+    # calcfem.triangulation_region_dict = {'0': range(0, 8), '1': range(8, 12)}
+    # calcfem.calculation_parameters = {'mesh_density': 1, 'freq': None, 'equation': 'HE'}
+    # calcfem.region_parameters = {
+    #         '0': {'coordinates': [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)], 'area_neg_pos': 'Positive',
+    #               'material'   : {'k': 1.0, 'c': 0, 'rho': 0}},
+    #         '1': {'coordinates': [(0.0, 1.0), (1.0, 1.0), (1.0, 2.0)], 'area_neg_pos': 'Positive',
+    #               'material'   : {'k': 3.0, 'c': 0, 'rho': 0}}}
+    # calcfem.boundary_parameters = {'0': {'coordinates': [(0.0, 0.0), (1.0, 0.0)], 'bc': {'type': None, 'value': None}},
+    #                             '1': {'coordinates': [(1.0, 0.0), (1.0, 1.0)], 'bc': {'type': None, 'value': None}},
+    #                             '2': {'coordinates': [(1.0, 1.0), (0.0, 1.0)], 'bc': {'type': None, 'value': None}},
+    #                             '3': {'coordinates': [(0.0, 1.0), (0.0, 0.0)],
+    #                                   'bc'         : {'type': 'Dirichlet', 'value': 3.0}},
+    #                             '4': {'coordinates': [(1.0, 1.0), (1.0, 2.0)],
+    #                                   'bc'         : {'type': 'Dirichlet', 'value': 4.0}},
+    #                             '5': {'coordinates': [(1.0, 2.0), (0.0, 1.0)], 'bc': {'type': None, 'value': None}}}
+    # calcfem.node_parameters = {'0': {'coordinates': (0.5, 0.5), 'bc': {'type': None, 'value': None}},
+    #                         '1': {'coordinates': (0.0, 0.0), 'bc': {'type': None, 'value': None}},
+    #                         '2': {'coordinates': (1.0, 0.0), 'bc': {'type': None, 'value': None}},
+    #                         '3': {'coordinates': (1.0, 1.0), 'bc': {'type': None, 'value': None}},
+    #                         '4': {'coordinates': (0.0, 1.0), 'bc': {'type': None, 'value': None}},
+    #                         '5': {'coordinates': (1.0, 2.0), 'bc': {'type': None, 'value': None}}}
+    # calcfem.calculation_parameters = {'mesh_density': 1, 'freq': None, 'equation': 'HE'}
 
     calcfem.calc_fem()

@@ -895,6 +895,20 @@ class GUI(tk.Tk):
         print(f"self.boundary_nodes_dict = {self.boundary_nodes_dict}")
         print(f"self.triangulation = {self.triangulation}")
         print(f"self.triangulation_region_dict = {self.triangulation_region_dict}")
+        write_output = (f"self.region_parameters = {self.region_parameters}\n"
+                        f"self.boundary_parameters = {self.boundary_parameters}\n"
+                        f"self.node_parameters = {self.node_parameters}\n"
+                        f"self.calculation_parameters = {self.calculation_parameters}\n"
+                        f"self.nodes_mesh_gen = np.array({list(self.nodes_mesh_gen)})\n"
+                        f"self.single_nodes_dict = {self.single_nodes_dict}\n"
+                        f"self.boundary_nodes_dict = {self.boundary_nodes_dict}\n"
+                        f"self.triangulation = np.array({list(self.triangulation)})\n"
+                        f"self.triangulation_region_dict = {self.triangulation_region_dict}\n")
+        write_output = write_output.replace('array', 'np.array')
+        write_output = write_output.replace('np.np.', 'np.')
+        with open('output_from_gui.txt', 'w') as f:
+            f.write(write_output)
+
 
 
 if __name__ == '__main__':
