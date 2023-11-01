@@ -40,7 +40,7 @@ class CalcFEM:
         self.solution = None
 
         # development
-        self.file_path_dev = 'output_gui_4_calcfem_' + '2' + '.txt'
+        self.file_path_dev = r'testing\output_gui_4_calcfem_' + '1' + '.txt'
 
     def develop_print_input(self):
         print("\n\n\n------------------DEBUG--------------------")
@@ -89,15 +89,17 @@ class CalcFEM:
         # implement boundary conditions
         self.implement_boundary_conditions()
 
-        self.print_matrix(self.sysmatrix_diri)
-        self.print_matrix(self.force_vector_diri)
-        self.develop_print_input()
+        # self.print_matrix(self.sysmatrix_diri)
+        # self.print_matrix(self.force_vector_diri)
+        # self.develop_print_input()
         # Solve the system
         self.solve_linear_system()
-        print(self.solution)
 
         # plot solution
         self.plot_solution(self.solution, self.nodes_mesh_gen, self.triangulation)
+
+        return self.solution
+
 
     @staticmethod
     def plot_solution(solution, all_points, triangles):
@@ -132,6 +134,7 @@ class CalcFEM:
     def solve_linear_system(self):
 
         self.solution = np.linalg.solve(self.sysmatrix_diri, self.force_vector_diri)
+        # print(self.solution)
 
     def implement_boundary_conditions(self):
         """
@@ -219,7 +222,7 @@ class CalcFEM:
                     ztb = int(alloc_mat[ielem, b])
                     self.syssteifarray[zta, ztb] = self.syssteifarray[zta, ztb] + elesteifmat[a, b]
                     self.sysmassarray[zta, ztb] = self.sysmassarray[zta, ztb] + elemassmat[a, b]
-            print(elesteifmat)
+            # print(elesteifmat)
         if self.equation == 'HE':
             self.sysarray = self.syssteifarray
         elif self.equation == 'HH':  # todo: include in elementmatrices

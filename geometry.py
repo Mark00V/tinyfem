@@ -730,12 +730,6 @@ class Geometry(tk.Toplevel):
                 self.canvas.create_text(node[0], node[1] - 10, text=text, fill='#1F1F1F', font=("Helvetica", 7))
 
 
-
-
-
-
-
-
     def return_geometry(self):
         """
         Callback method to return defined geometry to main class GUI

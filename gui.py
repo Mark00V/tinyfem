@@ -26,6 +26,7 @@ import random
 import threading
 import time
 from calcfem import CalcFEM
+from showsolution import ShowSolution
 
 #################################################
 # Other
@@ -193,6 +194,8 @@ class GUI(tk.Tk):
             thread_mesh = threading.Thread(target=thread_create_mesh)
             thread_mesh.start()
 
+            self.button_solve_system.config(state="normal")
+
             def update_wait_label():
                 wait_text = ''
                 while thread_mesh.is_alive():
@@ -214,7 +217,8 @@ class GUI(tk.Tk):
             params_mesh = (self.nodes_mesh_gen, self.single_nodes_dict, self.boundary_nodes_dict, self.triangulation, self.triangulation_region_dict)
             params_boundaries_materials = (self.region_parameters, self.boundary_parameters, self.node_parameters, self.calculation_parameters)
             calcfem = CalcFEM(params_mesh, params_boundaries_materials)
-
+            self.solution = calcfem.calc_fem()
+            ShowSolution(self.solution, self.nodes_mesh_gen, self.triangulation)  # opens window for solution
 
         # Button define Geometry
         tk.Frame(self, height=2, width=230, bg=GUIStatics.CANVAS_BORDER_COLOR) \
@@ -506,6 +510,21 @@ class GUI(tk.Tk):
         button_accept = tk.Button(window_bcs, text="ACCEPT REGIONs", command=accept_regions,
                                           width=14, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
         button_accept.place(relx=widgets_x_start + 0.05, rely= 0.895)
+
+    def window_solution(self):
+        """
+        window for solution
+        :return:
+        """
+
+        window_sol = tk.Toplevel(self)
+        window_sol.title('SOLUTION')
+        self.geometry(f"{GUIStatics.MAIN_WINDOW_SIZE_X}x{GUIStatics.MAIN_WINDOW_SIZE_Y}")
+        window_sol.resizable(False, False)
+
+
+
+
 
     def window_assign_boundary_conditions(self):
         """
