@@ -212,12 +212,18 @@ class GUI(tk.Tk):
 
         def show_mesh():
             self.draw_mesh_from_mesh_output()
+            print("self.nodes_mesh_gen:", self.nodes_mesh_gen)
+            print("self.single_nodes_dict:", self.single_nodes_dict)
+            print("self.boundary_nodes_dict:", self.boundary_nodes_dict)
+            print("self.triangulation:", self.triangulation)
+            print("self.triangulation_region_dict:", self.triangulation_region_dict)
 
         def solve_system():
             params_mesh = (self.nodes_mesh_gen, self.single_nodes_dict, self.boundary_nodes_dict, self.triangulation, self.triangulation_region_dict)
             params_boundaries_materials = (self.region_parameters, self.boundary_parameters, self.node_parameters, self.calculation_parameters)
             calcfem = CalcFEM(params_mesh, params_boundaries_materials)
             self.solution = calcfem.calc_fem()
+            print(self.solution)
             ShowSolution(self.solution, self.nodes_mesh_gen, self.triangulation)  # opens window for solution
         # Button define Geometry
         tk.Frame(self, height=2, width=230, bg=GUIStatics.CANVAS_BORDER_COLOR) \
@@ -666,6 +672,7 @@ class GUI(tk.Tk):
     def create_BC_params(self):
         """
         reformats the geometry for boundary and material parameters assignment via class CreateBCParams
+        Only for Development, otherwise done in receive_geometry()
         :return:
         """
         if self.geometry_input:
@@ -695,7 +702,6 @@ class GUI(tk.Tk):
         """
 
         self.geometry_input = geometry
-
         geometry_input_str = str(geometry)  # todo, for testing
         #self.text_label.config(text=geometry_input_str, font=("Helvetica", 6))  # todo, for testing
 
@@ -737,6 +743,7 @@ class GUI(tk.Tk):
         self.boundary_parameters = boundary_parameters
         self.node_parameters = node_parameters
         self.calculation_parameters = calculation_parameters
+
 
     def init_information_text_field(self):
         """
