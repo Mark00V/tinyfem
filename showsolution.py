@@ -38,6 +38,10 @@ class ShowSolution(tk.Toplevel):
         self.resizable(False, False)
         self.title('TinyFEM - SOLUTION')
         self.geometry(f"{GUIStatics.GEOM_WINDOW_SIZE_X}x{GUIStatics.GEOM_WINDOW_SIZE_Y}")
+        try:
+            self.iconbitmap('tiny_fem_icon.ico')
+        except tk.TclError:
+            ...  # todo: Muss für exe mitgepackt werden...???
         ##################################################
         # Position of elements
         # canvas
