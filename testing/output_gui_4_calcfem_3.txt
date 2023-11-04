@@ -1,7 +1,7 @@
-self.region_parameters = {'0': {'coordinates': [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 0.0)], 'area_neg_pos': 'Positive', 'material': {'k': 1.0, 'c': 0, 'rho': 0}}}
+self.region_parameters = {'0': {'coordinates': [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 0.0)], 'area_neg_pos': 'Positive', 'material': {'k': 1.0, 'c': 300, 'rho': 1}}}
 self.boundary_parameters = {'0': {'coordinates': [(0.0, 0.0), (1.0, 0.0)], 'bc': {'type': 'Dirichlet', 'value': 1.0}}, '1': {'coordinates': [(1.0, 0.0), (1.0, 1.0)], 'bc': {'type': 'Dirichlet', 'value': 2.0}}, '2': {'coordinates': [(1.0, 1.0), (0.0, 0.0)], 'bc': {'type': None, 'value': None}}}
 self.node_parameters = {'0': {'coordinates': (0.5, 0.25), 'bc': {'type': None, 'value': None}}, '1': {'coordinates': (0.0, 0.0), 'bc': {'type': None, 'value': None}}, '2': {'coordinates': (1.0, 0.0), 'bc': {'type': None, 'value': None}}, '3': {'coordinates': (1.0, 1.0), 'bc': {'type': None, 'value': None}}}
-self.calculation_parameters = {'mesh_density': 1, 'freq': None, 'equation': 'HE'}
+self.calculation_parameters = {'mesh_density': 1, 'freq': 100, 'equation': 'HE'}
 self.nodes_mesh_gen = np.array([np.array([0., 0.]), np.array([0.5, 0. ]), np.array([1., 0.]), np.array([1. , 0.5]), np.array([1., 1.]), np.array([0.5, 0.5]), np.array([0.5 , 0.25])])
 self.single_nodes_dict = {'0': 6, '1': 0, '2': 2, '3': 4}
 self.boundary_nodes_dict = {'0': [[0, np.array([0., 0.])], [1, np.array([0.5, 0. ])], [2, np.array([1., 0.])]], '1': [[2, np.array([1., 0.])], [3, np.array([1. , 0.5])], [4, np.array([1., 1.])]], '2': [[4, np.array([1., 1.])], [5, np.array([0.5, 0.5])], [0, np.array([0., 0.])]]}

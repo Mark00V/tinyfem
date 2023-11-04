@@ -38,6 +38,7 @@ class ShowSolution(tk.Toplevel):
         self.resizable(False, False)
         self.title('TinyFEM - SOLUTION')
         self.geometry(f"{GUIStatics.GEOM_WINDOW_SIZE_X}x{GUIStatics.GEOM_WINDOW_SIZE_Y}")
+        self.iconbitmap('tiny_fem_icon.ico')
         ##################################################
         # Position of elements
         # canvas
@@ -79,16 +80,19 @@ class ShowSolution(tk.Toplevel):
             fig.savefig(file_path, dpi=200)
 
         def get_min_value():
-            ...
+            GUIStatics.window_error(self, "Work In Progress...")
 
         def get_max_value():
-            ...
+            GUIStatics.window_error(self, "Work In Progress...")
 
         def show_help():
             window_help = tk.Toplevel(self)
             window_help.title('HELP - SOLUTION')
             window_help.geometry(f"{800}x{600}")
             window_help.resizable(False, False)
+            window_help.iconbitmap('tiny_fem_icon.ico')
+
+
 
         # Help Button
         tk.Button(self, text="HELP", command=show_help, width=8,

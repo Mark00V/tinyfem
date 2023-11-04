@@ -8,7 +8,7 @@ import math
 from typing import List, Tuple, Union
 from scipy.sparse import coo_matrix
 import copy
-
+from guistatics import GUIStatics
 class CalcFEM:
 
     def __init__(self, params_mesh, params_boundaries_materials):
@@ -28,6 +28,7 @@ class CalcFEM:
         self.boundary_parameters = params_boundaries_materials[1]
         self.node_parameters = params_boundaries_materials[2]
         self.calculation_parameters = params_boundaries_materials[3]
+
         # Instance vars created
         self.all_element_matrices_steif = None
         self.all_element_matrices_mass = None
@@ -38,9 +39,9 @@ class CalcFEM:
         self.sysmatrix_diri = None  # Systemmatrix after implementing Dirichlet Cond
         self.force_vector_diri = None  # Force Vector after implementing Dirichlet Cond
         self.solution = None
-
+        self.acoustic_source = None  # sources if equation is 'HH'
         # development
-        self.file_path_dev = r'testing\output_gui_4_calcfem_' + '1' + '.txt'
+        self.file_path_dev = r'testing\output_gui_4_calcfem_' + '2' + '.txt'
 
     def develop_print_input(self):
         print("\n\n\n------------------DEBUG--------------------")
@@ -73,9 +74,9 @@ class CalcFEM:
         :return:
         """
 
-
         # set equation
         self.equation = self.calculation_parameters['equation']  # either HE (HeatEquation) or HH (HelmHoltz)
+        #self.equation = 'HH' # todo for dev!
 
         # calculate element matrices
         self.calc_elementmatrices()
@@ -85,6 +86,11 @@ class CalcFEM:
 
         # create force vector
         self.create_force_vector()
+
+        # implement acoustic sources if helmholtz equation
+        if self.equation =='HH':
+            self.calculate_acoustic_sources()
+            self.implement_acoustic_sources()
 
         # implement boundary conditions
         self.implement_boundary_conditions()
@@ -96,10 +102,82 @@ class CalcFEM:
         self.solve_linear_system()
 
         # plot solution
-        self.plot_solution(self.solution, self.nodes_mesh_gen, self.triangulation)
+        # self.plot_solution(self.solution, self.nodes_mesh_gen, self.triangulation)
 
         return self.solution
 
+    def get_region_for_node_nbr(self, node):
+        """
+        Gets the region number for a node
+        :param node:
+        :return:
+        """
+        for key, val in self.triangulation_region_dict.items():
+            if node in val:
+                return key
+
+    def implement_acoustic_sources(self):
+        """
+        Implements acoustic source, if any, into force vector for calculation Helmholtz equation
+        :return:
+        """
+        for pos, val in self.acoustic_source:
+            self.force_vector[pos] = self.force_vector[pos] + val
+
+
+
+    def calculate_acoustic_sources(self):
+        """
+        calculates acoustic source values
+        :return:
+        """
+
+        freq = float(self.calculation_parameters['freq'])
+        omega = freq * 2 * math.pi
+
+        self.acoustic_source = list()
+        for node_nbr, vals in self.node_parameters.items():
+            val_bc = vals['bc']['value']
+            if val_bc:
+                node_pos = self.single_nodes_dict[node_nbr]
+                region_nbr = self.get_region_for_node_nbr(node_pos)
+                rho = self.region_parameters[region_nbr]['material']['rho']
+                mpsource = 4 * math.pi / rho * ((2 * rho * omega) / ((2 * math.pi) ** 2)) ** 0.5
+                self.acoustic_source.append([node_pos, mpsource])
+
+
+
+    def plot_solution_dev(self):
+        """
+        Plots the solution via matplotlib
+        """
+        solution = self.solution
+        all_points = self.nodes_mesh_gen
+        triangles = self.triangulation
+
+        dataz = np.real(solution)
+        values = dataz
+        aspectxy = 1
+        triang_mpl = tri.Triangulation(all_points[:, 0], all_points[:, 1], triangles)
+
+        fig, ax = plt.subplots(figsize=(12, 8))
+
+        units = self.calculation_parameters['units']
+        ax.set_title('solution')
+        ax.set_xlabel(f"x [{units}]")
+        ax.set_ylabel(f"y [{units}]")
+        ax.set_aspect(aspectxy)
+
+        contour = ax.tricontourf(triang_mpl, values, cmap='viridis', levels=20)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.2)
+        cbar = fig.colorbar(contour, cax=cax)
+
+        ax.scatter(all_points[:, 0], all_points[:, 1], c=values, cmap='viridis', marker='.',
+                             edgecolors='w', s=10)
+        ax.triplot(triang_mpl, 'w-', linewidth=0.1)
+
+        plt.show()
 
     @staticmethod
     def plot_solution(solution, all_points, triangles):
@@ -144,6 +222,7 @@ class CalcFEM:
 
         # create dirichlet list for implementation of dirichlet boundary conditions
         dirichlet_dict = dict()
+        print(self.boundary_parameters)
         for boundary_nbr, params in self.boundary_parameters.items():
             bc = params['bc']
             bc_type = bc['type']
@@ -158,8 +237,10 @@ class CalcFEM:
                         dirichlet_dict[node] = bc_value
         dirichlet_list = np.array([[key, val] for key, val in dirichlet_dict.items()])
 
-        self.sysmatrix_diri, self.force_vector_diri = self.implement_dirichlet_condition(dirichlet_list, self.sysarray, self.force_vector)
-
+        if dirichlet_list:
+            self.sysmatrix_diri, self.force_vector_diri = self.implement_dirichlet_condition(dirichlet_list, self.sysarray, self.force_vector)
+        else:
+            self.sysmatrix_diri, self.force_vector_diri = self.sysarray, self.force_vector
 
     @staticmethod
     def implement_dirichlet_condition(dirichlet_list: np.array, system_matrix: np.array, force_vector: np.array):
@@ -226,7 +307,9 @@ class CalcFEM:
         if self.equation == 'HE':
             self.sysarray = self.syssteifarray
         elif self.equation == 'HH':  # todo: include in elementmatrices
-            ...
+            freq = float(self.calculation_parameters['freq'])
+            omega = freq * 2 * math.pi
+            self.sysarray = self.syssteifarray - omega**2 * self.sysmassarray
 
 
     def calc_elementmatrices(self):
@@ -314,6 +397,8 @@ class CalcFEM:
 if __name__ == '__main__':
     calcfem = CalcFEM((0,0,0,0,0), (0,0,0,0))  # Develop
     calcfem.develop()  # read date via exec(!)
+    calcfem.calc_fem()
+    calcfem.plot_solution_dev()
     # calcfem.nodes_mesh_gen = [[0.5, 0.5], [0.,  0. ], [0.5, 0. ], [1.,  0. ], [1.,  0.5], [1.,  1. ], [0.5, 1. ], [0.,  1. ], [0.,  0.5], [1.,  1.5], [1.,  2. ], [0.5, 1.5]]
     # calcfem.single_nodes_dict = {'0': 1, '1': 3, '2': 5, '3': 7, '4': 10}
     # calcfem.boundary_nodes_dict = {'0': [[1, np.array([0., 0.])], [2, np.array([0.5, 0. ])], [3, np.array([1., 0.])]], '1': [[3, np.array([1., 0.])], [4, np.array([1. , 0.5])], [5, np.array([1., 1.])]], '2': [[5, np.array([1., 1.])], [6, np.array([0.5, 1. ])], [7, np.array([0., 1.])]], '3': [[7, np.array([0., 1.])], [8, np.array([0. , 0.5])], [1, np.array([0., 0.])]], '4': [[5, np.array([1., 1.])], [9, np.array([1. , 1.5])], [10, np.array([1., 2.])]], '5': [[10, np.array([1., 2.])], [11, np.array([0.5, 1.5])], [7, np.array([0., 1.])]]}
@@ -341,4 +426,3 @@ if __name__ == '__main__':
     #                         '5': {'coordinates': (1.0, 2.0), 'bc': {'type': None, 'value': None}}}
     # calcfem.calculation_parameters = {'mesh_density': 1, 'freq': None, 'equation': 'HE'}
 
-    calcfem.calc_fem()

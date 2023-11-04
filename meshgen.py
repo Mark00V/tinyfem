@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.path as mpath
 import math
-import random
 import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
 import struct  # for checking for duplicates since np.unique not very reliable
@@ -279,7 +278,7 @@ class CreateMesh:
         5: 80 nodes pro Einheitsunit
         :return:
         """
-        density_dict = {1: 1, 2: 1/4, 3: 1/10, 4: 1/30, 5: 1/80}
+        density_dict = {1: 1/2, 2: 1/4, 3: 1/10, 4: 1/30, 5: 1/80}
         self.density = density_dict[self.calculation_parameters['mesh_density']]
 
     @timing_decorator

@@ -30,6 +30,7 @@ class Geometry(tk.Toplevel):
         # self.points = {'0': [0, 1], '1': [2, 3], '2': [-2, 3]}  # testing todo
         self.units = 'm'
         self.other = 'None'  # json dump does not support None
+        self.highlight_element = None  # highlighting nodes and points
         super().__init__()
         self.main_window()
 
@@ -43,7 +44,7 @@ class Geometry(tk.Toplevel):
         self.resizable(False, False)
         self.title('TinyFEM - DEFINE GEOMETRY')
         self.geometry(f"{GUIStatics.GEOM_WINDOW_SIZE_X}x{GUIStatics.GEOM_WINDOW_SIZE_Y}")
-
+        self.iconbitmap('tiny_fem_icon.ico')
         ##################################################
         # Position of elements
         # canvas
@@ -102,6 +103,9 @@ class Geometry(tk.Toplevel):
                 GUIStatics.add_canvas_static_elements(self.canvas)
                 self.update_graphics()
 
+                # set geometry window to foreground
+                self.lift()
+
         def save_geometry():
             """
             save geometry data to json file
@@ -111,7 +115,7 @@ class Geometry(tk.Toplevel):
                 self.points = {'None': 'None'}  # workaround for json dumping
             self.geometry_input = {'polygons': self.polygons, 'points': self.points, 'units': self.units,
                                    'other': self.other}
-            print(self.geometry_input)
+            #print(self.geometry_input)
             file_path = filedialog.asksaveasfilename(
                 defaultextension=".txt",
                 filetypes=[("json Files", "*.json")],
@@ -120,7 +124,12 @@ class Geometry(tk.Toplevel):
             if file_path:
                 with open(file_path, "w") as file:
                     file.write(json.dumps(self.geometry_input))
-            self.points = {'None'}  # workaround for json dumping
+
+            if not self.points:
+                self.points = {'None'}  # workaround for json dumping
+
+            # set geometry window to foreground
+            self.lift()
 
         button_save_geo = tk.Button(self, text="SAVE", command=save_geometry,
                                     font=GUIStatics.SAVELOAD_FONT, width=10, height=1)
@@ -131,6 +140,17 @@ class Geometry(tk.Toplevel):
                                     font=GUIStatics.SAVELOAD_FONT, width=10, height=1)
         button_load_geo.place(relx=0.1, rely=0.02)
         ##################################################
+
+        def show_help():
+            window_help = tk.Toplevel(self)
+            window_help.title('HELP - GEOMETRY')
+            window_help.geometry(f"{800}x{600}")
+            window_help.resizable(False, False)
+            window_help.iconbitmap('tiny_fem_icon.ico')
+
+        # Help Button
+        tk.Button(self, text="HELP", command=show_help, width=8,
+                  font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.9, rely=0.025)
 
         ##################################################
         # unit selector
@@ -147,15 +167,15 @@ class Geometry(tk.Toplevel):
             self.units = unit_selected
 
         unit_select_label = tk.Label(self, text="Unit:", font=GUIStatics.STANDARD_FONT_SMALL_BOLD)
-        unit_select_label.place(relx=0.835, rely=0.04)
+        unit_select_label.place(relx=0.835-0.075, rely=0.04)
         units = ['m', 'mm', 'km', 'hm', 'dam', 'dm', 'cm']
         unit_var = tk.StringVar()
         unit_var.set(units[0])  # default value m
         dropdown_unit_select = tk.OptionMenu(self, unit_var, *units)
         dropdown_unit_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=2, height=1)
-        dropdown_unit_select.place(relx=0.865, rely=0.034)
+        dropdown_unit_select.place(relx=0.865-0.075, rely=0.034)
         self.unit_selected = tk.Label(self, text='meter', font=GUIStatics.STANDARD_FONT_SMALL)
-        self.unit_selected.place(relx=0.92, rely=0.04)
+        self.unit_selected.place(relx=0.92-0.075, rely=0.04)
         unit_var.trace('w', update_unit_text)
 
         ##################################################
@@ -233,7 +253,18 @@ class Geometry(tk.Toplevel):
                 add_node_x_entry.insert('end', str(node_coords[0]))
                 add_node_y_entry.delete(0, 'end')
                 add_node_y_entry.insert('end', str(node_coords[1]))
+                last_highlight_element = self.canvas.find_withtag('highlight_element')
+                if last_highlight_element:
+                    self.canvas.delete(last_highlight_element)
+                node = GUIStatics.transform_node_to_canvas(node_coords)
+                self.highlight_element = self.canvas.create_oval(node[0] - 10, node[1] - 10, node[0] + 10, node[1] + 10,
+                                                                 width=3, outline=GUIStatics.CANVAS_HIGHLIGHT_ELEMENT,
+                                                                 dash=(2, 1), fill='', tags='highlight_element')
+
             self.update_graphics()
+
+
+
 
         def new_polygon():
             """
@@ -306,10 +337,24 @@ class Geometry(tk.Toplevel):
                 return None
             else:
                 selected_node = int(polygon_node_var.get())
-            x_value = float(add_node_x_entry.get())
-            y_value = float(add_node_y_entry.get())
+            try:
+                x_value = float(add_node_x_entry.get())
+                y_value = float(add_node_y_entry.get())
+            except ValueError:
+                x_value = 0.0
+                y_value = 0.0
+                GUIStatics.window_error(self, "Enter Coordinates as float!")
             self.polygons[this_polygon]['coordinates'][selected_node] = [x_value, y_value]
             update_polygon_nodes_info()
+
+            last_highlight_element = self.canvas.find_withtag('highlight_element')
+            if last_highlight_element:  # todo...copypasted a lot -> method
+                self.canvas.delete(last_highlight_element)
+            node_coords = self.polygons[this_polygon]['coordinates'][selected_node]
+            node = GUIStatics.transform_node_to_canvas(node_coords)
+            self.highlight_element = self.canvas.create_oval(node[0] - 10, node[1] - 10, node[0] + 10, node[1] + 10,
+                                                             width=3, outline=GUIStatics.CANVAS_HIGHLIGHT_ELEMENT,
+                                                             dash=(2, 1), fill='', tags='highlight_element')
             self.update_graphics()
 
         def delete_polygon():
@@ -331,6 +376,8 @@ class Geometry(tk.Toplevel):
                     dropdown_polygon_node_select["state"] = "disabled"
                     dropdown_polygon_select["state"] = "disabled"
                     self.update_graphics()
+
+        GUIStatics.create_divider(self, widgets_x_start, 0.085, 230)
 
         polygon_def_label = tk.Label(self, text="Define Polygon", font=GUIStatics.STANDARD_FONT_MID_BOLD)
         polygon_def_label.place(relx=widgets_x_start, rely=0.1)
@@ -458,6 +505,16 @@ class Geometry(tk.Toplevel):
             add_point_y_entry.delete(0, 'end')
             add_point_y_entry.insert('end', str(node_coords[1]))
 
+            last_highlight_element = self.canvas.find_withtag('highlight_element')
+            if last_highlight_element:
+                self.canvas.delete(last_highlight_element)
+            node = GUIStatics.transform_node_to_canvas(node_coords)
+            self.highlight_element = self.canvas.create_oval(node[0] - 10, node[1] - 10, node[0] + 10, node[1] + 10,
+                                                             width=3, outline=GUIStatics.CANVAS_HIGHLIGHT_ELEMENT,
+                                                             dash=(2, 1), fill='', tags='highlight_element')
+
+            self.update_graphics()
+
         def update_point():
             """
             gets the selected point from dropdown and values from x and y field
@@ -473,10 +530,19 @@ class Geometry(tk.Toplevel):
                 new_x = float(add_point_x_entry_val.get().replace(',', '.'))
                 new_y = float(add_point_y_entry_val.get().replace(',', '.'))
             except ValueError:
-                # todo: warning window oder so falls text eingegben..
                 new_x = 0.0
                 new_y = 0.0
+                GUIStatics.window_error(self, "Enter Coordinates as float!")
             self.points[selected_point] = [new_x, new_y]
+
+            last_highlight_element = self.canvas.find_withtag('highlight_element')
+            if last_highlight_element:
+                self.canvas.delete(last_highlight_element)
+            node = GUIStatics.transform_node_to_canvas(self.points[selected_point])
+            self.highlight_element = self.canvas.create_oval(node[0] - 10, node[1] - 10, node[0] + 10, node[1] + 10,
+                                                             width=3, outline=GUIStatics.CANVAS_HIGHLIGHT_ELEMENT,
+                                                             dash=(2, 1), fill='', tags='highlight_element')
+
             self.update_graphics()
 
         def delete_point():
@@ -499,6 +565,7 @@ class Geometry(tk.Toplevel):
             single_point_var.set('0')
             self.update_graphics()
 
+        GUIStatics.create_divider(self, widgets_x_start, 0.535, 230)
         single_point_def_label = tk.Label(self, text="Define Point", font=GUIStatics.STANDARD_FONT_MID_BOLD)
         single_point_def_label.place(relx=widgets_x_start, rely=0.55)
         single_point_select_label = tk.Label(self, text="Select Point:", font=GUIStatics.STANDARD_FONT_SMALL)
@@ -586,8 +653,9 @@ class Geometry(tk.Toplevel):
 
         ##################################################
         # Update graphics
+        GUIStatics.create_divider(self, widgets_x_start, 0.87, 230)
         button_update_graphics = tk.Button(self, text="UPDATE GRAPHICS", command=self.update_graphics,
-                                           width=22, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID)
+                                           width=25, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID)
         button_update_graphics.place(relx=0.025, rely=0.885)
         ##################################################
 
@@ -711,7 +779,7 @@ class Geometry(tk.Toplevel):
 
         button_debug = tk.Button(self, text="DEBUG", command=debug,
                                  width=5, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
-        button_debug.place(relx=0.95, rely=0.01)
+        button_debug.place(relx=0.96, rely=0.005)
         ##################################################
 
     def update_graphics(self):
@@ -725,6 +793,8 @@ class Geometry(tk.Toplevel):
         # delete all
         all_canvas_elements = self.canvas.find_all()
         for elem in all_canvas_elements:
+            if elem == self.highlight_element:
+                continue
             self.canvas.delete(elem)
 
         # add grid etc

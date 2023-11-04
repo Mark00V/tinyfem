@@ -37,7 +37,11 @@ class GUIStatics:
     STANDARD_FONT_BUTTON_BIG_BOLD = ('Arial Black', 11)
     STANDARD_FONT_BUTTON_MID_BOLD = ('Arial Black', 10)
     STANDARD_FONT_MID = ('Arial', 10)
+    STANDARD_FONT_BIG = ('Arial', 12)
+    STANDARD_FONT_BIGGER = ('Arial', 14)
     STANDARD_FONT_MID_BOLD = ('Arial Black', 10)
+    STANDARD_FONT_BIG_BOLD = ('Arial Black', 12)
+    STANDARD_FONT_BIGGER_BOLD = ('Arial Black', 14)
     STANDARD_FONT_SMALL = ('Arial', 9)
     STANDARD_FONT_SMALLER = ('Arial', 8)
     STANDARD_FONT_SMALLEST = ('Arial', 7)
@@ -218,6 +222,7 @@ class GUIStatics:
         window_error.title('ERROR')
         window_error.geometry(f"{300}x{300}")
         window_error.resizable(False, False)
+        window_error.iconbitmap('tiny_fem_icon.ico')
         GUIStatics.create_divider(window_error, 0.025, 0.05, 275)
 
         # error message

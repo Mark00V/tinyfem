@@ -6,6 +6,7 @@ KNOWN BUGS:
 
 #######################################################################################
 TODOs:
+--> Output solution consecutive filename
 --> Docstrings and typehints
 --> Weitere Überprüfung Geometrie auf Kompatibilität (Entweder in Klasse Geometry oder CreateBCParams)
 --> Hilfe-Button in Fenstern GUI, GEOMETRY und SHOWSOLUTION mit kleiner Erläuterung
@@ -52,7 +53,7 @@ GUI -> init_parameters()
                                                    '1': {'coordinates': [(1.0, 0.0), (1.0, 1.0)], 'bc': {'type': None, 'value': None}}, '2': {'coordinates': [(1.0, 1.0), (0.0, 1.0)], 'bc': {'type': None, 'value': None}}, '3': {'coordinates': [(0.0, 1.0), (0.0, 0.0)], 'bc': {'type': None, 'value': None}}, '4': {'coordinates': [(1.0, 1.0), (1.0, 2.0)], 'bc': {'type': None, 'value': None}}, '5': {'coordinates': [(1.0, 2.0), (0.0, 1.0)], 'bc': {'type': None, 'value': None}}}
                     self.node_parameters        : {'0': {'coordinates': (0.5, 0.5), 'bc': {'type': None, 'value': None}},
                                                    '1': {'coordinates': (0.0, 0.0), 'bc': {'type': None, 'value': None}}, '2': {'coordinates': (1.0, 0.0), 'bc': {'type': None, 'value': None}}, '3': {'coordinates': (1.0, 1.0), 'bc': {'type': None, 'value': None}}, '4': {'coordinates': (0.0, 1.0), 'bc': {'type': None, 'value': None}}, '5': {'coordinates': (1.0, 2.0), 'bc': {'type': None, 'value': None}}}
-                    self.calculation_parameters : {'mesh_density': None, 'freq': None, 'equation': 'HE'}
+                    self.calculation_parameters : {'mesh_density': None, 'freq': None, 'equation': 'HE', 'units': 'm'}
 
 4) Definition von Randbedingungen, Regionen und Calculation Parametern
 GUI -> assign_BCs() | assign_materials() | assign_calc_params()

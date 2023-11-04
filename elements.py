@@ -253,6 +253,8 @@ class ElementMatrices:
             fp = phixphit * jacobi_det * integration_weights
             mass_mat = mass_mat + fp
 
+        stiffness_mat = stiffness_mat * 1/val_rho
+        mass_mat = mass_mat * 1/val_rho * 1/(val_c**2)
         return stiffness_mat, mass_mat
 
     @staticmethod

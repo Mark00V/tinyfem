@@ -16,8 +16,6 @@ TODO:
 import tkinter as tk
 import math
 from typing import Callable, Any
-from tkinter import filedialog
-import json
 from guistatics import GUIStatics
 from definebcs import CreateBCParams
 from geometry import Geometry
@@ -30,7 +28,7 @@ from showsolution import ShowSolution
 
 #################################################
 # Other
-AUTHOR = 'Itsame Mario'
+AUTHOR = 'Elias Perras'
 VERSION_MAJOR = 1
 VERSION_MINOR = 0
 VERSION_PATCH = 0
@@ -55,7 +53,7 @@ class GUI(tk.Tk):
         self.boundaries = None
         self.nodes = None
         # definitions for setting BCs, Mats etc. init in init_parameters() when geometry was created
-        self.equation = None  # HE for heat equation, HH for hemlholtz equation
+        self.equation = None  # HE for heat equation, HH for helmholtz equation
         self.region_parameters = None  # saves materials, area_neg_pos, nodes, number for regions
         self.boundary_parameters = None  # saves dirichlet/neumann/robin values and setting, nodes, number for boundaries
         self.node_parameters = None  # saves node number, coords, neumann value for nodes
@@ -97,6 +95,8 @@ class GUI(tk.Tk):
         :return:
         """
 
+        print("Starting...Please wait.")  # Console output when running as .exe
+        self.iconbitmap('tiny_fem_icon.ico')
         self.title('TinyFEM - MAIN WINDOW')
         self.geometry(f"{GUIStatics.MAIN_WINDOW_SIZE_X}x{GUIStatics.MAIN_WINDOW_SIZE_Y}")
         self.resizable(False, False)
@@ -212,25 +212,72 @@ class GUI(tk.Tk):
 
         def show_mesh():
             self.draw_mesh_from_mesh_output()
-            print("self.nodes_mesh_gen:", self.nodes_mesh_gen)
-            print("self.single_nodes_dict:", self.single_nodes_dict)
-            print("self.boundary_nodes_dict:", self.boundary_nodes_dict)
-            print("self.triangulation:", self.triangulation)
-            print("self.triangulation_region_dict:", self.triangulation_region_dict)
+            # print("self.nodes_mesh_gen:", self.nodes_mesh_gen)
+            # print("self.single_nodes_dict:", self.single_nodes_dict)
+            # print("self.boundary_nodes_dict:", self.boundary_nodes_dict)
+            # print("self.triangulation:", self.triangulation)
+            # print("self.triangulation_region_dict:", self.triangulation_region_dict)
 
         def solve_system():
+            if self.calculation_parameters['equation'] == 'HH' and not self.calculation_parameters['freq']:
+                GUIStatics.window_error(self, 'Please set frequency first!')
+                return
             params_mesh = (self.nodes_mesh_gen, self.single_nodes_dict, self.boundary_nodes_dict, self.triangulation, self.triangulation_region_dict)
             params_boundaries_materials = (self.region_parameters, self.boundary_parameters, self.node_parameters, self.calculation_parameters)
             calcfem = CalcFEM(params_mesh, params_boundaries_materials)
             self.solution = calcfem.calc_fem()
-            print(self.solution)
+            # print(self.solution)
             ShowSolution(self.solution, self.nodes_mesh_gen, self.triangulation)  # opens window for solution
+
         # Button define Geometry
         tk.Frame(self, height=2, width=230, bg=GUIStatics.CANVAS_BORDER_COLOR) \
             .place(relx=widgets_x_start, rely=0.08)
         button_define_geometry = tk.Button(self, text="GEOMETRY", command=self.define_geometry, width=12,
                                            font=GUIStatics.STANDARD_FONT_BUTTON_BIG_BOLD, height=1)
         button_define_geometry.place(relx=widgets_x_start, rely=0.1)
+
+        def show_help():
+            window_help = tk.Toplevel(self)
+            window_help.title('HELP - MAIN')
+            window_help.geometry(f"{800}x{600}")
+            window_help.resizable(False, False)
+            window_help.iconbitmap('tiny_fem_icon.ico')
+
+            help_txt_t = f"Welcome to TinyFEM"
+            help_txt_author_version = (f"Author: {AUTHOR}\n"
+                                       f"Version: {VERSION_MAJOR}.{VERSION_MINOR}.{VERSION_PATCH}")
+            help_txt_inst = (f"1) Click Button GEOMETRY to define geometry in GEOMETRY EDITOR\n\n"
+                             f"2) After defining geometry select equation to solve\n"
+                             f"     Heat Equation: Solves the stationary coupled heat equation -> T = d^2(T)/d(T^2)\n"
+                             f"     Helmholtz Equation: Solves the coupled Helmholtz equation -> d^2(P)/d(P^2) = -k^2 P\n\n"
+                             f"3) Select Boundary by clicking Button BOUNDARY CONDITIONS\n"
+                             f"     Select Boundary and Boundary Condition -> Dirichlet: Static values on Boundary\n"
+                             f"                               -> Neumann:   Flux on Boundary (WIP, not implemented yet)\n"
+                             f"     Input value and click SET VALUE\n"
+                             f"     Click ACCEPT BCs when finished\n\n"
+                             f"4) Select Material Parameters by clicking Button MATERIAL PARAMETERS\n"
+                             f"     Select region, input value and click SET VALUE\n"
+                             f"     Click ACCEPT REGIONs when finished\n\n"
+                             f"5) Set Calculation Parameters by clicking Button CALCULATION PARAMETERS\n"
+                             f"     Select Mesh Density (1: very coarse, 2: coarse, 3: medium, 4: fine, 5: very fine\n"
+                             f"     If Helmholtz Equation is selected, set frequency\n"
+                             f"     Click ACCEPT CALCULATION PARAMETERS when finished\n\n"
+                             f"6) Click CREATE MESH\n"
+                             f"   Click SHOW MESH to display mesh\n\n"
+                             f"7) Click SOLVE to start FEM-Solver and open solution window\n")
+
+            tk.Label(window_help, text=help_txt_t, font=GUIStatics.STANDARD_FONT_BIGGER_BOLD, anchor="center", justify="center") \
+                .place(relx=0.1, rely=0.1)
+            tk.Label(window_help, text=help_txt_author_version, font=GUIStatics.STANDARD_FONT_MID, anchor="center", justify="center") \
+                .place(relx=0.1, rely=0.175)
+            tk.Label(window_help, text='Instructions', font=GUIStatics.STANDARD_FONT_BIG_BOLD, anchor="w", justify="left") \
+                .place(relx=0.1, rely=0.25)
+            tk.Label(window_help, text=help_txt_inst, font=GUIStatics.STANDARD_FONT_MID, anchor="w", justify="left") \
+                .place(relx=0.1, rely=0.29)
+
+        # Help Button
+        tk.Button(self, text="HELP", command=show_help, width=8,
+                  font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.9, rely=0.025)
 
         # Button show Mesh
         button_define_geometry = tk.Button(self, text="SHOW MESH", command=show_mesh, width=12,
@@ -419,7 +466,7 @@ class GUI(tk.Tk):
                 try:
                     entry_k = float(entry_k)
                 except ValueError:
-                    entry_k = 0.0
+                    entry_k = 1.0
                 self.region_parameters[region_nbr]['material']['k'] = entry_k
             elif self.equation == 'HH':
                 entry_c = entry_material_c_value.get()
@@ -427,11 +474,11 @@ class GUI(tk.Tk):
                 try:
                     entry_c = float(entry_c)
                 except ValueError:
-                    entry_c = 0.0
+                    entry_c = 1.0
                 try:
                     entry_rho = float(entry_rho)
                 except ValueError:
-                    entry_rho = 0.0
+                    entry_rho = 1.0
                 self.region_parameters[region_nbr]['material']['c'] = entry_c
                 self.region_parameters[region_nbr]['material']['rho'] = entry_rho
 
@@ -731,14 +778,14 @@ class GUI(tk.Tk):
             area_neg_pos = values['area_neg_pos']
             region_parameters[region_nbr] = {'coordinates': coordinates,
                                              'area_neg_pos': area_neg_pos,
-                                             'material': {'k': 0, 'c': 0, 'rho': 0}}
+                                             'material': {'k': 1.0, 'c': 340, 'rho': 1.21}}
         for boundary_nbr, nodes in self.boundaries.items():
             coordinates = [nodes[0], nodes[1]]
             boundary_parameters[boundary_nbr] = {'coordinates': coordinates, 'bc': {'type': None, 'value': None}}
         for node_nbr, node in self.nodes.items():
             coordinates = node
             node_parameters[node_nbr] = {'coordinates': coordinates, 'bc': {'type': None, 'value': None}}
-        calculation_parameters = {'mesh_density': None, 'freq': None, 'equation': 'HE'}
+        calculation_parameters = {'mesh_density': None, 'freq': None, 'equation': 'HE', 'units': self.geometry_input['units']}
         self.region_parameters = region_parameters
         self.boundary_parameters = boundary_parameters
         self.node_parameters = node_parameters
@@ -905,14 +952,15 @@ class GUI(tk.Tk):
         print(f"self.boundary_nodes_dict = {self.boundary_nodes_dict}")
         print(f"self.triangulation = {self.triangulation}")
         print(f"self.triangulation_region_dict = {self.triangulation_region_dict}")
+
         write_output = (f"self.region_parameters = {self.region_parameters}\n"
                         f"self.boundary_parameters = {self.boundary_parameters}\n"
                         f"self.node_parameters = {self.node_parameters}\n"
                         f"self.calculation_parameters = {self.calculation_parameters}\n"
-                        f"self.nodes_mesh_gen = np.array({list(self.nodes_mesh_gen) if self.nodes_mesh_gen else 'None'})\n"
+                        f"self.nodes_mesh_gen = np.array({list(self.nodes_mesh_gen) if self.nodes_mesh_gen is not None else 'None'})\n"
                         f"self.single_nodes_dict = {self.single_nodes_dict}\n"
                         f"self.boundary_nodes_dict = {self.boundary_nodes_dict}\n"
-                        f"self.triangulation = np.array({list(self.triangulation) if self.triangulation else 'None'})\n"
+                        f"self.triangulation = np.array({list(self.triangulation) if self.triangulation is not None else 'None'})\n"
                         f"self.triangulation_region_dict = {self.triangulation_region_dict}\n")
         write_output = write_output.replace('array', 'np.array')
         write_output = write_output.replace('np.np.', 'np.')
@@ -922,13 +970,6 @@ class GUI(tk.Tk):
 
 
 if __name__ == '__main__':
-    gui = GUI()  # Todo - Develop: For testing main gui
+    gui = GUI()  
     gui.mainloop()
 
-
-
-# structure of boundary conditions variables -> used to create mesh and fem calculation
-# self.region_parameters = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)], 'area_neg_pos': 'Positive', 'material': {'k': 0, 'c': 0, 'rho': 0}}, '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive', 'material': {'k': 0, 'c': 0, 'rho': 0}}, '2': {'coordinates': [(-1.0, 0.0), (0.0, 0.0), (0.0, 0.75), (-1.0, 0.5)], 'area_neg_pos': 'Negative', 'material': {'k': 0, 'c': 0, 'rho': 0}}}
-# self.boundary_parameters = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5)], 'bc': {'type': None, 'value': None}}, '1': {'coordinates': [(1.0, -2.5), (2.5, 1.0)], 'bc': {'type': None, 'value': None}}, '2': {'coordinates': [(2.5, 1.0), (-2.5, 1.0)], 'bc': {'type': None, 'value': None}}, '3': {'coordinates': [(-2.5, 1.0), (-4.2, -1.5)], 'bc': {'type': None, 'value': None}}, '4': {'coordinates': [(-4.2, -1.5), (-4.0, -3.0)], 'bc': {'type': None, 'value': None}}, '5': {'coordinates': [(2.5, 1.0), (0.0, 3.0)], 'bc': {'type': None, 'value': None}}, '6': {'coordinates': [(0.0, 3.0), (-2.5, 1.0)], 'bc': {'type': None, 'value': None}}, '7': {'coordinates': [(-1.0, 0.0), (0.0, 0.0)], 'bc': {'type': None, 'value': None}}, '8': {'coordinates': [(0.0, 0.0), (0.0, 0.75)], 'bc': {'type': None, 'value': None}}, '9': {'coordinates': [(0.0, 0.75), (-1.0, 0.5)], 'bc': {'type': None, 'value': None}}, '10': {'coordinates': [(-1.0, 0.5), (-1.0, 0.0)], 'bc': {'type': None, 'value': None}}}
-# self.node_parameters = {'0': {'coordinates': (-3.0, -2.0), 'bc': {'type': None, 'value': None}}, '1': {'coordinates': (0.0, 1.5), 'bc': {'type': None, 'value': None}}, '2': {'coordinates': (1.0, -1.0), 'bc': {'type': None, 'value': None}}, '3': {'coordinates': (-4.0, -3.0), 'bc': {'type': None, 'value': None}}, '4': {'coordinates': (1.0, -2.5), 'bc': {'type': None, 'value': None}}, '5': {'coordinates': (2.5, 1.0), 'bc': {'type': None, 'value': None}}, '6': {'coordinates': (-2.5, 1.0), 'bc': {'type': None, 'value': None}}, '7': {'coordinates': (-4.2, -1.5), 'bc': {'type': None, 'value': None}}, '8': {'coordinates': (0.0, 3.0), 'bc': {'type': None, 'value': None}}, '9': {'coordinates': (-1.0, 0.0), 'bc': {'type': None, 'value': None}}, '10': {'coordinates': (0.0, 0.0), 'bc': {'type': None, 'value': None}}, '11': {'coordinates': (0.0, 0.75), 'bc': {'type': None, 'value': None}}, '12': {'coordinates': (-1.0, 0.5), 'bc': {'type': None, 'value': None}}}
-# self.calculation_parameters = {'mesh_density': None, 'freq': None}
