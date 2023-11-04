@@ -1,17 +1,19 @@
 #######################################################################################
 KNOWN BUGS:
--> Button Debug bei Beginn drücken (ohne definiertes Mesh):
-    f"self.nodes_mesh_gen = np.array({list(self.nodes_mesh_gen)})\n"
-    TypeError: 'NoneType' object is not iterable
+-> check_geometry() in Class Geometry: Funktioniert nicht für Linien mit Steigung inf
+
 
 
 #######################################################################################
 TODOs:
+--> Docstrings and typehints
 --> Weitere Überprüfung Geometrie auf Kompatibilität (Entweder in Klasse Geometry oder CreateBCParams)
 --> Hilfe-Button in Fenstern GUI, GEOMETRY und SHOWSOLUTION mit kleiner Erläuterung
 --> GEOMETRY: Bei Laden von Geometrie verschwindet Fenster GEOMETRY in Hintergrund
 --> Unit sollte aus Geometry in Solution übernommen werden und für Achsen angezeigt werden
 --> Bei ungültiger Geometrie wird CompatibilityError geraist --> sollte in Fehler-Fenster angezeigt werden
+--> Trace für Anzeige Class Geometry Nodes und Polygons ähnlich Boundary Definition
+--> Polygonerstellung und Punkteerstellung grafisch in Class Geometry ähnlich outdated Version von "Acoustics"
 #######################################################################################
 CODEFLOW:
 

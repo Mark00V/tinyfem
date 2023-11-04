@@ -1,5 +1,5 @@
 import tkinter as tk
-from typing import Callable, Any
+from typing import Any, Union
 
 
 class GUIStatics:
@@ -46,7 +46,7 @@ class GUIStatics:
 
     @staticmethod
     def create_divider(window, x_pos: float, y_pos: float, length: int):
-        div = tk.Frame(window, height=2, width=length, bg=GUIStatics.CANVAS_BORDER_COLOR)\
+        div = tk.Frame(window, height=2, width=length, bg=GUIStatics.CANVAS_BORDER_COLOR) \
             .place(relx=x_pos, rely=y_pos)
         return div
 
@@ -205,3 +205,68 @@ class GUIStatics:
         avg_y = sum(y for x, y in nodes) / num_vertices
 
         return avg_x, avg_y
+
+    @staticmethod
+    def window_error(root: Union[Any, tk], error_message: str):
+        """
+        Custom Error Window
+        :param root: tkinter root or toplevel
+        :return:
+        """
+
+        window_error = tk.Toplevel(root)
+        window_error.title('ERROR')
+        window_error.geometry(f"{300}x{300}")
+        window_error.resizable(False, False)
+        GUIStatics.create_divider(window_error, 0.025, 0.05, 275)
+
+        # error message
+        tk.Label(window_error, text=error_message, font=GUIStatics.STANDARD_FONT_MID_BOLD) \
+            .place(relx=0.05, rely=0.2)
+
+        GUIStatics.create_divider(window_error, 0.025, 0.95, 275)
+
+    @staticmethod
+    def check_line_intersection(line1: list, line2: list) -> bool:
+        """
+
+        :param line1: [[x_start, y_start],[x_end, y_end]]
+        :param line2: [[x_start, y_start],[x_end, y_end]]
+        :return:
+        """
+        x1, y1 = line1[0]
+        x2, y2 = line1[1]
+        x3, y3 = line2[0]
+        x4, y4 = line2[1]
+
+        def calculate_slope(point1, point2):
+            if point1[0] == point2[0]:
+                return 10e3  # stupid workaround for not defined slope TODO
+            return (point2[1] - point1[1]) / (point2[0] - point1[0])
+
+        m1 = calculate_slope(line1[0], line1[1])
+        m2 = calculate_slope(line2[0], line2[1])
+        if m1 == m2:
+            return False
+
+        x_intersection = ((y3 - y1) + (m1 * x1 - m2 * x3)) / (m1 - m2)
+        y_intersection = m1 * (x_intersection - x1) + y1
+        if (x1 <= x_intersection <= x2 or x2 <= x_intersection <= x1) and \
+                (y1 <= y_intersection <= y2 or y2 <= y_intersection <= y1) and \
+                (x3 <= x_intersection <= x4 or x4 <= x_intersection <= x3) and \
+                (y3 <= y_intersection <= y4 or y4 <= y_intersection <= y3):
+            if (x_intersection, y_intersection) == (x1, y1) or \
+               (x_intersection, y_intersection) == (x2, y2) or \
+               (x_intersection, y_intersection) == (x3, y3) or \
+               (x_intersection, y_intersection) == (x4, y4):
+                return False
+            else:
+                return True
+        else:
+            return False
+
+
+if __name__ == '__main__':
+    line1 = [[0, 0], [1, 0]]
+    line2 = [[1.0, 0], [1.0, 1]]
+    print(GUIStatics.check_line_intersection(line1, line2))

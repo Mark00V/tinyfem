@@ -909,10 +909,10 @@ class GUI(tk.Tk):
                         f"self.boundary_parameters = {self.boundary_parameters}\n"
                         f"self.node_parameters = {self.node_parameters}\n"
                         f"self.calculation_parameters = {self.calculation_parameters}\n"
-                        f"self.nodes_mesh_gen = np.array({list(self.nodes_mesh_gen)})\n"
+                        f"self.nodes_mesh_gen = np.array({list(self.nodes_mesh_gen) if self.nodes_mesh_gen else 'None'})\n"
                         f"self.single_nodes_dict = {self.single_nodes_dict}\n"
                         f"self.boundary_nodes_dict = {self.boundary_nodes_dict}\n"
-                        f"self.triangulation = np.array({list(self.triangulation)})\n"
+                        f"self.triangulation = np.array({list(self.triangulation) if self.triangulation else 'None'})\n"
                         f"self.triangulation_region_dict = {self.triangulation_region_dict}\n")
         write_output = write_output.replace('array', 'np.array')
         write_output = write_output.replace('np.np.', 'np.')
@@ -923,7 +923,6 @@ class GUI(tk.Tk):
 
 if __name__ == '__main__':
     gui = GUI()  # Todo - Develop: For testing main gui
-    # gui = Geometry(lambda x: x)  # Todo - Develop: For testing Geometry gui, argument simulates callback
     gui.mainloop()
 
 

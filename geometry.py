@@ -4,7 +4,7 @@ from typing import Callable, Any
 from tkinter import filedialog
 import json
 from guistatics import GUIStatics
-
+import copy
 
 class Geometry(tk.Toplevel):
     """
@@ -598,13 +598,61 @@ class Geometry(tk.Toplevel):
             Checks compatibility of geometry
             :return:
             """
-            # todo: more checks...
-            comp = True
-            for polygon in self.polygons.values():
-                nodes_len = len(polygon['coordinates'])
-                if nodes_len < 3:
-                    comp = False
 
+            comp = True
+
+            # self.polygons = {'0': {'coordinates' : [[0,0], [1,0], [1,1], [0,1]], 'area_neg_pos': 'Positive'}}
+            # self.polygons = {'0': {'coordinates': [[0, 0], [1, 0], [1.0, 1], [0.5,-1], [0, 1]], 'area_neg_pos': 'Positive'},
+            #                  '1': {'coordinates': [[0, 0], [1, 0], [1.0, 1], [0.5,-1], [0, 1]], 'area_neg_pos': 'Positive'}}
+            # check if all polygons have at least 3 nodes
+            node_count_error = False
+            for nbr, polygonvals in self.polygons.items():
+                nodes_len = len(polygonvals['coordinates'])
+                if nodes_len < 3:
+                    node_count_error = True
+                    GUIStatics.window_error(self, f"Polygon {nbr} has less than three nodes!")
+
+            # check if lines in polygons intersect todo: works only if lines are not vertical...(missing slope)
+            intersect_error = False
+            for nbr, polygonvals in self.polygons.items():
+                nodes = copy.deepcopy(polygonvals['coordinates'])
+                if not nodes:
+                    break
+                nodes.append(nodes[0])
+                for sn, en in zip(nodes[:-1], nodes[1:]):
+                    line1 = [sn, en]
+                    for nbr_2, polygonvals_2 in self.polygons.items():
+                        nodes_2 = copy.deepcopy(polygonvals_2['coordinates'])
+                        if not nodes_2 or nbr == nbr_2:
+                            break
+                        nodes_2.append(nodes_2[0])
+                        for sn_2, en_2 in zip(nodes_2[:-1], nodes_2[1:]):
+                            if sn == sn_2 and en == en_2:
+                                continue
+                            line2 = [sn_2, en_2]
+                            if GUIStatics.check_line_intersection(line1, line2):
+                                GUIStatics.window_error(self, f"Intersection in Polygon {nbr}!")
+                                intersect_error = True
+                                break
+                        if intersect_error:
+                            break
+                    if intersect_error:
+                        break
+                if intersect_error:
+                    break
+
+            # check if negative polygon entirely inside one positive polygon
+            # TODO
+
+            # check if adjacent polygons share 2 nodes
+            # todo
+
+            # check if single point inside positive polygon
+            # todo
+
+
+            if node_count_error or intersect_error:
+                comp = False
             return comp
 
         def check_geometry_error_window():
@@ -652,6 +700,7 @@ class Geometry(tk.Toplevel):
             when button DEBUG is pressed
             :return:
             """
+            check_geometry()
             geometry_input = {'polygons': self.polygons, 'points': self.points, 'units': self.units,
                                    'other': self.other}
             print("\n\n")
@@ -741,3 +790,9 @@ class Geometry(tk.Toplevel):
 
         self.callback_geometry(self.geometry_input)
         self.destroy()  # closes top window
+
+
+
+if __name__ == '__main__':
+    geo = Geometry(lambda x: x)  # Todo - Develop: For testing Geometry gui, argument simulates callback
+    geo.mainloop()
