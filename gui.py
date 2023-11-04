@@ -96,7 +96,11 @@ class GUI(tk.Tk):
         """
 
         print("Starting...Please wait.")  # Console output when running as .exe
-        self.iconbitmap('tiny_fem_icon.ico')
+        try:
+            self.iconbitmap('tiny_fem_icon.ico')
+        except tk.TclError:
+            ...  # todo: Muss für exe mitgepackt werden...???
+
         self.title('TinyFEM - MAIN WINDOW')
         self.geometry(f"{GUIStatics.MAIN_WINDOW_SIZE_X}x{GUIStatics.MAIN_WINDOW_SIZE_Y}")
         self.resizable(False, False)
@@ -241,7 +245,6 @@ class GUI(tk.Tk):
             window_help.title('HELP - MAIN')
             window_help.geometry(f"{800}x{600}")
             window_help.resizable(False, False)
-            window_help.iconbitmap('tiny_fem_icon.ico')
 
             help_txt_t = f"Welcome to TinyFEM"
             help_txt_author_version = (f"Author: {AUTHOR}\n"
@@ -970,6 +973,6 @@ class GUI(tk.Tk):
 
 
 if __name__ == '__main__':
-    gui = GUI()  
+    gui = GUI()
     gui.mainloop()
 

@@ -222,7 +222,6 @@ class GUIStatics:
         window_error.title('ERROR')
         window_error.geometry(f"{300}x{300}")
         window_error.resizable(False, False)
-        window_error.iconbitmap('tiny_fem_icon.ico')
         GUIStatics.create_divider(window_error, 0.025, 0.05, 275)
 
         # error message
