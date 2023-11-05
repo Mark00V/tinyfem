@@ -211,7 +211,7 @@ class GUIStatics:
         return avg_x, avg_y
 
     @staticmethod
-    def window_error(root: Union[Any, tk], error_message: str):
+    def window_error(root, error_message: str):
         """
         Custom Error Window
         :param root: tkinter root or toplevel

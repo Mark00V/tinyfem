@@ -161,21 +161,41 @@ class GUI(tk.Tk):
         animate()
 
         ##################################################
-        self.equation = 'HE'
+        self.equation = 'HE'  # Initialized value
         ##################################################
         # Buttons
         def assign_BCs():
+            """
+            Button action, calls window to assign Boundary conditions
+            :return:
+            """
             self.window_assign_boundary_conditions()
 
         def assign_materials():
+            """
+            Button action, calls window to assign Materials
+            :return:
+            """
             self.window_assign_region_conditions()
 
         def assign_calc_params():
+            """
+            Button action, calls window to assign Calculation Parameters
+            :return:
+            """
             self.window_assign_calculation_params()
 
         def create_mesh():
+            """
+            Button action, creates mesh. Calls window during wait time via thread
+            :return:
+            """
 
             def thread_create_mesh():
+                """
+                Helper function for thread
+                :return:
+                """
                 mesh = CreateMesh(self.region_parameters, self.boundary_parameters,
                                   self.node_parameters, self.calculation_parameters)
                 mesh_generator_output = mesh.create_mesh()
@@ -194,13 +214,16 @@ class GUI(tk.Tk):
             window_create_mesh_wait_label = tk.Label(window_create_mesh_wait, text="",
                                                      font=GUIStatics.STANDARD_FONT_MID_BOLD)
             window_create_mesh_wait_label.place(relx=0.35, rely=0.6)
-
             thread_mesh = threading.Thread(target=thread_create_mesh)
             thread_mesh.start()
 
             self.button_solve_system.config(state="normal")
 
             def update_wait_label():
+                """
+                Helper function to update text in window appearing when mesh is calculated
+                :return:
+                """
                 wait_text = ''
                 while thread_mesh.is_alive():
                     if wait_text == '.....':
@@ -215,6 +238,10 @@ class GUI(tk.Tk):
             button_define_geometry.config(state='normal')
 
         def show_mesh():
+            """
+            Button action to show mesh (not automatically shown since threading too slow)
+            :return:
+            """
             self.draw_mesh_from_mesh_output()
             # print("self.nodes_mesh_gen:", self.nodes_mesh_gen)
             # print("self.single_nodes_dict:", self.single_nodes_dict)
@@ -223,6 +250,11 @@ class GUI(tk.Tk):
             # print("self.triangulation_region_dict:", self.triangulation_region_dict)
 
         def solve_system():
+            """
+            Button action to start FEM calculation and show window for displaying solution
+            TODO: threading during waittime
+            :return:
+            """
             if self.calculation_parameters['equation'] == 'HH' and not self.calculation_parameters['freq']:
                 GUIStatics.window_error(self, 'Please set frequency first!')
                 return
@@ -241,6 +273,10 @@ class GUI(tk.Tk):
         button_define_geometry.place(relx=widgets_x_start, rely=0.1)
 
         def show_help():
+            """
+            Button action to show help window for GUI
+            :return:
+            """
             window_help = tk.Toplevel(self)
             window_help.title('HELP - MAIN')
             window_help.geometry(f"{800}x{600}")
@@ -294,6 +330,11 @@ class GUI(tk.Tk):
 
         # Dropdown select equation
         def trace_equation(*args):
+            """
+            Tracer function for equation selector
+            :param args:
+            :return:
+            """
             equation_selected = var_equations.get()
             equation_dict = {'Heat Equation': 'HE', 'Helmholtz Equation': 'HH'}
             self.equation = equation_dict[equation_selected]
@@ -374,10 +415,9 @@ class GUI(tk.Tk):
         opens top window to assign calculation parameters
         """
 
-
         def set_freq():
             """
-
+            Button action for setting frequency if HH eqution is selected
             :return:
             """
             if self.equation == 'HH':
@@ -416,7 +456,7 @@ class GUI(tk.Tk):
 
         def accept_calcparams():
             """
-
+            Button action for setting calculation parameters
             :return:
             """
             self.calculation_parameters['mesh_density'] = density_slider.get()
@@ -544,7 +584,7 @@ class GUI(tk.Tk):
 
         def accept_regions():
             """
-
+            Button action for setting region parameters (Materials)
             :return:
             """
 
@@ -572,6 +612,10 @@ class GUI(tk.Tk):
         """
 
         def set_boundary_value():
+            """
+            Button action to set boundary values and type
+            :return:
+            """
             boundary_nbr = dropdown_boundary_select_var.get().split('B-')[-1]
             boundary_type = dropdown_boundary_type_var.get()
             if boundary_type == 'None' or boundary_nbr == 'None':
@@ -584,6 +628,10 @@ class GUI(tk.Tk):
             self.boundary_parameters[boundary_nbr]['bc']['value'] = value
 
         def set_node_value():
+            """
+            Button action to set value for boundary condition for nodes (eg acoustic source values)
+            :return:
+            """
             node_number = dropdown_node_select_var.get().split('N-')[-1]
             try:
                 value = entry_node_value.get()
@@ -592,6 +640,11 @@ class GUI(tk.Tk):
             self.node_parameters[node_number]['bc']['value'] = value
 
         def trace_boundary(*args):
+            """
+            tracer function for highlighting boundarys in set boundary window
+            :param args:
+            :return:
+            """
 
             last_highlight_element = self.canvas.find_withtag('highlight_element')
             if last_highlight_element:
@@ -609,6 +662,11 @@ class GUI(tk.Tk):
                                                      width=6, fill=GUIStatics.CANVAS_HIGHLIGHT_ELEMENT, dash=(1, 1), tags='highlight_element')
 
         def trace_node(*args):
+            """
+            tracer function for highlighting nodes in set boundary window
+            :param args:
+            :return:
+            """
             last_highlight_element = self.canvas.find_withtag('highlight_element')
             if last_highlight_element:
                 self.canvas.delete(last_highlight_element)
@@ -688,7 +746,7 @@ class GUI(tk.Tk):
 
         def accept_bcs():
             """
-
+            Button action to set boundary conditions
             :return:
             """
             last_highlight_element = self.canvas.find_withtag('highlight_element')
@@ -760,6 +818,10 @@ class GUI(tk.Tk):
         self.init_parameters()
 
     def init_parameters(self):
+        """
+        Initializes parameters after geometry was defined
+        :return:
+        """
         self.draw_geometry_from_definebcs()
 
         # enable disabled buttons for bcs, materials, calc parametsr
@@ -880,6 +942,11 @@ class GUI(tk.Tk):
                                     font=GUIStatics.STANDARD_FONT_SMALL)
 
     def draw_mesh_from_mesh_output(self):
+        """
+        Called when Button for show mesh pressed
+        Draws mesh in canvas
+        :return:
+        """
         all_canvas_elements = self.canvas.find_all()
         for elem in all_canvas_elements:
             self.canvas.delete(elem)

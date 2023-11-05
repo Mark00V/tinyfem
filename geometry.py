@@ -6,6 +6,7 @@ import json
 from guistatics import GUIStatics
 import copy
 
+
 class Geometry(tk.Toplevel):
     """
     Define Geometry Window
@@ -34,8 +35,6 @@ class Geometry(tk.Toplevel):
         super().__init__()
         self.main_window()
 
-
-
     def main_window(self):
         """
         Creates main window for class Geometry
@@ -57,6 +56,7 @@ class Geometry(tk.Toplevel):
 
         # buttons and text on left side
         widgets_x_start = 0.01
+
         ##################################################
 
         ##################################################
@@ -69,8 +69,8 @@ class Geometry(tk.Toplevel):
             """
 
             file_path = filedialog.askopenfilename(
-                filetypes=[("json Files", "*.json")],
-                title="Open Input File",
+                    filetypes=[("json Files", "*.json")],
+                    title="Open Input File",
             )
             if file_path:
                 with open(file_path, "r") as file:
@@ -83,7 +83,7 @@ class Geometry(tk.Toplevel):
                 self.units = geo_dict['units']
                 self.other = geo_dict['other']
                 self.geometry_input = {'polygons': self.polygons, 'points': self.points, 'units': self.units,
-                                       'other': self.other}
+                                       'other'   : self.other}
 
                 # point input
                 update_point_select_dropdown()
@@ -117,12 +117,12 @@ class Geometry(tk.Toplevel):
             if self.points == {'None'}:
                 self.points = {'None': 'None'}  # workaround for json dumping
             self.geometry_input = {'polygons': self.polygons, 'points': self.points, 'units': self.units,
-                                   'other': self.other}
-            #print(self.geometry_input)
+                                   'other'   : self.other}
+            # print(self.geometry_input)
             file_path = filedialog.asksaveasfilename(
-                defaultextension=".txt",
-                filetypes=[("json Files", "*.json")],
-                title="Save Input As",
+                    defaultextension=".txt",
+                    filetypes=[("json Files", "*.json")],
+                    title="Save Input As",
             )
             if file_path:
                 with open(file_path, "w") as file:
@@ -142,13 +142,38 @@ class Geometry(tk.Toplevel):
         button_load_geo = tk.Button(self, text="LOAD", command=load_geometry,
                                     font=GUIStatics.SAVELOAD_FONT, width=10, height=1)
         button_load_geo.place(relx=0.1, rely=0.02)
+
         ##################################################
 
         def show_help():
+            """
+            Button action to show help window for GUI
+            :return:
+            """
             window_help = tk.Toplevel(self)
             window_help.title('HELP - GEOMETRY')
             window_help.geometry(f"{800}x{600}")
             window_help.resizable(False, False)
+
+            help_txt_t = f"GEOMETRY"
+            help_txt_inst = (f"1) SAVE / LOAD to save or load geometry input \n\n"
+                             f"2) Select Polygon from Selector SELECT POLYGON to add/delete/change nodes\n"
+                             f"      - Select Node from Selector SELECT NODE or add new nodes by pressing NEW (select afterwards)\n"
+                             f"      - Input coordinates in input fields and press UPDATE\n"
+                             f"      - Current nodes and coordinates are shown in POLYGON NODES \n"
+                             f"      - Select positive/negative Area from Selector AREA (press UPDATE afterwards)\n\n"
+                             f"3) Select Point from Selector SELECT POINT or ADD new points\n"
+                             f"      - Points are mainly used to define acoustic sources (but edge nodes can also be used instead)\n\n"
+                             f"4) Click Button ACCEPT GEOMETRY to finish geometry defintion and exit window\n")
+
+            tk.Label(window_help, text=help_txt_t, font=GUIStatics.STANDARD_FONT_BIGGER_BOLD, anchor="center",
+                     justify="center") \
+                .place(relx=0.1, rely=0.1)
+            tk.Label(window_help, text='Instructions', font=GUIStatics.STANDARD_FONT_BIG_BOLD, anchor="w",
+                     justify="left") \
+                .place(relx=0.1, rely=0.175)
+            tk.Label(window_help, text=help_txt_inst, font=GUIStatics.STANDARD_FONT_MID, anchor="w", justify="left") \
+                .place(relx=0.1, rely=0.225)
 
         # Help Button
         tk.Button(self, text="HELP", command=show_help, width=8,
@@ -163,21 +188,21 @@ class Geometry(tk.Toplevel):
             :return:
             """
             unit_selected = unit_var.get()
-            units_dict = {'m': 'meter', 'mm': 'milimeter', 'km': 'kilometer', 'hm': 'hektometer', 'dam': 'dekameter',
+            units_dict = {'m' : 'meter', 'mm': 'milimeter', 'km': 'kilometer', 'hm': 'hektometer', 'dam': 'dekameter',
                           'dm': 'dezimeter', 'cm': 'centimeter'}
             self.unit_selected.config(text=units_dict[unit_selected])
             self.units = unit_selected
 
         unit_select_label = tk.Label(self, text="Unit:", font=GUIStatics.STANDARD_FONT_SMALL_BOLD)
-        unit_select_label.place(relx=0.835-0.075, rely=0.04)
+        unit_select_label.place(relx=0.835 - 0.075, rely=0.04)
         units = ['m', 'mm', 'km', 'hm', 'dam', 'dm', 'cm']
         unit_var = tk.StringVar()
         unit_var.set(units[0])  # default value m
         dropdown_unit_select = tk.OptionMenu(self, unit_var, *units)
         dropdown_unit_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=2, height=1)
-        dropdown_unit_select.place(relx=0.865-0.075, rely=0.034)
+        dropdown_unit_select.place(relx=0.865 - 0.075, rely=0.034)
         self.unit_selected = tk.Label(self, text='meter', font=GUIStatics.STANDARD_FONT_SMALL)
-        self.unit_selected.place(relx=0.92-0.075, rely=0.04)
+        self.unit_selected.place(relx=0.92 - 0.075, rely=0.04)
         unit_var.trace('w', update_unit_text)
 
         ##################################################
@@ -198,7 +223,7 @@ class Geometry(tk.Toplevel):
             dropdown_polygon_select["menu"].delete(0, "end")
             for option in polygons_numbered:
                 dropdown_polygon_select["menu"].add_command(label=option,
-                                                                 command=tk._setit(polygon_select_var, option))
+                                                            command=tk._setit(polygon_select_var, option))
             # updates the polygon nodes dropdown menu and the info field for nodes
             active_polygon = self.polygons.get(polygon_select_var.get(), None)
             self.polygon_select_var = active_polygon
@@ -265,9 +290,6 @@ class Geometry(tk.Toplevel):
 
             self.update_graphics()
 
-
-
-
         def new_polygon():
             """
             create new polygon on click button NEW
@@ -286,6 +308,10 @@ class Geometry(tk.Toplevel):
                 polygon_select_var.set(new_index)
 
         def delete_poly_node():
+            """
+            Button action to delete polygon node
+            :return:
+            """
             active_polygon = polygon_select_var.get()
             if active_polygon == 'None':
                 return None
@@ -435,7 +461,7 @@ class Geometry(tk.Toplevel):
                                             width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
         update_poly_node_button.place(relx=widgets_x_start + 0.125, rely=0.289)
         delete_polygon_node_button = tk.Button(self, text="DELETE", command=delete_poly_node,
-                                     width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
+                                               width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
         delete_polygon_node_button.place(relx=widgets_x_start + 0.125, rely=0.228)
 
         polygon_nodes_label = tk.Label(self, text="Polygon Nodes:", font=GUIStatics.STANDARD_FONT_SMALL)
@@ -618,6 +644,10 @@ class Geometry(tk.Toplevel):
         # clear all button
         ##################################################
         def clear_all():
+            """
+            Button action, clears all input
+            :return:
+            """
             # reset to init values
             self.geometry_input = None
             self.polygons = {'0': {'coordinates': [], 'area_neg_pos': 'Positive'}}
@@ -642,7 +672,7 @@ class Geometry(tk.Toplevel):
             GUIStatics.add_canvas_static_elements(self.canvas)
 
         button_clear_all = tk.Button(self, text="CLEAR ALL", command=clear_all,
-                                    font=GUIStatics.STANDARD_FONT_BUTTON_MID, width=10, height=1)
+                                     font=GUIStatics.STANDARD_FONT_BUTTON_MID, width=10, height=1)
         button_clear_all.place(relx=widgets_x_start + 0.25, rely=0.02)
 
         ##################################################
@@ -659,6 +689,7 @@ class Geometry(tk.Toplevel):
         button_update_graphics = tk.Button(self, text="UPDATE GRAPHICS", command=self.update_graphics,
                                            width=25, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID)
         button_update_graphics.place(relx=0.025, rely=0.885)
+
         ##################################################
 
         ##################################################
@@ -720,7 +751,6 @@ class Geometry(tk.Toplevel):
             # check if single point inside positive polygon
             # todo
 
-
             if node_count_error or intersect_error:
                 comp = False
             return comp
@@ -741,7 +771,8 @@ class Geometry(tk.Toplevel):
                        f"All vertices of negative Polygons\n" \
                        f"must be inside positive Polygons\n" \
                        f"Polygons must have at least 3 vertices"
-            info_label = tk.Label(info_window, text="GEOMETRY NOT COMPATIBLE:\n", font=("Arial Black", 12), bg='#FFB5B5', fg='#470000')
+            info_label = tk.Label(info_window, text="GEOMETRY NOT COMPATIBLE:\n", font=("Arial Black", 12),
+                                  bg='#FFB5B5', fg='#470000')
             info_label.place(relx=0.025, rely=0.1)
             info_label = tk.Label(info_window, text=info_str, font=("Arial", 10), bg='#FFB5B5', fg='#470000')
             info_label.place(relx=0.025, rely=0.3)
@@ -761,6 +792,7 @@ class Geometry(tk.Toplevel):
         button_accept = tk.Button(self, text="ACCEPT GEOMETRY", command=check_and_accept,
                                   width=16, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_BIG_BOLD)
         button_accept.place(relx=0.025, rely=0.935)
+
         ##################################################
 
         ##################################################
@@ -772,7 +804,7 @@ class Geometry(tk.Toplevel):
             """
             check_geometry()
             geometry_input = {'polygons': self.polygons, 'points': self.points, 'units': self.units,
-                                   'other': self.other}
+                              'other'   : self.other}
             print("\n\n")
             print(f"self.polygons: {self.polygons}")
             print(f"self.polygon_nodes: {self.polygon_nodes}")
@@ -850,7 +882,6 @@ class Geometry(tk.Toplevel):
                                         outline='#1F1F1F', width=1)
                 self.canvas.create_text(node[0], node[1] - 10, text=text, fill='#1F1F1F', font=("Helvetica", 7))
 
-
     def return_geometry(self):
         """
         Callback method to return defined geometry to main class GUI
@@ -862,7 +893,6 @@ class Geometry(tk.Toplevel):
 
         self.callback_geometry(self.geometry_input)
         self.destroy()  # closes top window
-
 
 
 if __name__ == '__main__':
