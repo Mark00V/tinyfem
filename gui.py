@@ -69,20 +69,20 @@ class GUI(tk.Tk):
         self.text_information_str = ''
         ##################################################
         # for development
-        # self.regions = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
-        #                       'area_neg_pos': 'Positive'},
-        #                 '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive'},
-        #                 '2': {'coordinates': [(-1.0, 0.0), (0.0, 0.0), (0.0, 0.75), (-1.0, 0.5)],
-        #                       'area_neg_pos': 'Negative'}}
-        # self.boundaries = {'0': ((-4.0, -3.0), (1.0, -2.5)), '1': ((1.0, -2.5), (2.5, 1.0)),
-        #                    '2': ((2.5, 1.0), (-2.5, 1.0)), '3': ((-2.5, 1.0), (-4.2, -1.5)),
-        #                    '4': ((-4.2, -1.5), (-4.0, -3.0)), '5': ((2.5, 1.0), (0.0, 3.0)),
-        #                    '6': ((0.0, 3.0), (-2.5, 1.0)), '7': ((-1.0, 0.0), (0.0, 0.0)),
-        #                    '8': ((0.0, 0.0), (0.0, 0.75)), '9': ((0.0, 0.75), (-1.0, 0.5)),
-        #                    '10': ((-1.0, 0.5), (-1.0, 0.0))}
-        # self.nodes = {'0': (-3.0, -2.0), '1': (0.0, 1.5), '2': (1.0, -1.0), '3': (-4.0, -3.0), '4': (1.0, -2.5),
-        #               '5': (2.5, 1.0), '6': (-2.5, 1.0), '7': (-4.2, -1.5), '8': (0.0, 3.0), '9': (-1.0, 0.0),
-        #               '10': (0.0, 0.0), '11': (0.0, 0.75), '12': (-1.0, 0.5)}
+        self.regions = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
+                              'area_neg_pos': 'Positive'},
+                        '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive'},
+                        '2': {'coordinates': [(-1.0, 0.0), (0.0, 0.0), (0.0, 0.75), (-1.0, 0.5)],
+                              'area_neg_pos': 'Negative'}}
+        self.boundaries = {'0': ((-4.0, -3.0), (1.0, -2.5)), '1': ((1.0, -2.5), (2.5, 1.0)),
+                           '2': ((2.5, 1.0), (-2.5, 1.0)), '3': ((-2.5, 1.0), (-4.2, -1.5)),
+                           '4': ((-4.2, -1.5), (-4.0, -3.0)), '5': ((2.5, 1.0), (0.0, 3.0)),
+                           '6': ((0.0, 3.0), (-2.5, 1.0)), '7': ((-1.0, 0.0), (0.0, 0.0)),
+                           '8': ((0.0, 0.0), (0.0, 0.75)), '9': ((0.0, 0.75), (-1.0, 0.5)),
+                           '10': ((-1.0, 0.5), (-1.0, 0.0))}
+        self.nodes = {'0': (-3.0, -2.0), '1': (0.0, 1.5), '2': (1.0, -1.0), '3': (-4.0, -3.0), '4': (1.0, -2.5),
+                      '5': (2.5, 1.0), '6': (-2.5, 1.0), '7': (-4.2, -1.5), '8': (0.0, 3.0), '9': (-1.0, 0.0),
+                      '10': (0.0, 0.0), '11': (0.0, 0.75), '12': (-1.0, 0.5)}
         # for development
         ##################################################
         super().__init__()
@@ -235,7 +235,7 @@ class GUI(tk.Tk):
 
             update_thread = threading.Thread(target=update_wait_label)
             update_thread.start()
-            button_define_geometry.config(state='normal')
+            button_show_mesh.config(state='normal')
 
         def show_mesh():
             """
@@ -248,6 +248,13 @@ class GUI(tk.Tk):
             # print("self.boundary_nodes_dict:", self.boundary_nodes_dict)
             # print("self.triangulation:", self.triangulation)
             # print("self.triangulation_region_dict:", self.triangulation_region_dict)
+
+        def show_geometry():
+            """
+
+            :return:
+            """
+            ...
 
         def solve_system():
             """
@@ -318,10 +325,13 @@ class GUI(tk.Tk):
         tk.Button(self, text="HELP", command=show_help, width=8,
                   font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.9, rely=0.025)
 
-        # Button show Mesh
-        button_define_geometry = tk.Button(self, text="SHOW MESH", command=show_mesh, width=12,
+        # Button show Mesh and show Geometry
+        button_show_mesh = tk.Button(self, text="SHOW MESH", command=show_mesh, width=12,
                                            font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1, state='disabled')
-        button_define_geometry.place(relx=0.25, rely=0.035)
+        button_show_mesh.place(relx=0.23, rely=0.035)
+        self.button_show_geom = tk.Button(self, text="SHOW GEOMETRY", command=show_geometry, width=12,
+                                           font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1, state='disabled')
+        self.button_show_geom.place(relx=0.34, rely=0.035)
 
         # FEM Parameters
         GUIStatics.create_divider(self, widgets_x_start, 0.17, 230)
@@ -402,9 +412,9 @@ class GUI(tk.Tk):
         #self.text_label.place(relx=0.02, rely=0.965)
 
         # Developing -> uncomment self.regions etc. in init!
-        # self.animation = False  # todo delete this
-        # self.init_parameters()  # todo delete this
-        # self.draw_geometry_from_definebcs()  # todo delete this
+        self.animation = False  # todo delete this
+        self.init_parameters()  # todo delete this
+        self.draw_geometry_from_definebcs()  # todo delete this
         # Developing
         ##################################################
 
@@ -661,11 +671,15 @@ class GUI(tk.Tk):
 
             if type_set in  ['Neumann', 'Dirichlet']:
                 entry_boundary_value.set(str(value_set))
+                entry_boundary_value_B.set('None')
             elif type_set == 'Robin':
                 entry_boundary_value.set(str(value_set[0]))
                 entry_boundary_value_B.set(str(value_set[1]))
             if type_set:
                 dropdown_boundary_type_var.set(type_set)
+            else:
+                entry_boundary_value.set('None')
+                entry_boundary_value_B.set('None')
             nodes = self.boundary_parameters[boundary_nbr]['coordinates']
             self.highlight_element = self.canvas.create_line(GUIStatics.transform_node_to_canvas(nodes[0]),
                                                      GUIStatics.transform_node_to_canvas(nodes[1]),
@@ -839,6 +853,7 @@ class GUI(tk.Tk):
         format_for_params = CreateBCParams(self.geometry_input)
         self.regions, self.boundaries, self.nodes = format_for_params.main()
         self.init_parameters()
+        button_show_geom.config(state='normal')
 
     def init_parameters(self):
         """

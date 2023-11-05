@@ -1,3 +1,7 @@
+# TODO:
+# Systematik Einarbeitung boundary conditions überarbeiten... Außerdem ist Neumann für HH lediglich Impedanz -> In GUI umbenennen oder so...
+
+
 from scipy.interpolate import griddata
 import numpy as np
 from elements import ElementMatrices
@@ -47,7 +51,7 @@ class CalcFEM:
         self.sysboundaries = None  # Boundary matrix e.g. impedance matrix for system
 
         # development
-        self.file_path_dev = r'testing\output_gui_4_calcfem_' + '1' + '.txt'
+        self.file_path_dev = r'testing/output_gui_4_calcfem_' + 'C1' + '.txt'
 
     def develop_print_input(self):
         print("\n\n\n------------------DEBUG--------------------")
@@ -104,8 +108,11 @@ class CalcFEM:
             self.calculate_acoustic_sources()
             self.implement_acoustic_sources()
 
-        # implement boundary conditions
-        self.implement_boundary_conditions()
+        # implement robin boundary condition in force vector
+        self.implement_robin_force_vector()
+
+        # implement dirichlet boundary conditions
+        self.implement_dirichlet_boundary_conditions()
 
         # self.print_matrix(self.sysmatrix_diri)
         # self.print_matrix(self.force_vector_diri)
@@ -127,6 +134,26 @@ class CalcFEM:
         for key, val in self.triangulation_region_dict.items():
             if node in val:
                 return key
+
+    def implement_robin_force_vector(self):
+        """
+
+        :return:
+        """
+        for bc_nbr, vals in self.boundary_parameters.items():
+            bc_type = vals['bc']['type']
+            bc_val_forcevector = None
+            if bc_type == 'Robin':
+                bc_val_forcevector = vals['bc']['value'][1]
+                bc_node_mid = self.boundary_nodes_dict[bc_nbr][1][0]  # since every boundary has at least 3 nodes -> node 1 to determine which region boundary belongs to
+                region = self.get_region_for_node_nbr(bc_node_mid)
+                mats = self.region_parameters[region]['material']
+                if self.equation == 'HE':
+                    bc_val_forcevector = bc_val_forcevector * mats['k']  # todo, probs not correct...
+                bc_nodes = [elem[0] for elem in self.boundary_nodes_dict[bc_nbr]]
+                for pos in bc_nodes:
+                    self.force_vector[pos] = self.force_vector[pos] + bc_val_forcevector
+
 
     def implement_acoustic_sources(self):
         """
@@ -226,6 +253,7 @@ class CalcFEM:
         """
         calculates the boundary elements for neumann / robin BC
         todo: Vermutlich muss hier noch Vorzeichen geändert werden abhängig davon ob normalenvektor in Region zeigt oder aus Region raus...?!?
+        todo: Umschreiben Values für Robin notwendig, vermutlich wird für WLG noch Wärmeleitzahl benötigt siehe Mathematica script...
         :return:
         """
 
@@ -233,14 +261,22 @@ class CalcFEM:
         self.all_boundary_elements = list()
         for bc_nbr, vals in self.boundary_parameters.items():
             bc_type = vals['bc']['type']
+            bc_val = None
             if bc_type == 'Neumann':
                 bc_val = vals['bc']['value']
+            elif bc_type == 'Robin':
+                bc_val = vals['bc']['value'][0]
+                bc_node_mid = self.boundary_nodes_dict[bc_nbr][1][0]  # since every boundary has at least 3 nodes -> node 1 to determine which region boundary belongs to
+                region = self.get_region_for_node_nbr(bc_node_mid)
+                mats = self.region_parameters[region]['material']
+                if self.equation == 'HE':
+                    bc_val = bc_val * mats['k']  # todo, probs not correct...
+            if bc_type in {'Neumann', 'Robin'}:
                 bc_nodes = self.boundary_nodes_dict[bc_nbr]
                 for e0, e1 in zip(bc_nodes[:-1], bc_nodes[1:]):
                     self.boundaries_incidence_matrix.append([e0[0], e1[0]])
                     boundary_element_matrix = ElementMatrices.boundary_element_p1([e0[1], e1[1]], bc_val)
                     self.all_boundary_elements.append(boundary_element_matrix)
-
 
     def assembly_system_matrix_boundaries(self):
         """
@@ -260,7 +296,7 @@ class CalcFEM:
                     ztb = int(alloc_mat[ielem, b])
                     self.sysboundaries[zta, ztb] = self.sysboundaries[zta, ztb] + boundary_mat[a, b]
 
-    def implement_boundary_conditions(self):
+    def implement_dirichlet_boundary_conditions(self):
         """
 
         :return:
