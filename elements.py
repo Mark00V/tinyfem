@@ -260,6 +260,7 @@ class ElementMatrices:
     @staticmethod
     def boundary_element_p1(nodes: list, value: float) -> np.array:
         """
+        TODO: Muss das Element überhaupt transformiert werden????
         Creates boundary element (e.g. for impedance)
         :param nodes: [[x_1, y_1],[x_2, y_2]]
         :param value: value for the boundary element
@@ -316,7 +317,7 @@ class ElementMatrices:
                                           [math.sin(angle), math.cos(angle)]])
         transformed_element = transformation_matrix @ element_mat
 
-        return transformed_element
+        return element_mat
 
 
 if __name__ == "__main__":

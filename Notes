@@ -6,6 +6,8 @@ KNOWN BUGS:
 
 #######################################################################################
 TODOs:
+--> GUI: Add button show geometry (nachdem Mesh generiert wurde)
+--> GUI: Schreibe in Infofenster alle Infos!
 --> Output solution consecutive filename
 --> Docstrings and typehints
 --> Weitere Überprüfung Geometrie auf Kompatibilität (Entweder in Klasse Geometry oder CreateBCParams)

@@ -9,6 +9,7 @@ from typing import List, Tuple, Union
 from scipy.sparse import coo_matrix
 import copy
 from guistatics import GUIStatics
+
 class CalcFEM:
 
     def __init__(self, params_mesh, params_boundaries_materials):
@@ -23,7 +24,8 @@ class CalcFEM:
         self.boundary_nodes_dict = params_mesh[2]
         self.triangulation = params_mesh[3]
         self.triangulation_region_dict = params_mesh[4]
-        # von GUI übergebene Werte aus Boundary/Materials/Calculation Defintion
+
+        # von GUI übergebene Werte aus Boundary/Materials/Calculation Definition
         self.region_parameters = params_boundaries_materials[0]
         self.boundary_parameters = params_boundaries_materials[1]
         self.node_parameters = params_boundaries_materials[2]
@@ -40,8 +42,12 @@ class CalcFEM:
         self.force_vector_diri = None  # Force Vector after implementing Dirichlet Cond
         self.solution = None
         self.acoustic_source = None  # sources if equation is 'HH'
+        self.boundaries_incidence_matrix = None  # Incidence matrix for boundary elements
+        self.all_boundary_elements = None  # list contains all boundary element matrices
+        self.sysboundaries = None  # Boundary matrix e.g. impedance matrix for system
+
         # development
-        self.file_path_dev = r'testing\output_gui_4_calcfem_' + '2' + '.txt'
+        self.file_path_dev = r'testing\output_gui_4_calcfem_' + '1' + '.txt'
 
     def develop_print_input(self):
         print("\n\n\n------------------DEBUG--------------------")
@@ -80,7 +86,13 @@ class CalcFEM:
 
         # calculate element matrices
         self.calc_elementmatrices()
-        
+
+        # calculate boundary elements
+        self.calc_boundary_elements()
+
+        # assembly boundary system matrix
+        self.assembly_system_matrix_boundaries()
+
         # assembly system matrices
         self.calc_system_matrices()
 
@@ -124,8 +136,6 @@ class CalcFEM:
         for pos, val in self.acoustic_source:
             self.force_vector[pos] = self.force_vector[pos] + val
 
-
-
     def calculate_acoustic_sources(self):
         """
         calculates acoustic source values
@@ -144,8 +154,6 @@ class CalcFEM:
                 rho = self.region_parameters[region_nbr]['material']['rho']
                 mpsource = 4 * math.pi / rho * ((2 * rho * omega) / ((2 * math.pi) ** 2)) ** 0.5
                 self.acoustic_source.append([node_pos, mpsource])
-
-
 
     def plot_solution_dev(self):
         """
@@ -214,6 +222,44 @@ class CalcFEM:
         self.solution = np.linalg.solve(self.sysmatrix_diri, self.force_vector_diri)
         # print(self.solution)
 
+    def calc_boundary_elements(self):
+        """
+        calculates the boundary elements for neumann / robin BC
+        todo: Vermutlich muss hier noch Vorzeichen geändert werden abhängig davon ob normalenvektor in Region zeigt oder aus Region raus...?!?
+        :return:
+        """
+
+        self.boundaries_incidence_matrix = list()
+        self.all_boundary_elements = list()
+        for bc_nbr, vals in self.boundary_parameters.items():
+            bc_type = vals['bc']['type']
+            if bc_type == 'Neumann':
+                bc_val = vals['bc']['value']
+                bc_nodes = self.boundary_nodes_dict[bc_nbr]
+                for e0, e1 in zip(bc_nodes[:-1], bc_nodes[1:]):
+                    self.boundaries_incidence_matrix.append([e0[0], e1[0]])
+                    boundary_element_matrix = ElementMatrices.boundary_element_p1([e0[1], e1[1]], bc_val)
+                    self.all_boundary_elements.append(boundary_element_matrix)
+
+
+    def assembly_system_matrix_boundaries(self):
+        """
+        Assembles the system boundaries matrix e.g. for impedance of boundaries
+        :return:
+        """
+        maxnode = len(self.nodes_mesh_gen)
+        nbr_of_elements = len(self.all_boundary_elements)
+        alloc_mat = np.array(self.boundaries_incidence_matrix)
+        self.sysboundaries = np.zeros((maxnode, maxnode), dtype=np.single)
+
+        for ielem in range(nbr_of_elements):
+            boundary_mat = self.all_boundary_elements[ielem]
+            for a in range(2):
+                for b in range(2):
+                    zta = int(alloc_mat[ielem, a])
+                    ztb = int(alloc_mat[ielem, b])
+                    self.sysboundaries[zta, ztb] = self.sysboundaries[zta, ztb] + boundary_mat[a, b]
+
     def implement_boundary_conditions(self):
         """
 
@@ -222,7 +268,6 @@ class CalcFEM:
 
         # create dirichlet list for implementation of dirichlet boundary conditions
         dirichlet_dict = dict()
-        print(self.boundary_parameters)
         for boundary_nbr, params in self.boundary_parameters.items():
             bc = params['bc']
             bc_type = bc['type']
@@ -235,9 +280,10 @@ class CalcFEM:
                         dirichlet_dict[node] = (dirichlet_dict[node] + bc_value) / 2
                     except KeyError:
                         dirichlet_dict[node] = bc_value
-        dirichlet_list = np.array([[key, val] for key, val in dirichlet_dict.items()])
+        dirichlet_list = [[key, val] for key, val in dirichlet_dict.items()]
 
         if dirichlet_list:
+            dirichlet_list = np.array(dirichlet_list)
             self.sysmatrix_diri, self.force_vector_diri = self.implement_dirichlet_condition(dirichlet_list, self.sysarray, self.force_vector)
         else:
             self.sysmatrix_diri, self.force_vector_diri = self.sysarray, self.force_vector
@@ -309,8 +355,7 @@ class CalcFEM:
         elif self.equation == 'HH':  # todo: include in elementmatrices
             freq = float(self.calculation_parameters['freq'])
             omega = freq * 2 * math.pi
-            self.sysarray = self.syssteifarray - omega**2 * self.sysmassarray
-
+            self.sysarray = self.syssteifarray - omega**2 * self.sysmassarray + omega * 1j * self.sysboundaries
 
     def calc_elementmatrices(self):
         """
@@ -356,7 +401,6 @@ class CalcFEM:
             self.all_element_matrices_steif[idx] = elemsteif
             if elemmass is not None:  # since it might be a np.array
                 self.all_element_matrices_mass[idx] = elemmass
-
 
     @staticmethod
     def print_matrix(matrix: Union[np.array, list]):

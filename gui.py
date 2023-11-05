@@ -402,9 +402,9 @@ class GUI(tk.Tk):
         #self.text_label.place(relx=0.02, rely=0.965)
 
         # Developing -> uncomment self.regions etc. in init!
-        #self.animation = False  # todo delete this
-        #self.init_parameters()  # todo delete this
-        #self.draw_geometry_from_definebcs()  # todo delete this
+        # self.animation = False  # todo delete this
+        # self.init_parameters()  # todo delete this
+        # self.draw_geometry_from_definebcs()  # todo delete this
         # Developing
         ##################################################
 
@@ -622,10 +622,16 @@ class GUI(tk.Tk):
                 return None
             try:
                 value = float(entry_boundary_value.get())
+                value_B = None
+                if boundary_type == 'Robin':
+                    value_B = float(entry_boundary_value_B.get())
             except ValueError:
                 value = 0.0
             self.boundary_parameters[boundary_nbr]['bc']['type'] = boundary_type
-            self.boundary_parameters[boundary_nbr]['bc']['value'] = value
+            if boundary_type == 'Robin':
+                self.boundary_parameters[boundary_nbr]['bc']['value'] = [value, value_B]
+            else:
+                self.boundary_parameters[boundary_nbr]['bc']['value'] = value
 
         def set_node_value():
             """
@@ -653,7 +659,11 @@ class GUI(tk.Tk):
             value_set = self.boundary_parameters[boundary_nbr]['bc']['value']
             type_set = self.boundary_parameters[boundary_nbr]['bc']['type']
 
-            entry_boundary_value.set(str(value_set))
+            if type_set in  ['Neumann', 'Dirichlet']:
+                entry_boundary_value.set(str(value_set))
+            elif type_set == 'Robin':
+                entry_boundary_value.set(str(value_set[0]))
+                entry_boundary_value_B.set(str(value_set[1]))
             if type_set:
                 dropdown_boundary_type_var.set(type_set)
             nodes = self.boundary_parameters[boundary_nbr]['coordinates']
@@ -699,23 +709,36 @@ class GUI(tk.Tk):
         dropdown_boundary_select.place(relx=widgets_x_start + 0.025, rely=0.18)
         dropdown_boundary_select_var.trace('w', trace_boundary)
 
-        boundary_types = ['Dirichlet', 'Neumann']
+        boundary_types = ['Dirichlet', 'Neumann', 'Robin']
         dropdown_boundary_type_var = tk.StringVar()
         dropdown_boundary_type_var.set(boundary_types[0])
         dropdown_boundary_type = tk.OptionMenu(window_bcs, dropdown_boundary_type_var, *boundary_types)
         dropdown_boundary_type.config(font=GUIStatics.STANDARD_FONT_SMALL, width=8, height=1)
         dropdown_boundary_type.place(relx=widgets_x_start + 0.48, rely=0.18)
 
-        tk.Label(window_bcs, text="Value:", font=GUIStatics.STANDARD_FONT_SMALL)\
+        tk.Label(window_bcs, text="Value A:", font=GUIStatics.STANDARD_FONT_SMALL)\
             .place(relx=widgets_x_start + 0.025, rely=0.27)
+        tk.Label(window_bcs, text="For Dirichlet &\nNeumann     ", font=GUIStatics.STANDARD_FONT_SMALLER)\
+            .place(relx=widgets_x_start + 0.35, rely=0.26)
         entry_boundary_value = tk.StringVar()
         entry_boundary_value.set('None')
         entry_boundary_value_field = tk.Entry(window_bcs, textvariable=entry_boundary_value,
                                               font=GUIStatics.STANDARD_FONT_SMALL, width=8)
         entry_boundary_value_field.place(relx=widgets_x_start + 0.025 + 0.15, rely=0.27)
+
+        tk.Label(window_bcs, text="Value B:", font=GUIStatics.STANDARD_FONT_SMALL)\
+            .place(relx=widgets_x_start + 0.025, rely=0.33)
+        tk.Label(window_bcs, text="For Robin", font=GUIStatics.STANDARD_FONT_SMALLER)\
+            .place(relx=widgets_x_start + 0.35, rely=0.33)
+        entry_boundary_value_B = tk.StringVar()
+        entry_boundary_value_B.set('None')
+        entry_boundary_value_B_field = tk.Entry(window_bcs, textvariable=entry_boundary_value_B,
+                                              font=GUIStatics.STANDARD_FONT_SMALL, width=8)
+        entry_boundary_value_B_field.place(relx=widgets_x_start + 0.025 + 0.15, rely=0.33)
+
         button_boundary_value_set = tk.Button(window_bcs, text="SET VALUE", command=set_boundary_value,
                                           width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
-        button_boundary_value_set.place(relx=widgets_x_start + 0.38, rely=0.265)
+        button_boundary_value_set.place(relx=widgets_x_start + 0.6, rely=0.29)
 
         if equation_set == 'HH':
             GUIStatics.create_divider(window_bcs, widgets_x_start, 0.42, 335)
@@ -758,7 +781,7 @@ class GUI(tk.Tk):
             for boundary_nbr in self.boundary_parameters.keys():
                 boundary_value = self.boundary_parameters[boundary_nbr]['bc']['value']
                 boundary_type = self.boundary_parameters[boundary_nbr]['bc']['type']
-                boundary_type_dict = {'Dirichlet': 'DC', 'Neumann': 'NM'}
+                boundary_type_dict = {'Dirichlet': 'DC', 'Neumann': 'NM', 'Robin': 'RB'}
                 if boundary_type:
                     self.text_information_str += f"B-{boundary_nbr}: {boundary_value},{boundary_type_dict[boundary_type]}; | "
 
@@ -850,7 +873,11 @@ class GUI(tk.Tk):
         for node_nbr, node in self.nodes.items():
             coordinates = node
             node_parameters[node_nbr] = {'coordinates': coordinates, 'bc': {'type': None, 'value': None}}
-        calculation_parameters = {'mesh_density': None, 'freq': None, 'equation': 'HE', 'units': self.geometry_input['units']}
+        try:
+            calculation_parameters = {'mesh_density': None, 'freq': None, 'equation': 'HE', 'units': self.geometry_input['units']}
+        except TypeError:
+            calculation_parameters = {'mesh_density': None, 'freq': None, 'equation': 'HE',
+                                      'units'       : 'm'}
         self.region_parameters = region_parameters
         self.boundary_parameters = boundary_parameters
         self.node_parameters = node_parameters
