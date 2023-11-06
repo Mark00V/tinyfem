@@ -51,7 +51,7 @@ class CalcFEM:
         self.sysboundaries = None  # Boundary matrix e.g. impedance matrix for system
 
         # development
-        self.file_path_dev = r'testing/output_gui_4_calcfem_' + 'C1' + '.txt'
+        self.file_path_dev = r'testing/output_gui_4_calcfem_' + 'C2' + '.txt'
 
     def develop_print_input(self):
         print("\n\n\n------------------DEBUG--------------------")
@@ -114,6 +114,7 @@ class CalcFEM:
         # implement dirichlet boundary conditions
         self.implement_dirichlet_boundary_conditions()
 
+        self.print_matrix(self.force_vector_diri)
         # self.print_matrix(self.sysmatrix_diri)
         # self.print_matrix(self.force_vector_diri)
         # self.develop_print_input()
@@ -144,12 +145,14 @@ class CalcFEM:
             bc_type = vals['bc']['type']
             bc_val_forcevector = None
             if bc_type == 'Robin':
-                bc_val_forcevector = vals['bc']['value'][1]
+                bc_val_A = vals['bc']['value'][0]
+                bc_val_B = vals['bc']['value'][1]
                 bc_node_mid = self.boundary_nodes_dict[bc_nbr][1][0]  # since every boundary has at least 3 nodes -> node 1 to determine which region boundary belongs to
                 region = self.get_region_for_node_nbr(bc_node_mid)
                 mats = self.region_parameters[region]['material']
                 if self.equation == 'HE':
-                    bc_val_forcevector = bc_val_forcevector * mats['k']  # todo, probs not correct...
+                    bc_val_forcevector = bc_val_A * bc_val_B
+                    #bc_val_forcevector = bc_val_forcevector * mats['k']  # todo, probs not correct...
                 bc_nodes = [elem[0] for elem in self.boundary_nodes_dict[bc_nbr]]
                 for pos in bc_nodes:
                     self.force_vector[pos] = self.force_vector[pos] + bc_val_forcevector
@@ -271,6 +274,7 @@ class CalcFEM:
                 mats = self.region_parameters[region]['material']
                 if self.equation == 'HE':
                     bc_val = bc_val * mats['k']  # todo, probs not correct...
+                    bc_val = bc_val
             if bc_type in {'Neumann', 'Robin'}:
                 bc_nodes = self.boundary_nodes_dict[bc_nbr]
                 for e0, e1 in zip(bc_nodes[:-1], bc_nodes[1:]):
@@ -317,7 +321,6 @@ class CalcFEM:
                     except KeyError:
                         dirichlet_dict[node] = bc_value
         dirichlet_list = [[key, val] for key, val in dirichlet_dict.items()]
-
         if dirichlet_list:
             dirichlet_list = np.array(dirichlet_list)
             self.sysmatrix_diri, self.force_vector_diri = self.implement_dirichlet_condition(dirichlet_list, self.sysarray, self.force_vector)
@@ -340,6 +343,7 @@ class CalcFEM:
         sysmatrix_orig = np.copy(system_matrix)
         sysmatrix_adj = np.copy(system_matrix)
         force_vector_adj = np.copy(force_vector)
+
 
         # sysmatrix
         for position, _ in dirichlet_list:
@@ -385,13 +389,15 @@ class CalcFEM:
                     ztb = int(alloc_mat[ielem, b])
                     self.syssteifarray[zta, ztb] = self.syssteifarray[zta, ztb] + elesteifmat[a, b]
                     self.sysmassarray[zta, ztb] = self.sysmassarray[zta, ztb] + elemassmat[a, b]
-            # print(elesteifmat)
+        #self.print_matrix(self.syssteifarray)
+        #self.print_matrix(self.sysboundaries)
         if self.equation == 'HE':
-            self.sysarray = self.syssteifarray
+            self.sysarray = self.syssteifarray + self.sysboundaries
         elif self.equation == 'HH':  # todo: include in elementmatrices
             freq = float(self.calculation_parameters['freq'])
             omega = freq * 2 * math.pi
             self.sysarray = self.syssteifarray - omega**2 * self.sysmassarray + omega * 1j * self.sysboundaries
+        #self.print_matrix(self.sysarray)
 
     def calc_elementmatrices(self):
         """
