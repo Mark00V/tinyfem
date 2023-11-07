@@ -86,45 +86,68 @@ class CalcFEM:
 
         # set equation
         self.equation = self.calculation_parameters['equation']  # either HE (HeatEquation) or HH (HelmHoltz)
-        #self.equation = 'HH' # todo for dev!
 
+        ########################################################################
+        # Raw System matrix and force vector (without any boundary conditions)
         # calculate element matrices
         self.calc_elementmatrices()
 
-        # calculate boundary elements
+        # initialize force vector
+        self.create_force_vector()
+
+        # assembly system matrices
+        self.calc_system_matrices_init()
+
+        # -> self.force_vector | self.syssteifarray | self.sysmassarray
+        ########################################################################
+
+        ########################################################################
+        # calculate boundary elements for system matrix and frore vector
         self.calc_boundary_elements()
 
         # assembly boundary system matrix
         self.assembly_system_matrix_boundaries()
 
-        # assembly system matrices
-        self.calc_system_matrices()
+        # -> self.sysboundaries                         system boundary matrix with Neumann/Robin BCs
+        # -> self.allboundary_elements_forcevektor      positions and values added to force vector for robin bc
+        ########################################################################
 
-        # create force vector
-        self.create_force_vector()
+        ########################################################################
+        # Systemmatrix and force vector with added Neumann/Robin BCs
+        # implement Neumann/robin into raw system matrix
+        self.calc_system_matrices_robin_neumann_bc()
 
-        # implement acoustic sources if helmholtz equation
+        # # implement acoustic sources if helmholtz equation
         if self.equation =='HH':
             self.calculate_acoustic_sources()
             self.implement_acoustic_sources()
 
-        # implement robin boundary condition in force vector
+        # # implement robin boundary condition in force vector
         self.implement_robin_force_vector()
 
+        # -> self.sysarray_neumann_robin        System matrix with implemented neumann /robin BCs
+        # -> self.force_vector_neumann_robin    Force vector with implemented neumann/robin Bcs
+        ########################################################################
+
+        ########################################################################
         # implement dirichlet boundary conditions
         self.implement_dirichlet_boundary_conditions()
 
+        self.print_matrix(self.sysmatrix_diri)
         self.print_matrix(self.force_vector_diri)
-        # self.print_matrix(self.sysmatrix_diri)
-        # self.print_matrix(self.force_vector_diri)
-        # self.develop_print_input()
-        # Solve the system
+
+        # -> self.sysmatrix_diri | self.force_vector_diri
+        ########################################################################
+
+        ########################################################################
+        # solve system
+        # # self.develop_print_input()
         self.solve_linear_system()
-
-        # plot solution
-        # self.plot_solution(self.solution, self.nodes_mesh_gen, self.triangulation)
-
-        return self.solution
+        #
+        # # plot solution
+        # # self.plot_solution(self.solution, self.nodes_mesh_gen, self.triangulation)
+        #
+        # return self.solution
 
     def get_region_for_node_nbr(self, node):
         """
@@ -141,21 +164,13 @@ class CalcFEM:
 
         :return:
         """
-        for bc_nbr, vals in self.boundary_parameters.items():
-            bc_type = vals['bc']['type']
-            bc_val_forcevector = None
-            if bc_type == 'Robin':
-                bc_val_A = vals['bc']['value'][0]
-                bc_val_B = vals['bc']['value'][1]
-                bc_node_mid = self.boundary_nodes_dict[bc_nbr][1][0]  # since every boundary has at least 3 nodes -> node 1 to determine which region boundary belongs to
-                region = self.get_region_for_node_nbr(bc_node_mid)
-                mats = self.region_parameters[region]['material']
-                if self.equation == 'HE':
-                    bc_val_forcevector = bc_val_A * bc_val_B
-                    #bc_val_forcevector = bc_val_forcevector * mats['k']  # todo, probs not correct...
-                bc_nodes = [elem[0] for elem in self.boundary_nodes_dict[bc_nbr]]
-                for pos in bc_nodes:
-                    self.force_vector[pos] = self.force_vector[pos] + bc_val_forcevector
+
+        self.force_vector_neumann_robin = np.copy(self.force_vector)
+
+        for idx, elem in enumerate(self.allboundary_elements_forcevektor):
+            pos = elem[0]
+            value = elem[1]
+            self.force_vector_neumann_robin[pos] = self.force_vector_neumann_robin[pos] + value
 
 
     def implement_acoustic_sources(self):
@@ -260,27 +275,31 @@ class CalcFEM:
         :return:
         """
 
-        self.boundaries_incidence_matrix = list()
-        self.all_boundary_elements = list()
+        self.boundaries_incidence_matrix = list()  # contains incidence matrix for assembly boundary elements for addition to systemmatrix
+        self.all_boundary_elements = list()  # contains boundary elements for implementation in systemmatrx
+        self.allboundary_elements_forcevektor = list()  # contains the contributions to the force vector for robin bcs -> [[pos],[values]]
         for bc_nbr, vals in self.boundary_parameters.items():
             bc_type = vals['bc']['type']
             bc_val = None
             if bc_type == 'Neumann':
-                bc_val = vals['bc']['value']
+                bc_val_A = vals['bc']['value']
+                bc_val_B = 0
             elif bc_type == 'Robin':
-                bc_val = vals['bc']['value'][0]
-                bc_node_mid = self.boundary_nodes_dict[bc_nbr][1][0]  # since every boundary has at least 3 nodes -> node 1 to determine which region boundary belongs to
-                region = self.get_region_for_node_nbr(bc_node_mid)
-                mats = self.region_parameters[region]['material']
-                if self.equation == 'HE':
-                    bc_val = bc_val * mats['k']  # todo, probs not correct...
-                    bc_val = bc_val
+                bc_val_A = vals['bc']['value'][0]
+                bc_val_B = vals['bc']['value'][1]
             if bc_type in {'Neumann', 'Robin'}:
                 bc_nodes = self.boundary_nodes_dict[bc_nbr]
+                bc_node_mid = self.boundary_nodes_dict[bc_nbr][1][0]  # since every boundary has at least 3 nodes -> node 1 to determine which region boundary belongs to
+                region = self.get_region_for_node_nbr(bc_node_mid)
+                mats = self.region_parameters[region]['material']  # todo necessary for robin/neumann???
                 for e0, e1 in zip(bc_nodes[:-1], bc_nodes[1:]):
                     self.boundaries_incidence_matrix.append([e0[0], e1[0]])
-                    boundary_element_matrix = ElementMatrices.boundary_element_p1([e0[1], e1[1]], bc_val)
+                    boundary_element_matrix, force_vector_matrix = ElementMatrices.boundary_element_p1([e0[1], e1[1]], bc_val_A, bc_val_B)
                     self.all_boundary_elements.append(boundary_element_matrix)
+                    if bc_type == 'Robin':
+                        #self.allboundary_elements_forcevektor.append([[e0[0], e1[0]], force_vector_matrix])
+                        self.allboundary_elements_forcevektor.append([e0[0], force_vector_matrix[0][0]])  # todo, only works for p=1
+                        self.allboundary_elements_forcevektor.append([e1[0], force_vector_matrix[1][0]])
 
     def assembly_system_matrix_boundaries(self):
         """
@@ -321,11 +340,12 @@ class CalcFEM:
                     except KeyError:
                         dirichlet_dict[node] = bc_value
         dirichlet_list = [[key, val] for key, val in dirichlet_dict.items()]
+
         if dirichlet_list:
             dirichlet_list = np.array(dirichlet_list)
-            self.sysmatrix_diri, self.force_vector_diri = self.implement_dirichlet_condition(dirichlet_list, self.sysarray, self.force_vector)
-        else:
-            self.sysmatrix_diri, self.force_vector_diri = self.sysarray, self.force_vector
+            self.sysmatrix_diri, self.force_vector_diri = self.implement_dirichlet_condition(dirichlet_list, self.sysarray_neumann_robin, self.force_vector_neumann_robin)
+        else:  # no dirichlet conditions specified
+            self.sysmatrix_diri, self.force_vector_diri = self.sysarray_neumann_robin, self.force_vector_neumann_robin
 
     @staticmethod
     def implement_dirichlet_condition(dirichlet_list: np.array, system_matrix: np.array, force_vector: np.array):
@@ -366,11 +386,11 @@ class CalcFEM:
     def create_force_vector(self):
         maxnode = len(self.nodes_mesh_gen)
         self.force_vector = np.zeros(maxnode, dtype=np.single)
-    
-    def calc_system_matrices(self):
+
+    def calc_system_matrices_init(self):
         """
-        
-        :return: 
+
+        :return:
         """
         maxnode = len(self.nodes_mesh_gen)
         nbr_of_elements = len(self.triangulation)
@@ -378,7 +398,6 @@ class CalcFEM:
         self.syssteifarray = np.zeros((maxnode, maxnode), dtype=np.single)
         self.sysmassarray = np.zeros((maxnode, maxnode), dtype=np.single)
         self.sysarray = np.zeros((maxnode, maxnode), dtype=np.single)
-
 
         for ielem in range(nbr_of_elements):
             elesteifmat = self.all_element_matrices_steif[ielem]
@@ -389,15 +408,19 @@ class CalcFEM:
                     ztb = int(alloc_mat[ielem, b])
                     self.syssteifarray[zta, ztb] = self.syssteifarray[zta, ztb] + elesteifmat[a, b]
                     self.sysmassarray[zta, ztb] = self.sysmassarray[zta, ztb] + elemassmat[a, b]
-        #self.print_matrix(self.syssteifarray)
-        #self.print_matrix(self.sysboundaries)
+
+    def calc_system_matrices_robin_neumann_bc(self):
+        """
+        
+        :return: 
+        """
+
         if self.equation == 'HE':
-            self.sysarray = self.syssteifarray + self.sysboundaries
+            self.sysarray_neumann_robin = self.syssteifarray + self.sysboundaries
         elif self.equation == 'HH':  # todo: include in elementmatrices
             freq = float(self.calculation_parameters['freq'])
             omega = freq * 2 * math.pi
-            self.sysarray = self.syssteifarray - omega**2 * self.sysmassarray + omega * 1j * self.sysboundaries
-        #self.print_matrix(self.sysarray)
+            self.sysarray_neumann_robin = self.syssteifarray - omega**2 * self.sysmassarray + omega * 1j * self.sysboundaries
 
     def calc_elementmatrices(self):
         """

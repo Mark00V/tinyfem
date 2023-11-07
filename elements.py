@@ -258,7 +258,7 @@ class ElementMatrices:
         return stiffness_mat, mass_mat
 
     @staticmethod
-    def boundary_element_p1(nodes: list, value: float) -> np.array:
+    def boundary_element_p1(nodes: list, value_A: float, value_B: float) -> np.array:
         """
         TODO: Muss das Element überhaupt transformiert werden????
         Creates boundary element (e.g. for impedance)
@@ -310,21 +310,32 @@ class ElementMatrices:
                     val = phi_p1(i + 1, intnodes[j]) * phi_p1(ii + 1, intnodes[j]) * intweights[j]
                     nb[i, ii] = val
             element_mat = element_mat + nb
-        element_mat = element_mat * length * value
+        element_mat = element_mat * length * value_B
+
+        # calculate contribution to force vector
+        force_vector_mat = np.zeros((2, 1), dtype=np.single)
+        nb = np.zeros((2, 1))
+        for j in range(0, 2):
+            for i in range(0, 2):
+                val = phi_p1(i + 1, intnodes[j]) * intweights[j]
+                nb[i, 0] = val
+            force_vector_mat = force_vector_mat + nb
+        force_vector_mat = force_vector_mat * length * value_A * value_B
+
 
         # transform element to angle
         transformation_matrix = np.array([[math.cos(angle), -1 * math.sin(angle)],
                                           [math.sin(angle), math.cos(angle)]])
         transformed_element = transformation_matrix @ element_mat
 
-        return element_mat
+        return element_mat, force_vector_mat
 
 
 if __name__ == "__main__":
     # Example output
     nodes_element = [[0, 0], [1.1, -0.1], [0.5, 0.6]]
-    nodes_boundary = [[0, 0], [2, 1]]
-    boundary_value = 2.5
+    nodes_boundary = [[0, 0], [0.5, 0]]
+    boundary_value = 0.75
     k = 0.5
     c = 300.0
     rho = 1.0
