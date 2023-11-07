@@ -258,9 +258,13 @@ class ElementMatrices:
         return stiffness_mat, mass_mat
 
     @staticmethod
-    def boundary_element_p1(nodes: list, value_A: float, value_B: float) -> np.array:
+    def boundary_element_p1(nodes: list, value_A: float, value_B: float, value_G: float) -> np.array:
         """
         TODO: Muss das Element überhaupt transformiert werden????
+
+        value_A: input from self.boundary_parameters[...]['bc']['value'] -> Value from Tuple[0] for Robin BC, Value for Neumann BC
+        value_B: input from self.boundary_parameters[...]['bc']['value'] -> Value from Tuple[1] for Robin BC, None for Neumann BC
+        value_C: corresponding Materials parameter, e.g. k for HE
         Creates boundary element (e.g. for impedance)
         :param nodes: [[x_1, y_1],[x_2, y_2]]
         :param value: value for the boundary element
@@ -281,6 +285,23 @@ class ElementMatrices:
                 f = 1.0 - xi
             elif node == 2:
                 f = xi
+
+            return f
+
+        def phi_grad_p1(node: int, xi: float):
+            """
+            form function for 1D line element
+            todo: transformation for inclined boundary correct?
+            :param node: node for formfunction
+            :param xi:
+            :return:
+            """
+
+            node = int(node)
+            if node == 1:
+                f = - 1
+            elif node == 2:
+                f = 1
 
             return f
 
@@ -310,18 +331,29 @@ class ElementMatrices:
                     val = phi_p1(i + 1, intnodes[j]) * phi_p1(ii + 1, intnodes[j]) * intweights[j]
                     nb[i, ii] = val
             element_mat = element_mat + nb
-        element_mat = element_mat * length * value_B
+        element_mat = element_mat * length * value_A
 
-        # calculate contribution to force vector
-        force_vector_mat = np.zeros((2, 1), dtype=np.single)
+        # calculate contribution to force vector, convective part
+        force_vector_mat_conv = np.zeros((2, 1), dtype=np.single)
         nb = np.zeros((2, 1))
         for j in range(0, 2):
             for i in range(0, 2):
                 val = phi_p1(i + 1, intnodes[j]) * intweights[j]
                 nb[i, 0] = val
-            force_vector_mat = force_vector_mat + nb
-        force_vector_mat = force_vector_mat * length * value_A * value_B
+            force_vector_mat_conv = force_vector_mat_conv + nb
+        force_vector_mat_conv = force_vector_mat_conv * length * value_G
 
+        # calculate contribution to force vector, conductive part
+        force_vector_mat_cond = np.zeros((2, 1), dtype=np.single)
+        nb = np.zeros((2, 1))
+        for j in range(0, 2):
+            for i in range(0, 2):
+                val = phi_grad_p1(i + 1, intnodes[j]) * phi_p1(i + 1, intnodes[j]) * intweights[j]
+                nb[i, 0] = val
+            force_vector_mat_cond = force_vector_mat_cond + nb
+        force_vector_mat_cond = force_vector_mat_cond * length * value_B
+
+        force_vector_mat = force_vector_mat_conv + force_vector_mat_cond
 
         # transform element to angle
         transformation_matrix = np.array([[math.cos(angle), -1 * math.sin(angle)],
@@ -335,14 +367,16 @@ if __name__ == "__main__":
     # Example output
     nodes_element = [[0, 0], [1.1, -0.1], [0.5, 0.6]]
     nodes_boundary = [[0, 0], [0.5, 0]]
-    boundary_value = 0.75
+    bc_val_a = 0.5
+    bc_val_b = 0.25
+    bc_val_g = 2
     k = 0.5
     c = 300.0
     rho = 1.0
     elements = ElementMatrices()
     stiffness_heat_flow_p1, mass_heat_flow_p1 = elements.calc_2d_triangular_heatflow_p1(k, nodes_element)
     stiffness_acoustic_flow_p1, mass_acoustic_flow_p1 = elements.calc_2d_triangular_acoustic_p1(c, rho, nodes_element)
-    boundary_element = elements.boundary_element_p1(nodes_boundary, boundary_value)
+    boundary_element = elements.boundary_element_p1(nodes_boundary, bc_val_a, bc_val_b, bc_val_g)
     print(f"Heat flow element, p = 1: \n{stiffness_heat_flow_p1}\n{mass_heat_flow_p1}")
     print(f"\nAcoustic element, p = 1: \n{stiffness_acoustic_flow_p1}\n{mass_acoustic_flow_p1}")
     print(f"\nBoundary element, p = 1: \n{boundary_element}")

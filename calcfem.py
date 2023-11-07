@@ -133,9 +133,6 @@ class CalcFEM:
         # implement dirichlet boundary conditions
         self.implement_dirichlet_boundary_conditions()
 
-        self.print_matrix(self.sysmatrix_diri)
-        self.print_matrix(self.force_vector_diri)
-
         # -> self.sysmatrix_diri | self.force_vector_diri
         ########################################################################
 
@@ -271,16 +268,15 @@ class CalcFEM:
         """
         calculates the boundary elements for neumann / robin BC
         todo: Vermutlich muss hier noch Vorzeichen geändert werden abhängig davon ob normalenvektor in Region zeigt oder aus Region raus...?!?
-        todo: Umschreiben Values für Robin notwendig, vermutlich wird für WLG noch Wärmeleitzahl benötigt siehe Mathematica script...
         :return:
         """
 
         self.boundaries_incidence_matrix = list()  # contains incidence matrix for assembly boundary elements for addition to systemmatrix
         self.all_boundary_elements = list()  # contains boundary elements for implementation in systemmatrx
         self.allboundary_elements_forcevektor = list()  # contains the contributions to the force vector for robin bcs -> [[pos],[values]]
+        bc_val_A, bc_val_B, bc_val_C = None, None, None
         for bc_nbr, vals in self.boundary_parameters.items():
             bc_type = vals['bc']['type']
-            bc_val = None
             if bc_type == 'Neumann':
                 bc_val_A = vals['bc']['value']
                 bc_val_B = 0
@@ -291,10 +287,21 @@ class CalcFEM:
                 bc_nodes = self.boundary_nodes_dict[bc_nbr]
                 bc_node_mid = self.boundary_nodes_dict[bc_nbr][1][0]  # since every boundary has at least 3 nodes -> node 1 to determine which region boundary belongs to
                 region = self.get_region_for_node_nbr(bc_node_mid)
-                mats = self.region_parameters[region]['material']  # todo necessary for robin/neumann???
+                mats = self.region_parameters[region]['material']
+                if self.equation == 'HE':
+                    bc_val_C = mats['k']
+                    # transform values A, B, C into standard ROBIN form
+                    bc_std_a = bc_val_B  # corresponds to h
+                    bc_std_b = bc_val_C  # corresponds to k
+                    bc_std_g = bc_val_B * bc_val_A  # corresponds to h * T_ext
+                elif self.equation == 'HH':
+                    # transform values A, B, C into standard ROBIN form
+                    bc_std_a = bc_val_B  # only impedance
+                    bc_std_b = 0  # only impedance
+                    bc_std_g = 0  # only impedance
                 for e0, e1 in zip(bc_nodes[:-1], bc_nodes[1:]):
                     self.boundaries_incidence_matrix.append([e0[0], e1[0]])
-                    boundary_element_matrix, force_vector_matrix = ElementMatrices.boundary_element_p1([e0[1], e1[1]], bc_val_A, bc_val_B)
+                    boundary_element_matrix, force_vector_matrix = ElementMatrices.boundary_element_p1([e0[1], e1[1]], bc_std_a, bc_std_b, bc_std_g)
                     self.all_boundary_elements.append(boundary_element_matrix)
                     if bc_type == 'Robin':
                         #self.allboundary_elements_forcevektor.append([[e0[0], e1[0]], force_vector_matrix])
