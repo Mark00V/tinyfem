@@ -41,7 +41,7 @@ class ElementMatrices:
     #     val32 = val23
     #     val33 = -((k * (x_1 - x_2 - y_1 + y_2) ** 2) / (2 * (x_3 * (-y_1 + y_2) +
     #                                                          x_2 * (y_1 - y_3) + x_1 * (-y_2 + y_3))))
-    #     stiffness_mat = np.array([[val11, val12, val13], [val21, val22, val23], [val31, val32, val33]], dtype=np.single)
+    #     stiffness_mat = np.array([[val11, val12, val13], [val21, val22, val23], [val31, val32, val33]], dtype=np.double)
     #
     #     mass_mat = None
     #
@@ -80,21 +80,21 @@ class ElementMatrices:
             Calculates gradient of form function for node 1 and order 1 for triangular elements
             """
 
-            return np.array([-1, -1], dtype=np.single)
+            return np.array([-1, -1], dtype=np.double)
 
         def ngrad2(xi1: float, xi2: float) -> np.array:
             """
             Calculates gradient of form function for node 2 and order 1 for triangular elements
             """
 
-            return np.array([1, 0], dtype=np.single)
+            return np.array([1, 0], dtype=np.double)
 
         def ngrad3(xi1: float, xi2: float) -> np.array:
             """
             Calculates gradient of form function for node 3 and order 1 for triangular elements
             """
 
-            return np.array([0, 1], dtype=np.single)
+            return np.array([0, 1], dtype=np.double)
 
         def gradmat(xi1: Union[np.array, float], xi2: Union[np.array, float],
                     x1: float, x2: float, x3: float, y1: float, y2: float, y3: float) -> np.array:
@@ -107,9 +107,9 @@ class ElementMatrices:
                 [[(y1 - y3) / (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3),
                   (y1 - y2) / (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))],
                  [(x1 - x3) / (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)),
-                  (x1 - x2) / (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3)]], dtype=np.single)
+                  (x1 - x2) / (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3)]], dtype=np.double)
             ngrad = np.array([ngrad1(xi1, xi2), ngrad2(xi1, xi2),
-                              ngrad3(xi1, xi2)], dtype=np.single)
+                              ngrad3(xi1, xi2)], dtype=np.double)
 
             return np.transpose(np.dot(jacobi_inverse_transpose_matrix, np.transpose(ngrad)))
 
@@ -119,7 +119,7 @@ class ElementMatrices:
             :return: np.array -> [[_],[_],[_]]
             """
 
-            return np.array([[n1(xi1, xi2)], [n2(xi1, xi2)], [n3(xi1, xi2)]], dtype=np.single)
+            return np.array([[n1(xi1, xi2)], [n2(xi1, xi2)], [n3(xi1, xi2)]], dtype=np.double)
 
         x_1 = nodes[0][0]
         y_1 = nodes[0][1]
@@ -133,7 +133,7 @@ class ElementMatrices:
 
         jacobi_det = -x_2 * y_1 + x_3 * y_1 + x_1 * y_2 - x_3 * y_2 - x_1 * y_3 + x_2 * y_3
 
-        stiffness_mat = np.zeros((3, 3), dtype=np.single)
+        stiffness_mat = np.zeros((3, 3), dtype=np.double)
         for i in range(3):
             xi_1 = integration_nodes[i, 0]
             xi_2 = integration_nodes[i, 1]
@@ -180,21 +180,21 @@ class ElementMatrices:
             Calculates gradient of form function for node 1 and order 1 for triangular elements
             """
 
-            return np.array([-1, -1], dtype=np.single)
+            return np.array([-1, -1], dtype=np.double)
 
         def ngrad2(xi1: float, xi2: float) -> np.array:
             """
             Calculates gradient of form function for node 2 and order 1 for triangular elements
             """
 
-            return np.array([1, 0], dtype=np.single)
+            return np.array([1, 0], dtype=np.double)
 
         def ngrad3(xi1: float, xi2: float) -> np.array:
             """
             Calculates gradient of form function for node 3 and order 1 for triangular elements
             """
 
-            return np.array([0, 1], dtype=np.single)
+            return np.array([0, 1], dtype=np.double)
 
         def gradmat(xi1: Union[np.array, float], xi2: Union[np.array, float],
                     x1: float, x2: float, x3: float, y1: float, y2: float, y3: float) -> np.array:
@@ -207,9 +207,9 @@ class ElementMatrices:
                 [[(y1 - y3) / (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3),
                   (y1 - y2) / (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))],
                  [(x1 - x3) / (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)),
-                  (x1 - x2) / (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3)]], dtype=np.single)
+                  (x1 - x2) / (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3)]], dtype=np.double)
             ngrad = np.array([ngrad1(xi1, xi2), ngrad2(xi1, xi2),
-                              ngrad3(xi1, xi2)], dtype=np.single)
+                              ngrad3(xi1, xi2)], dtype=np.double)
 
             return np.transpose(np.dot(jacobi_inverse_transpose_matrix, np.transpose(ngrad)))
 
@@ -219,7 +219,7 @@ class ElementMatrices:
             :return: np.array -> [[_],[_],[_]]
             """
 
-            return np.array([[n1(xi1, xi2)], [n2(xi1, xi2)], [n3(xi1, xi2)]], dtype=np.single)
+            return np.array([[n1(xi1, xi2)], [n2(xi1, xi2)], [n3(xi1, xi2)]], dtype=np.double)
 
         x_1 = nodes[0][0]
         y_1 = nodes[0][1]
@@ -233,7 +233,7 @@ class ElementMatrices:
 
         jacobi_det = -x_2 * y_1 + x_3 * y_1 + x_1 * y_2 - x_3 * y_2 - x_1 * y_3 + x_2 * y_3
 
-        stiffness_mat = np.zeros((3, 3), dtype=np.single)
+        stiffness_mat = np.zeros((3, 3), dtype=np.double)
         for i in range(3):
             xi_1 = integration_nodes[i, 0]
             xi_2 = integration_nodes[i, 1]
@@ -243,7 +243,7 @@ class ElementMatrices:
             fp = grxgrt * jacobi_det * integration_weights
             stiffness_mat = stiffness_mat + fp
 
-        mass_mat = np.zeros((3, 3), dtype=np.single)
+        mass_mat = np.zeros((3, 3), dtype=np.double)
         for i in range(3):
             xi_1 = integration_nodes[i, 0]
             xi_2 = integration_nodes[i, 1]
@@ -258,13 +258,13 @@ class ElementMatrices:
         return stiffness_mat, mass_mat
 
     @staticmethod
-    def boundary_element_p1(nodes: list, value_A: float, value_B: float, value_G: float) -> np.array:
+    def boundary_element_p1(nodes: list, bc_std_a: float, bc_std_b: float, bc_std_g: float) -> np.array:
         """
         TODO: Muss das Element überhaupt transformiert werden????
 
         value_A: input from self.boundary_parameters[...]['bc']['value'] -> Value from Tuple[0] for Robin BC, Value for Neumann BC
         value_B: input from self.boundary_parameters[...]['bc']['value'] -> Value from Tuple[1] for Robin BC, None for Neumann BC
-        value_C: corresponding Materials parameter, e.g. k for HE
+        value_C: corresponding Materials parameter, e.g. k for HE, placeholder, currently not necessary
         Creates boundary element (e.g. for impedance)
         :param nodes: [[x_1, y_1],[x_2, y_2]]
         :param value: value for the boundary element
@@ -306,7 +306,7 @@ class ElementMatrices:
             return f
 
         numintgld1 = np.array([[0.21132486, 0.78867513], [0.50000000, 0.50000000]],
-                              dtype=np.single)
+                              dtype=np.double)
         intnodes = numintgld1[0]
         intweights = numintgld1[1]
 
@@ -323,7 +323,7 @@ class ElementMatrices:
         length = math.sqrt((x_2 - x_1) ** 2 + (y_2 - y_1) ** 2)  # length of boundary
 
         # calculate element matrix
-        element_mat = np.zeros((2, 2), dtype=np.single)
+        element_mat = np.zeros((2, 2), dtype=np.double)
         nb = np.zeros((2, 2))
         for j in range(0, 2):
             for i in range(0, 2):
@@ -331,34 +331,34 @@ class ElementMatrices:
                     val = phi_p1(i + 1, intnodes[j]) * phi_p1(ii + 1, intnodes[j]) * intweights[j]
                     nb[i, ii] = val
             element_mat = element_mat + nb
-        element_mat = element_mat * length * value_A
+        element_mat = element_mat * length * bc_std_a
 
         # calculate contribution to force vector, convective part
-        force_vector_mat_conv = np.zeros((2, 1), dtype=np.single)
+        force_vector_mat_conv = np.zeros((2, 1), dtype=np.double)
         nb = np.zeros((2, 1))
         for j in range(0, 2):
             for i in range(0, 2):
                 val = phi_p1(i + 1, intnodes[j]) * intweights[j]
                 nb[i, 0] = val
             force_vector_mat_conv = force_vector_mat_conv + nb
-        force_vector_mat_conv = force_vector_mat_conv * length * value_G
+        force_vector_mat_conv = force_vector_mat_conv * length * bc_std_g
 
         # calculate contribution to force vector, conductive part
-        force_vector_mat_cond = np.zeros((2, 1), dtype=np.single)
-        nb = np.zeros((2, 1))
-        for j in range(0, 2):
-            for i in range(0, 2):
-                val = phi_grad_p1(i + 1, intnodes[j]) * phi_p1(i + 1, intnodes[j]) * intweights[j]
-                nb[i, 0] = val
-            force_vector_mat_cond = force_vector_mat_cond + nb
-        force_vector_mat_cond = force_vector_mat_cond * length * value_B
+        # force_vector_mat_cond = np.zeros((2, 1), dtype=np.double)
+        # nb = np.zeros((2, 1))
+        # for j in range(0, 2):
+        #     for i in range(0, 2):
+        #         val = phi_grad_p1(i + 1, intnodes[j]) * phi_p1(i + 1, intnodes[j]) * intweights[j]
+        #         nb[i, 0] = val
+        #     force_vector_mat_cond = force_vector_mat_cond + nb
+        # force_vector_mat_cond = force_vector_mat_cond * length * value_B
 
-        force_vector_mat = force_vector_mat_conv + force_vector_mat_cond
+        force_vector_mat = force_vector_mat_conv
 
         # transform element to angle
-        transformation_matrix = np.array([[math.cos(angle), -1 * math.sin(angle)],
-                                          [math.sin(angle), math.cos(angle)]])
-        transformed_element = transformation_matrix @ element_mat
+        # transformation_matrix = np.array([[math.cos(angle), -1 * math.sin(angle)],
+        #                                   [math.sin(angle), math.cos(angle)]])
+        # transformed_element = transformation_matrix @ element_mat
 
         return element_mat, force_vector_mat
 

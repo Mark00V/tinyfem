@@ -1,7 +1,7 @@
 #######################################################################################
 KNOWN BUGS:
 -> check_geometry() in Class Geometry: Funktioniert nicht für Linien mit Steigung inf
-
+-> testing/output_gui_4_calcfem_C6 -> Fehlerhafte Zuordnung von Knoten zu Boundaries, vermutlich bei Netzerstellung bei Abzug negatives Element.. boundary_nodes_dict fehlerhaft
 
 
 #######################################################################################
@@ -106,51 +106,4 @@ GUI (automatisch nach solve_system()) -> Class ShowSolution
 
     Rückgabewerte: Keine
 #######################################################################################
-
-
-
-Order of Operations for implementing both Dirichlet and Robin boundary conditions in pseudo code:
-
-systemmatrix = assembleMatrix()  # Calculation of the system matrix without boundary conditions using only the element matrices for the regions
-forcevector = assembleForceVector()  # Calculation of the force vector (right hand side vector) without boundary conditions
-
-boundarymatrix = assembleBoundaryMatrix()  # Calculates the matrix of boundary elements with Neumann or Robin boundary conditions
-systemmatrix += boundarymatrix  # Introduces the boundary elements with Neumann or Robin boundary conditions in the system matrix
-
-# Calculate additional force vector contributions due to Robin boundary conditions
-forcevector = applyRobinBoundaryConditions(forcevector)
-
-# Apply Dirichlet boundary conditions after all other modifications to the system matrix and force vector
-systemmatrix, forcevector = applyDirichletBoundaryConditions(systemmatrix, forcevector)
-
-# solve system:
-solution = np.linalg.solve(systemmatrix, forcevector)
-
-# Function to apply Robin boundary conditions to the force vector
-def applyRobinBoundaryConditions(forcevector):
-    # pos are the positions of the nodes with robin boundary condition
-    # robin_gamma and robin_g are the robin boundary condition values
-    for pos, (robin_gamma, robin_g) in robin_values:
-        forcevector[pos] += integrate(robin_gamma * robin_g, boundary_element)
-    return forcevector
-
-# Function to apply Dirichlet boundary conditions to the system matrix and force vector
-def applyDirichletBoundaryConditions(systemmatrix, forcevector):
-    # Zero out the rows and columns in the system matrix corresponding to Dirichlet boundaries
-    # and set the diagonal entries to 1
-    for pos in positions_dirichlet:
-        systemmatrix[:, pos] = 0
-        systemmatrix[pos, :] = 0
-        systemmatrix[pos, pos] = 1
-
-    # Modify the force vector for Dirichlet boundary conditions
-    for pos, value in dirichlet_list:
-        forcevector = forcevector - systemmatrix[:, pos] * value
-        forcevector[pos] = value
-
-    return systemmatrix, forcevector
-
-
-
-
 

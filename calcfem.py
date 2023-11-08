@@ -14,6 +14,9 @@ from scipy.sparse import coo_matrix
 import copy
 from guistatics import GUIStatics
 
+import matplotlib  # delete later, only used for development in matplotlib.use('Qt5Agg')
+
+
 class CalcFEM:
 
     def __init__(self, params_mesh, params_boundaries_materials):
@@ -51,31 +54,9 @@ class CalcFEM:
         self.sysboundaries = None  # Boundary matrix e.g. impedance matrix for system
 
         # development
-        self.file_path_dev = r'testing/output_gui_4_calcfem_' + 'C2' + '.txt'
+        self.file_path_dev = r'testing/output_gui_4_calcfem_' + 'C6' + '.txt'
 
-    def develop_print_input(self):
-        print("\n\n\n------------------DEBUG--------------------")
-        print(f"self.equation = {self.equation}")
 
-        print(f"\nself.region_parameters = {self.region_parameters}")
-        print(f"self.boundary_parameters = {self.boundary_parameters}")
-        print(f"self.node_parameters = {self.node_parameters}")
-        print(f"self.calculation_parameters = {self.calculation_parameters}")
-
-        print(f"self.nodes_mesh_gen = {self.nodes_mesh_gen}")
-        print(f"self.single_nodes_dict = {self.single_nodes_dict}")
-        print(f"self.boundary_nodes_dict = {self.boundary_nodes_dict}")
-        print(f"self.triangulation = {self.triangulation}")
-        print(f"self.triangulation_region_dict = {self.triangulation_region_dict}")
-
-    def develop(self):
-        """
-        loads data for development
-        :return:
-        """
-        with open(self.file_path_dev, 'r') as f:
-            content = f.read()
-        exec(content)
 
     def calc_fem(self):
         """
@@ -138,131 +119,31 @@ class CalcFEM:
 
         ########################################################################
         # solve system
-        # # self.develop_print_input()
+        # self.develop_print_input()
         self.solve_linear_system()
-        #
+
+        ########################################################################
+
+        ########################################################################
         # # plot solution
         # # self.plot_solution(self.solution, self.nodes_mesh_gen, self.triangulation)
-        #
-        # return self.solution
 
-    def get_region_for_node_nbr(self, node):
-        """
-        Gets the region number for a node
-        :param node:
-        :return:
-        """
-        for key, val in self.triangulation_region_dict.items():
-            if node in val:
-                return key
+        # self.print_solution_nodes()  # for dev
+        return self.solution
+        ########################################################################
 
-    def implement_robin_force_vector(self):
+    def calc_system_matrices_robin_neumann_bc(self):
         """
 
         :return:
         """
 
-        self.force_vector_neumann_robin = np.copy(self.force_vector)
-
-        for idx, elem in enumerate(self.allboundary_elements_forcevektor):
-            pos = elem[0]
-            value = elem[1]
-            self.force_vector_neumann_robin[pos] = self.force_vector_neumann_robin[pos] + value
-
-
-    def implement_acoustic_sources(self):
-        """
-        Implements acoustic source, if any, into force vector for calculation Helmholtz equation
-        :return:
-        """
-        for pos, val in self.acoustic_source:
-            self.force_vector[pos] = self.force_vector[pos] + val
-
-    def calculate_acoustic_sources(self):
-        """
-        calculates acoustic source values
-        :return:
-        """
-
-        freq = float(self.calculation_parameters['freq'])
-        omega = freq * 2 * math.pi
-
-        self.acoustic_source = list()
-        for node_nbr, vals in self.node_parameters.items():
-            val_bc = vals['bc']['value']
-            if val_bc:
-                node_pos = self.single_nodes_dict[node_nbr]
-                region_nbr = self.get_region_for_node_nbr(node_pos)
-                rho = self.region_parameters[region_nbr]['material']['rho']
-                mpsource = 4 * math.pi / rho * ((2 * rho * omega) / ((2 * math.pi) ** 2)) ** 0.5
-                self.acoustic_source.append([node_pos, mpsource])
-
-    def plot_solution_dev(self):
-        """
-        Plots the solution via matplotlib
-        """
-        solution = self.solution
-        all_points = self.nodes_mesh_gen
-        triangles = self.triangulation
-
-        dataz = np.real(solution)
-        values = dataz
-        aspectxy = 1
-        triang_mpl = tri.Triangulation(all_points[:, 0], all_points[:, 1], triangles)
-
-        fig, ax = plt.subplots(figsize=(12, 8))
-
-        units = self.calculation_parameters['units']
-        ax.set_title('solution')
-        ax.set_xlabel(f"x [{units}]")
-        ax.set_ylabel(f"y [{units}]")
-        ax.set_aspect(aspectxy)
-
-        contour = ax.tricontourf(triang_mpl, values, cmap='viridis', levels=20)
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="5%", pad=0.2)
-        cbar = fig.colorbar(contour, cax=cax)
-
-        ax.scatter(all_points[:, 0], all_points[:, 1], c=values, cmap='viridis', marker='.',
-                             edgecolors='w', s=10)
-        ax.triplot(triang_mpl, 'w-', linewidth=0.1)
-
-        plt.show()
-
-    @staticmethod
-    def plot_solution(solution, all_points, triangles):
-        """
-        Plots the solution via matplotlib
-        """
-
-
-        dataz = np.real(solution)
-        values = dataz
-        aspectxy = 1
-        triang_mpl = tri.Triangulation(all_points[:, 0], all_points[:, 1], triangles)
-
-        fig, ax = plt.subplots(figsize=(12, 8))
-
-        ax.set_title('solution')
-        ax.set_xlabel('x [m]')
-        ax.set_ylabel('y [m]')
-        ax.set_aspect(aspectxy)
-
-        contour = ax.tricontourf(triang_mpl, values, cmap='viridis', levels=20)
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="5%", pad=0.2)
-        cbar = fig.colorbar(contour, cax=cax)
-
-        ax.scatter(all_points[:, 0], all_points[:, 1], c=values, cmap='viridis', marker='.',
-                             edgecolors='w', s=10)
-        ax.triplot(triang_mpl, 'w-', linewidth=0.1)
-
-        plt.show()
-
-    def solve_linear_system(self):
-
-        self.solution = np.linalg.solve(self.sysmatrix_diri, self.force_vector_diri)
-        # print(self.solution)
+        if self.equation == 'HE':
+            self.sysarray_neumann_robin = self.syssteifarray + self.sysboundaries
+        elif self.equation == 'HH':  # todo: include in elementmatrices
+            freq = float(self.calculation_parameters['freq'])
+            omega = freq * 2 * math.pi
+            self.sysarray_neumann_robin = self.syssteifarray - omega ** 2 * self.sysmassarray + omega * 1j * self.sysboundaries
 
     def calc_boundary_elements(self):
         """
@@ -316,7 +197,7 @@ class CalcFEM:
         maxnode = len(self.nodes_mesh_gen)
         nbr_of_elements = len(self.all_boundary_elements)
         alloc_mat = np.array(self.boundaries_incidence_matrix)
-        self.sysboundaries = np.zeros((maxnode, maxnode), dtype=np.single)
+        self.sysboundaries = np.zeros((maxnode, maxnode), dtype=np.double)
 
         for ielem in range(nbr_of_elements):
             boundary_mat = self.all_boundary_elements[ielem]
@@ -326,6 +207,46 @@ class CalcFEM:
                     ztb = int(alloc_mat[ielem, b])
                     self.sysboundaries[zta, ztb] = self.sysboundaries[zta, ztb] + boundary_mat[a, b]
 
+    def implement_robin_force_vector(self):
+        """
+
+        :return:
+        """
+
+        self.force_vector_neumann_robin = np.copy(self.force_vector)
+
+        for idx, elem in enumerate(self.allboundary_elements_forcevektor):
+            pos = elem[0]
+            value = elem[1]
+            self.force_vector_neumann_robin[pos] = self.force_vector_neumann_robin[pos] + value
+
+    def implement_acoustic_sources(self):
+        """
+        Implements acoustic source, if any, into force vector for calculation Helmholtz equation
+        :return:
+        """
+        for pos, val in self.acoustic_source:
+            self.force_vector[pos] = self.force_vector[pos] + val
+
+    def calculate_acoustic_sources(self):
+        """
+        calculates acoustic source values
+        :return:
+        """
+
+        freq = float(self.calculation_parameters['freq'])
+        omega = freq * 2 * math.pi
+
+        self.acoustic_source = list()
+        for node_nbr, vals in self.node_parameters.items():
+            val_bc = vals['bc']['value']
+            if val_bc:
+                node_pos = self.single_nodes_dict[node_nbr]
+                region_nbr = self.get_region_for_node_nbr(node_pos)
+                rho = self.region_parameters[region_nbr]['material']['rho']
+                mpsource = 4 * math.pi / rho * ((2 * rho * omega) / ((2 * math.pi) ** 2)) ** 0.5
+                self.acoustic_source.append([node_pos, mpsource])
+
     def implement_dirichlet_boundary_conditions(self):
         """
 
@@ -334,7 +255,7 @@ class CalcFEM:
 
         # create dirichlet list for implementation of dirichlet boundary conditions
         dirichlet_dict = dict()
-        for boundary_nbr, params in self.boundary_parameters.items():
+        for boundary_nbr, params in self.boundary_parameters.items():  # Todo: Für C6 ist hier ein Fehler bei der Ermittlung der zugehörigen Knoten zu einem Boundary, vermutlich bei Netzerstellung...
             bc = params['bc']
             bc_type = bc['type']
             bc_value = bc['value']
@@ -384,15 +305,21 @@ class CalcFEM:
             force_vector_adj[int(pos)] = value
 
         # Dev
-        # CalcFEM.print_matrix(sysmatrix_adj)
         # CalcFEM.print_matrix(force_vector_adj)
 
         return sysmatrix_adj, force_vector_adj
 
+    def solve_linear_system(self):
+        """
+
+        :return:
+        """
+
+        self.solution = np.linalg.solve(self.sysmatrix_diri, self.force_vector_diri)
 
     def create_force_vector(self):
         maxnode = len(self.nodes_mesh_gen)
-        self.force_vector = np.zeros(maxnode, dtype=np.single)
+        self.force_vector = np.zeros(maxnode, dtype=np.double)
 
     def calc_system_matrices_init(self):
         """
@@ -402,9 +329,9 @@ class CalcFEM:
         maxnode = len(self.nodes_mesh_gen)
         nbr_of_elements = len(self.triangulation)
         alloc_mat = self.triangulation
-        self.syssteifarray = np.zeros((maxnode, maxnode), dtype=np.single)
-        self.sysmassarray = np.zeros((maxnode, maxnode), dtype=np.single)
-        self.sysarray = np.zeros((maxnode, maxnode), dtype=np.single)
+        self.syssteifarray = np.zeros((maxnode, maxnode), dtype=np.double)
+        self.sysmassarray = np.zeros((maxnode, maxnode), dtype=np.double)
+        self.sysarray = np.zeros((maxnode, maxnode), dtype=np.double)
 
         for ielem in range(nbr_of_elements):
             elesteifmat = self.all_element_matrices_steif[ielem]
@@ -415,19 +342,6 @@ class CalcFEM:
                     ztb = int(alloc_mat[ielem, b])
                     self.syssteifarray[zta, ztb] = self.syssteifarray[zta, ztb] + elesteifmat[a, b]
                     self.sysmassarray[zta, ztb] = self.sysmassarray[zta, ztb] + elemassmat[a, b]
-
-    def calc_system_matrices_robin_neumann_bc(self):
-        """
-        
-        :return: 
-        """
-
-        if self.equation == 'HE':
-            self.sysarray_neumann_robin = self.syssteifarray + self.sysboundaries
-        elif self.equation == 'HH':  # todo: include in elementmatrices
-            freq = float(self.calculation_parameters['freq'])
-            omega = freq * 2 * math.pi
-            self.sysarray_neumann_robin = self.syssteifarray - omega**2 * self.sysmassarray + omega * 1j * self.sysboundaries
 
     def calc_elementmatrices(self):
         """
@@ -447,8 +361,8 @@ class CalcFEM:
 
         nbr_of_elements = len(self.triangulation)
 
-        self.all_element_matrices_steif = np.zeros((nbr_of_elements, 3, 3), dtype=np.single)
-        self.all_element_matrices_mass = np.zeros((nbr_of_elements, 3, 3), dtype=np.single)
+        self.all_element_matrices_steif = np.zeros((nbr_of_elements, 3, 3), dtype=np.double)
+        self.all_element_matrices_mass = np.zeros((nbr_of_elements, 3, 3), dtype=np.double)
 
         elemsteif = None
         elemmass = None
@@ -473,6 +387,121 @@ class CalcFEM:
             self.all_element_matrices_steif[idx] = elemsteif
             if elemmass is not None:  # since it might be a np.array
                 self.all_element_matrices_mass[idx] = elemmass
+
+    def get_region_for_node_nbr(self, node):
+        """
+        Gets the region number for a node
+        :param node:
+        :return:
+        """
+        for key, val in self.triangulation_region_dict.items():
+            if node in val:
+                return key
+
+    def develop_print_input(self):
+        print("\n\n\n------------------DEBUG--------------------")
+        print(f"self.equation = {self.equation}")
+
+        print(f"\nself.region_parameters = {self.region_parameters}")
+        print(f"self.boundary_parameters = {self.boundary_parameters}")
+        print(f"self.node_parameters = {self.node_parameters}")
+        print(f"self.calculation_parameters = {self.calculation_parameters}")
+
+        print(f"self.nodes_mesh_gen = {self.nodes_mesh_gen}")
+        print(f"self.single_nodes_dict = {self.single_nodes_dict}")
+        print(f"self.boundary_nodes_dict = {self.boundary_nodes_dict}")
+        print(f"self.triangulation = {self.triangulation}")
+        print(f"self.triangulation_region_dict = {self.triangulation_region_dict}")
+
+    def develop(self):
+        """
+        loads data for development
+        :return:
+        """
+        with open(self.file_path_dev, 'r') as f:
+            content = f.read()
+        exec(content)
+
+    def plot_solution_dev(self):
+        """
+        Plots the solution via matplotlib
+        """
+        solution = self.solution
+        all_points = self.nodes_mesh_gen
+        triangles = self.triangulation
+
+        dataz = np.real(solution)
+        values = dataz
+        aspectxy = 1
+        triang_mpl = tri.Triangulation(all_points[:, 0], all_points[:, 1], triangles)
+
+        fig, ax = plt.subplots(figsize=(12, 8))
+
+        units = self.calculation_parameters['units']
+        ax.set_title('solution')
+        ax.set_xlabel(f"x [{units}]")
+        ax.set_ylabel(f"y [{units}]")
+        ax.set_aspect(aspectxy)
+
+        contour = ax.tricontourf(triang_mpl, values, cmap='viridis', levels=50)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.2)
+        cbar = fig.colorbar(contour, cax=cax)
+
+        ax.scatter(all_points[:, 0], all_points[:, 1], c=values, cmap='viridis', marker='.',
+                             edgecolors='w', s=10)
+        ax.triplot(triang_mpl, 'w-', linewidth=0.1)
+
+        plt.show()
+
+    def print_solution_nodes(self, gap=1, setx=None, sety=None):
+        """
+        prints nodes and their solution, can ge a gap...
+        :return:
+        """
+        nodes = self.nodes_mesh_gen
+        sol_nodes = np.column_stack((self.nodes_mesh_gen, self.solution))
+        print(f"N: {'x:'.ljust(10)}  {'y:'.ljust(10)}  {'sol:'.ljust(10)}")
+        for n, (x, y, sol) in enumerate(sol_nodes[::gap]):
+            if not setx and not sety:
+                print(f"{n}  {str(x).ljust(10)}  {str(y).ljust(10)}  {str(sol).ljust(10)}")
+            elif not sety:
+                if x == setx:
+                    print(f"{n}  {str(x).ljust(10)}  {str(y).ljust(10)}  {str(sol).ljust(10)}")
+            elif not setx:
+                if y == sety:
+                    print(f"{n}  {str(x).ljust(10)}  {str(y).ljust(10)}  {str(sol).ljust(10)}")
+
+
+    @staticmethod
+    def plot_solution(solution, all_points, triangles):
+        """
+        Plots the solution via matplotlib
+        """
+
+
+        dataz = np.real(solution)
+        values = dataz
+        aspectxy = 1
+        triang_mpl = tri.Triangulation(all_points[:, 0], all_points[:, 1], triangles)
+
+        fig, ax = plt.subplots(figsize=(12, 8))
+
+        ax.set_title('solution')
+        ax.set_xlabel('x [m]')
+        ax.set_ylabel('y [m]')
+        ax.set_aspect(aspectxy)
+
+        contour = ax.tricontourf(triang_mpl, values, cmap='viridis', levels=20)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.2)
+        cbar = fig.colorbar(contour, cax=cax)
+
+        ax.scatter(all_points[:, 0], all_points[:, 1], c=values, cmap='viridis', marker='.',
+                             edgecolors='w', s=10)
+        ax.triplot(triang_mpl, 'w-', linewidth=0.1)
+
+        plt.show()
 
     @staticmethod
     def print_matrix(matrix: Union[np.array, list]):
@@ -509,8 +538,8 @@ class CalcFEM:
                             print(f"{val_str}]", end='\n')
                 print("]")
 
-
 if __name__ == '__main__':
+    matplotlib.use('TkAgg')
     calcfem = CalcFEM((0,0,0,0,0), (0,0,0,0))  # Develop
     calcfem.develop()  # read date via exec(!)
     calcfem.calc_fem()

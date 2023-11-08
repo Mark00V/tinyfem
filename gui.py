@@ -69,20 +69,22 @@ class GUI(tk.Tk):
         self.text_information_str = ''
         ##################################################
         # for development
-        # self.regions = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
-        #                       'area_neg_pos': 'Positive'},
-        #                 '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive'},
-        #                 '2': {'coordinates': [(-1.0, 0.0), (0.0, 0.0), (0.0, 0.75), (-1.0, 0.5)],
-        #                       'area_neg_pos': 'Negative'}}
-        # self.boundaries = {'0': ((-4.0, -3.0), (1.0, -2.5)), '1': ((1.0, -2.5), (2.5, 1.0)),
-        #                    '2': ((2.5, 1.0), (-2.5, 1.0)), '3': ((-2.5, 1.0), (-4.2, -1.5)),
-        #                    '4': ((-4.2, -1.5), (-4.0, -3.0)), '5': ((2.5, 1.0), (0.0, 3.0)),
-        #                    '6': ((0.0, 3.0), (-2.5, 1.0)), '7': ((-1.0, 0.0), (0.0, 0.0)),
-        #                    '8': ((0.0, 0.0), (0.0, 0.75)), '9': ((0.0, 0.75), (-1.0, 0.5)),
-        #                    '10': ((-1.0, 0.5), (-1.0, 0.0))}
-        # self.nodes = {'0': (-3.0, -2.0), '1': (0.0, 1.5), '2': (1.0, -1.0), '3': (-4.0, -3.0), '4': (1.0, -2.5),
-        #               '5': (2.5, 1.0), '6': (-2.5, 1.0), '7': (-4.2, -1.5), '8': (0.0, 3.0), '9': (-1.0, 0.0),
-        #               '10': (0.0, 0.0), '11': (0.0, 0.75), '12': (-1.0, 0.5)}
+        self.DEV = False
+        if self.DEV:
+            self.regions = {'0': {'coordinates' : [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
+                                 'area_neg_pos': 'Positive'},
+                           '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive'},
+                           '2': {'coordinates' : [(-1.0, 0.0), (0.0, 0.0), (0.0, 0.75), (-1.0, 0.5)],
+                                 'area_neg_pos': 'Negative'}}
+            self.boundaries = {'0' : ((-4.0, -3.0), (1.0, -2.5)), '1': ((1.0, -2.5), (2.5, 1.0)),
+                              '2' : ((2.5, 1.0), (-2.5, 1.0)), '3': ((-2.5, 1.0), (-4.2, -1.5)),
+                              '4' : ((-4.2, -1.5), (-4.0, -3.0)), '5': ((2.5, 1.0), (0.0, 3.0)),
+                              '6' : ((0.0, 3.0), (-2.5, 1.0)), '7': ((-1.0, 0.0), (0.0, 0.0)),
+                              '8' : ((0.0, 0.0), (0.0, 0.75)), '9': ((0.0, 0.75), (-1.0, 0.5)),
+                              '10': ((-1.0, 0.5), (-1.0, 0.0))}
+            self.nodes = {'0' : (-3.0, -2.0), '1': (0.0, 1.5), '2': (1.0, -1.0), '3': (-4.0, -3.0), '4': (1.0, -2.5),
+                         '5' : (2.5, 1.0), '6': (-2.5, 1.0), '7': (-4.2, -1.5), '8': (0.0, 3.0), '9': (-1.0, 0.0),
+                         '10': (0.0, 0.0), '11': (0.0, 0.75), '12': (-1.0, 0.5)}
         # for development
         ##################################################
         super().__init__()
@@ -269,7 +271,7 @@ class GUI(tk.Tk):
             params_boundaries_materials = (self.region_parameters, self.boundary_parameters, self.node_parameters, self.calculation_parameters)
             calcfem = CalcFEM(params_mesh, params_boundaries_materials)
             self.solution = calcfem.calc_fem()
-            # print(self.solution)
+            print("XXX - self.solution", self.solution)
             ShowSolution(self.solution, self.nodes_mesh_gen, self.triangulation)  # opens window for solution
 
         # Button define Geometry
@@ -412,9 +414,10 @@ class GUI(tk.Tk):
         #self.text_label.place(relx=0.02, rely=0.965)
 
         # Developing -> uncomment self.regions etc. in init!
-        # self.animation = False  # todo delete this
-        # self.init_parameters()  # todo delete this
-        # self.draw_geometry_from_definebcs()  # todo delete this
+        if self.DEV:
+            self.animation = False  # todo delete this
+            self.init_parameters()  # todo delete this
+            self.draw_geometry_from_definebcs()  # todo delete this
         # Developing
         ##################################################
 

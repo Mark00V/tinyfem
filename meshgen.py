@@ -8,6 +8,7 @@ from typing import Union
 import warnings
 import copy
 import time
+import matplotlib  # delete later, only used for development in matplotlib.use('Qt5Agg')
 
 time_it_dict = dict()
 
@@ -48,6 +49,9 @@ class CreateMesh:
         self.triangulation = None
         self.triangulation_region_dict = None
 
+        # Develop
+        self.file_path_dev = r'testing/output_gui_4_calcfem_' + 'C6' + '.txt'
+
     @timing_decorator
     def create_mesh(self):
         self.boundary_nodes = list()
@@ -56,12 +60,7 @@ class CreateMesh:
         self.triangulate_regions()
         self.get_single_nodes_pos()
         self.get_boundary_nodes_pos()
-        # print("self.nodes:   ", self.nodes)
-        # print("self.single_nodes_dict:   ", self.single_nodes_dict)
-        # print("self.boundary_nodes:   ", self.boundary_nodes)
-        # print("self.boundary_nodes_dict:   ", self.boundary_nodes_dict)
-        # print("self.triangulation:   ", self.triangulation)
-        # print("self.triangulation_region_dict:   ", self.triangulation_region_dict)
+
 
         return self.nodes, self.single_nodes_dict, self.boundary_nodes_dict, self.triangulation, self.triangulation_region_dict
 
@@ -125,7 +124,6 @@ class CreateMesh:
                     for warning in w:
                         if issubclass(warning.category, RuntimeWarning):
                             ...
-                            #print(f"RuntimeWarning: {warning.message} for {normal_vector}, {start_point}, {end_point}, {polygon}")
             first_point_new_rect = np.array(
                 [(start_point[0] - tolerance * normal_vector_[0]), (start_point[1] - tolerance * normal_vector_[1])])
             second_point_new_rect = np.array(
@@ -566,16 +564,17 @@ class CreateMesh:
         boundary_number_dict =dict()  # dict key=nbr aus self.boundary_parameters values=zugehörige Knotenkoords
         boundary_pos_val_dict = dict()
         all_boundary_nodes = self.boundary_nodes
-        for boundary in all_boundary_nodes:
-            fn = boundary[0]
-            ln = boundary[-1]
-            fn_ln_x = np.array([fn[0], ln[0]])
-            fn_ln_y = np.array([fn[1], ln[1]])
+
+        # new
+        for n, boundary in enumerate(all_boundary_nodes):
+            fn_c = boundary[0][0] + 1j * boundary[0][1]
+            ln_c = boundary[-1][0] + 1j * boundary[-1][1]
             for nbr, boundary_param in self.boundary_parameters.items():
                 nodes = np.array(boundary_param['coordinates'])
-                x_eq = np.isin(nodes[:, 0], fn_ln_x)
-                y_eq = np.isin(nodes[:, 1], fn_ln_y)
-                if x_eq[0] and x_eq[1] and y_eq[0] and y_eq[1]:
+                nodes_c = [node[0] + 1j * node[1] for node in nodes]
+                f_eq = np.isin(fn_c, nodes_c)
+                l_eq = np.isin(ln_c, nodes_c)
+                if f_eq and l_eq:
                     if nbr not in boundary_number_dict.keys():
                         boundary_number_dict[nbr] = boundary
 
@@ -590,43 +589,30 @@ class CreateMesh:
 
         self.boundary_nodes_dict = boundary_pos_val_dict
 
+    def develop(self):
+        """
+        loads data for development
+        :return:
+        """
+        with open(self.file_path_dev, 'r') as f:
+            content = f.read()
+        exec(content)
+
 
 if __name__ == '__main__':
-    region_parameters1 = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
-                                    'area_neg_pos': 'Positive', 'material': {'k': 0, 'c': 0, 'rho': 0}},
-                              '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive',
-                                    'material': {'k': 0, 'c': 0, 'rho': 0}},
-                              '2': {'coordinates': [(-1.0, 0.0), (0.0, 0.0), (0.0, 0.75), (-1.0, 0.5)],
-                                    'area_neg_pos': 'Negative', 'material': {'k': 0, 'c': 0, 'rho': 0}}}
-    boundary_parameters1 = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5)], 'bc': {'type': None, 'value': None}},
-                                '1': {'coordinates': [(1.0, -2.5), (2.5, 1.0)], 'bc': {'type': None, 'value': None}},
-                                '2': {'coordinates': [(2.5, 1.0), (-2.5, 1.0)], 'bc': {'type': None, 'value': None}},
-                                '3': {'coordinates': [(-2.5, 1.0), (-4.2, -1.5)], 'bc': {'type': None, 'value': None}},
-                                '4': {'coordinates': [(-4.2, -1.5), (-4.0, -3.0)], 'bc': {'type': None, 'value': None}},
-                                '5': {'coordinates': [(2.5, 1.0), (0.0, 3.0)], 'bc': {'type': None, 'value': None}},
-                                '6': {'coordinates': [(0.0, 3.0), (-2.5, 1.0)], 'bc': {'type': None, 'value': None}},
-                                '7': {'coordinates': [(-1.0, 0.0), (0.0, 0.0)], 'bc': {'type': None, 'value': None}},
-                                '8': {'coordinates': [(0.0, 0.0), (0.0, 0.75)], 'bc': {'type': None, 'value': None}},
-                                '9': {'coordinates': [(0.0, 0.75), (-1.0, 0.5)], 'bc': {'type': None, 'value': None}},
-                                '10': {'coordinates': [(-1.0, 0.5), (-1.0, 0.0)], 'bc': {'type': None, 'value': None}}}
-    node_parameters1 = {'0': {'coordinates': (-3.0, -2.0), 'bc': {'type': None, 'value': None}},
-                            '1': {'coordinates': (0.0, 1.5), 'bc': {'type': None, 'value': None}},
-                            '2': {'coordinates': (1.0, -1.0), 'bc': {'type': None, 'value': None}},
-                            '3': {'coordinates': (-4.0, -3.0), 'bc': {'type': None, 'value': None}},
-                            '4': {'coordinates': (1.0, -2.5), 'bc': {'type': None, 'value': None}},
-                            '5': {'coordinates': (2.5, 1.0), 'bc': {'type': None, 'value': None}},
-                            '6': {'coordinates': (-2.5, 1.0), 'bc': {'type': None, 'value': None}},
-                            '7': {'coordinates': (-4.2, -1.5), 'bc': {'type': None, 'value': None}},
-                            '8': {'coordinates': (0.0, 3.0), 'bc': {'type': None, 'value': None}},
-                            '9': {'coordinates': (-1.0, 0.0), 'bc': {'type': None, 'value': None}},
-                            '10': {'coordinates': (0.0, 0.0), 'bc': {'type': None, 'value': None}},
-                            '11': {'coordinates': (0.0, 0.75), 'bc': {'type': None, 'value': None}},
-                            '12': {'coordinates': (-1.0, 0.5), 'bc': {'type': None, 'value': None}}}
-    calculation_parameters1 = {'mesh_density': 1, 'freq': None}
+    matplotlib.use('TkAgg')
+    region_parameters1 = {'0': {'coordinates': [(0.0, 0.0), (2.0, 0.0), (0.0, 2.0)], 'area_neg_pos': 'Positive', 'material': {'k': 1.0, 'c': 340, 'rho': 1.21}}, '1': {'coordinates': [(0.5, 0.5), (1.0, 0.5), (0.5, 1.0)], 'area_neg_pos': 'Negative', 'material': {'k': 1.0, 'c': 340, 'rho': 1.21}}}
+    boundary_parameters1 = {'0': {'coordinates': [(0.0, 0.0), (2.0, 0.0)], 'bc': {'type': None, 'value': None}}, '1': {'coordinates': [(2.0, 0.0), (0.0, 2.0)], 'bc': {'type': None, 'value': None}}, '2': {'coordinates': [(0.0, 2.0), (0.0, 0.0)], 'bc': {'type': None, 'value': None}}, '3': {'coordinates': [(0.5, 0.5), (1.0, 0.5)], 'bc': {'type': None, 'value': None}}, '4': {'coordinates': [(1.0, 0.5), (0.5, 1.0)], 'bc': {'type': None, 'value': None}}, '5': {'coordinates': [(0.5, 1.0), (0.5, 0.5)], 'bc': {'type': None, 'value': None}}}
+    node_parameters1 = {'0': {'coordinates': (0.0, 0.0), 'bc': {'type': None, 'value': None}}, '1': {'coordinates': (2.0, 0.0), 'bc': {'type': None, 'value': None}}, '2': {'coordinates': (0.0, 2.0), 'bc': {'type': None, 'value': None}}, '3': {'coordinates': (0.5, 0.5), 'bc': {'type': None, 'value': None}}, '4': {'coordinates': (1.0, 0.5), 'bc': {'type': None, 'value': None}}, '5': {'coordinates': (0.5, 1.0), 'bc': {'type': None, 'value': None}}}
+    calculation_parameters1 = {'mesh_density': 3, 'freq': None}
+    # Obenstehende Werte werden durch createmesh.develop() überschrieben durch content in file self.file_path_dev
     params1 = (region_parameters1, boundary_parameters1, node_parameters1, calculation_parameters1)
     createmesh = CreateMesh(*params1)  # Todo - Develop: For testing mesh
+    createmesh.develop()
     nodes, single_nodes_dict, boundary_nodes_dict, triangulation, triangulation_region_dict = createmesh.create_mesh()
-
+    #CreateMesh.plot_polygon_points(nodes, createmesh.positive_regions, createmesh.negative_regions)
+    for bnd, vals in boundary_nodes_dict.items():
+        print(bnd, vals)
     # params
     print(f"\n\n"
           f"Number of nodes:     {len(nodes)}")
