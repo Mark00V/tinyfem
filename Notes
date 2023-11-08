@@ -6,6 +6,7 @@ KNOWN BUGS:
 
 #######################################################################################
 TODOs:
+--> Neumann für HH lediglich Impedanz -> In GUI umbenennen oder so...
 --> GUI: Add button show geometry (nachdem Mesh generiert wurde)
 --> GUI: Schreibe in Infofenster alle Infos!
 --> Output solution consecutive filename

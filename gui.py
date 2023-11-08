@@ -1,15 +1,6 @@
 """
 Description:
-TODO
-
-TODO:
- - set region parameters
- - update info field if new boundary condition, point condition set
- - add window with small description for each module
- - Docstrings and typehints
-
-TODO:
- - Codeflow:
+...
 
 """
 
@@ -69,7 +60,7 @@ class GUI(tk.Tk):
         self.text_information_str = ''
         ##################################################
         # for development
-        self.DEV = False
+        self.DEV = False  # set to True for DEV mode
         if self.DEV:
             self.regions = {'0': {'coordinates' : [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
                                  'area_neg_pos': 'Positive'},
@@ -101,7 +92,7 @@ class GUI(tk.Tk):
         try:
             self.iconbitmap('tiny_fem_icon.ico')
         except tk.TclError:
-            ...  # todo: Muss für exe mitgepackt werden...???
+            ...  # Todo: Kann Icon mit Exe mitgepackt werden? Oder Alternativ supp Ordner erstellen, Exe in Hauptordner und in Supp noch Beispiele etc.
 
         self.title('TinyFEM - MAIN WINDOW')
         self.geometry(f"{GUIStatics.MAIN_WINDOW_SIZE_X}x{GUIStatics.MAIN_WINDOW_SIZE_Y}")
@@ -119,7 +110,7 @@ class GUI(tk.Tk):
 
         ##################################################
         # Add canvas for visualization of geometry, boundaries, mesh...
-        self.animation = True
+        self.animation = True  # Start Main window canvas with animation cause ppl like animations :)
 
         def animate():
             """
@@ -152,18 +143,16 @@ class GUI(tk.Tk):
             else:
                 return None
 
-        # width = GUIStatics.CANVAS_SIZE_X
-        # height = GUIStatics.CANVAS_SIZE_Y
+
         self.canvas = tk.Canvas(self, width=GUIStatics.CANVAS_SIZE_X, height=GUIStatics.CANVAS_SIZE_Y,
                                 bg=GUIStatics.CANVAS_BG)
         self.canvas.place(relx=canvas_x + 0.0075, rely=canvas_y)
         GUIStatics.add_canvas_border(self.canvas)
-        # GUIStatics.add_canvas_static_elements(self.canvas)
-        rect = self.canvas.create_rectangle(10, 10, 50, 50, fill="", outline="gray")
+        self.canvas.create_rectangle(10, 10, 50, 50, fill="", outline="gray")
         animate()
 
         ##################################################
-        self.equation = 'HE'  # Initialized value
+        self.equation = 'HE'  # Initialized value for equation
         ##################################################
         # Buttons
         def assign_BCs():
@@ -245,18 +234,13 @@ class GUI(tk.Tk):
             :return:
             """
             self.draw_mesh_from_mesh_output()
-            # print("self.nodes_mesh_gen:", self.nodes_mesh_gen)
-            # print("self.single_nodes_dict:", self.single_nodes_dict)
-            # print("self.boundary_nodes_dict:", self.boundary_nodes_dict)
-            # print("self.triangulation:", self.triangulation)
-            # print("self.triangulation_region_dict:", self.triangulation_region_dict)
 
         def show_geometry():
             """
-
+            Button action to show geometry and boundaries instead of mesh in GUI mainwindow
             :return:
             """
-            ...
+            self.draw_geometry_from_definebcs()
 
         def solve_system():
             """
@@ -688,6 +672,55 @@ class GUI(tk.Tk):
                                                      GUIStatics.transform_node_to_canvas(nodes[1]),
                                                      width=6, fill=GUIStatics.CANVAS_HIGHLIGHT_ELEMENT, dash=(1, 1), tags='highlight_element')
 
+        def trace_boundary_type(*args):
+            """
+            Traces boundary type selected and changes field states for values and labels accordingly
+            :param args:
+            :return:
+            """
+            boundary_type_selected = dropdown_boundary_type_var.get()
+            equation_selected = self.equation
+            if equation_selected == 'HE':
+                if boundary_type_selected == 'Dirichlet':
+                    entry_label_a.config(text='Temp T:')
+                    entry_label_b.config(text='NONE')
+                    entry_label_a_note.config(text='[K]')
+                    entry_label_b_note.config(text='[-]')
+                    entry_boundary_value_B_field.config(state='disabled')
+                elif boundary_type_selected == 'Neumann':
+                    entry_label_a.config(text='Flux q:')
+                    entry_label_b.config(text='NONE')
+                    entry_label_a_note.config(text='[K]')
+                    entry_label_b_note.config(text='[-]')
+                    entry_boundary_value_B_field.config(state='disabled')
+                elif boundary_type_selected == 'Robin':
+                    entry_label_a.config(text='Fluid Temp:')
+                    entry_label_b.config(text='Heat TC h:')
+                    entry_label_a_note.config(text='[K]')
+                    entry_label_b_note.config(text='[-]')
+                    entry_boundary_value_B_field.config(state='normal')
+
+            elif equation_selected == 'HH':
+                if boundary_type_selected == 'Dirichlet':
+                    entry_label_a.config(text='Pressure:')
+                    entry_label_b.config(text='NONE')
+                    entry_label_a_note.config(text='[Pa]')
+                    entry_label_b_note.config(text='[-]')
+                    entry_boundary_value_B_field.config(state='disabled')
+                elif boundary_type_selected == 'Neumann':
+                    entry_label_a.config(text='Impedance:')
+                    entry_label_b.config(text='NONE')
+                    entry_label_a_note.config(text='[XXX]')
+                    entry_label_b_note.config(text='[-]')
+                    entry_boundary_value_B_field.config(state='disabled')
+                elif boundary_type_selected == 'Robin':
+                    entry_label_a.config(text='NONE')
+                    entry_label_b.config(text='NONE')
+                    entry_label_a_note.config(text='[-]')
+                    entry_label_b_note.config(text='[-]')
+                    entry_boundary_value_B_field.config(state='disabled')
+                    entry_boundary_value_B_field.config(state='disabled')
+
         def trace_node(*args):
             """
             tracer function for highlighting nodes in set boundary window
@@ -732,21 +765,22 @@ class GUI(tk.Tk):
         dropdown_boundary_type = tk.OptionMenu(window_bcs, dropdown_boundary_type_var, *boundary_types)
         dropdown_boundary_type.config(font=GUIStatics.STANDARD_FONT_SMALL, width=8, height=1)
         dropdown_boundary_type.place(relx=widgets_x_start + 0.48, rely=0.18)
+        dropdown_boundary_type_var.trace('w', trace_boundary_type)
 
-        tk.Label(window_bcs, text="Value A:", font=GUIStatics.STANDARD_FONT_SMALL)\
-            .place(relx=widgets_x_start + 0.025, rely=0.27)
-        tk.Label(window_bcs, text="For Dirichlet &\nNeumann     ", font=GUIStatics.STANDARD_FONT_SMALLER)\
-            .place(relx=widgets_x_start + 0.35, rely=0.26)
+        entry_label_a = tk.Label(window_bcs, text="Value A:", font=GUIStatics.STANDARD_FONT_SMALL)
+        entry_label_a.place(relx=widgets_x_start + 0.025, rely=0.27)
+        entry_label_a_note = tk.Label(window_bcs, text="For Dirichlet &\nNeumann     ", font=GUIStatics.STANDARD_FONT_SMALLER)
+        entry_label_a_note.place(relx=widgets_x_start + 0.35, rely=0.26)
         entry_boundary_value = tk.StringVar()
         entry_boundary_value.set('None')
         entry_boundary_value_field = tk.Entry(window_bcs, textvariable=entry_boundary_value,
                                               font=GUIStatics.STANDARD_FONT_SMALL, width=8)
         entry_boundary_value_field.place(relx=widgets_x_start + 0.025 + 0.15, rely=0.27)
 
-        tk.Label(window_bcs, text="Value B:", font=GUIStatics.STANDARD_FONT_SMALL)\
-            .place(relx=widgets_x_start + 0.025, rely=0.33)
-        tk.Label(window_bcs, text="For Robin", font=GUIStatics.STANDARD_FONT_SMALLER)\
-            .place(relx=widgets_x_start + 0.35, rely=0.33)
+        entry_label_b = tk.Label(window_bcs, text="Value B:", font=GUIStatics.STANDARD_FONT_SMALL)
+        entry_label_b.place(relx=widgets_x_start + 0.025, rely=0.33)
+        entry_label_b_note = tk.Label(window_bcs, text="For Robin", font=GUIStatics.STANDARD_FONT_SMALLER)
+        entry_label_b_note.place(relx=widgets_x_start + 0.35, rely=0.33)
         entry_boundary_value_B = tk.StringVar()
         entry_boundary_value_B.set('None')
         entry_boundary_value_B_field = tk.Entry(window_bcs, textvariable=entry_boundary_value_B,
@@ -773,7 +807,7 @@ class GUI(tk.Tk):
             dropdown_node_select.place(relx=widgets_x_start + 0.025, rely=0.545)
             dropdown_node_select_var.trace('w', trace_node)
 
-            tk.Label(window_bcs, text="Value:", font=GUIStatics.STANDARD_FONT_SMALL) \
+            tk.Label(window_bcs, text="Power:", font=GUIStatics.STANDARD_FONT_SMALL) \
                 .place(relx=widgets_x_start + 0.025, rely=0.635)
             entry_node_value = tk.StringVar()
             entry_node_value.set('None')
