@@ -1,43 +1,36 @@
-from PIL import Image
-import pytesseract
-
-# Open an image using Pillow (PIL)
-image = Image.open("tiny_fem_icon.ico")
-
-# Perform OCR using pytesseract
-text = pytesseract.image_to_string(image)
-
-# Print the extracted text
-print(text)
-
-
-############################
-
-from PIL import Image
-import io
-
-# Assuming 'byte_data' contains your byte sequence
-byte_data = b'\x89PNG\r\n...'
-
-# Create an image from the byte sequence
-img = Image.open(io.BytesIO(byte_data))
-
-# Save the image as a PNG file
-img.save("icon.png", "PNG")
-
-###########################
-
 import tkinter as tk
 
+class Tooltip:
+    def __init__(self, widget, text):
+        self.widget = widget
+        self.text = text
+        self.tooltip = None
+        self.widget.bind("<Enter>", self.show_tooltip)
+        self.widget.bind("<Leave>", self.hide_tooltip)
+
+    def show_tooltip(self, event):
+        x, y, _, _ = self.widget.bbox("insert")
+        x += self.widget.winfo_rootx() + 80
+        y += self.widget.winfo_rooty() + 50
+
+        self.tooltip = tk.Toplevel(self.widget)
+        self.tooltip.wm_overrideredirect(True)
+        self.tooltip.wm_geometry(f"+{x}+{y}")
+
+        label = tk.Label(self.tooltip, text=self.text, background="lightyellow", relief="solid", borderwidth=1)
+        label.pack()
+
+    def hide_tooltip(self, event):
+        if self.tooltip:
+            self.tooltip.destroy()
+            self.tooltip = None
+
 root = tk.Tk()
-root.title("My App")
+root.title("Tooltip Example")
 
-# Load the image as an icon
-icon_image = tk.PhotoImage(file="icon.png")
+label = tk.Label(root, text="Hover over me for a tooltip.")
+label.pack(pady=20)
 
-# Set the icon for the tkinter window
-root.tk.call('wm', 'iconphoto', root._w, icon_image)
-
-# Rest of your tkinter application code here
+tooltip = Tooltip(label, "This is a tooltip message.")
 
 root.mainloop()

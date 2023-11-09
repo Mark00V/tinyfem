@@ -10,6 +10,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.tri as tri
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from PIL import ImageTk
 
 class ShowSolution(tk.Toplevel):
     """
@@ -28,7 +29,16 @@ class ShowSolution(tk.Toplevel):
         self.triangulation = triangulation
 
         super().__init__()
+        self.set_icon(self)
         self.main_window_solution()
+
+    def set_icon(self, root):
+        """
+        Creates Icon from raw byte data to not need external files for creating .exe
+        :return:
+        """
+        icon_image = ImageTk.PhotoImage(data=GUIStatics.return_icon_bytestring())
+        root.tk.call('wm', 'iconphoto', root._w, icon_image)
 
     def main_window_solution(self):
         """
@@ -93,7 +103,7 @@ class ShowSolution(tk.Toplevel):
             window_help.title('HELP - SOLUTION')
             window_help.geometry(f"{800}x{600}")
             window_help.resizable(False, False)
-
+            self.set_icon(window_help)
 
 
         # Help Button

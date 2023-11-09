@@ -4,18 +4,18 @@ Description:
 
 """
 
-import tkinter as tk
 import math
-from typing import Callable, Any
-from guistatics import GUIStatics
-from definebcs import CreateBCParams
-from geometry import Geometry
-from meshgen import CreateMesh
 import random
 import threading
 import time
+import tkinter as tk
 from calcfem import CalcFEM
+from definebcs import CreateBCParams
+from geometry import Geometry
+from guistatics import GUIStatics, Tooltip
+from meshgen import CreateMesh
 from showsolution import ShowSolution
+from PIL import ImageTk
 
 #################################################
 # Other
@@ -23,7 +23,6 @@ AUTHOR = 'Elias Perras'
 VERSION_MAJOR = 1
 VERSION_MINOR = 0
 VERSION_PATCH = 0
-
 
 #################################################
 
@@ -63,24 +62,33 @@ class GUI(tk.Tk):
         self.DEV = False  # set to True for DEV mode
         if self.DEV:
             self.regions = {'0': {'coordinates' : [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
-                                 'area_neg_pos': 'Positive'},
-                           '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive'},
-                           '2': {'coordinates' : [(-1.0, 0.0), (0.0, 0.0), (0.0, 0.75), (-1.0, 0.5)],
-                                 'area_neg_pos': 'Negative'}}
+                                  'area_neg_pos': 'Positive'},
+                            '1': {'coordinates': [(2.5, 1.0), (0.0, 3.0), (-2.5, 1.0)], 'area_neg_pos': 'Positive'},
+                            '2': {'coordinates' : [(-1.0, 0.0), (0.0, 0.0), (0.0, 0.75), (-1.0, 0.5)],
+                                  'area_neg_pos': 'Negative'}}
             self.boundaries = {'0' : ((-4.0, -3.0), (1.0, -2.5)), '1': ((1.0, -2.5), (2.5, 1.0)),
-                              '2' : ((2.5, 1.0), (-2.5, 1.0)), '3': ((-2.5, 1.0), (-4.2, -1.5)),
-                              '4' : ((-4.2, -1.5), (-4.0, -3.0)), '5': ((2.5, 1.0), (0.0, 3.0)),
-                              '6' : ((0.0, 3.0), (-2.5, 1.0)), '7': ((-1.0, 0.0), (0.0, 0.0)),
-                              '8' : ((0.0, 0.0), (0.0, 0.75)), '9': ((0.0, 0.75), (-1.0, 0.5)),
-                              '10': ((-1.0, 0.5), (-1.0, 0.0))}
+                               '2' : ((2.5, 1.0), (-2.5, 1.0)), '3': ((-2.5, 1.0), (-4.2, -1.5)),
+                               '4' : ((-4.2, -1.5), (-4.0, -3.0)), '5': ((2.5, 1.0), (0.0, 3.0)),
+                               '6' : ((0.0, 3.0), (-2.5, 1.0)), '7': ((-1.0, 0.0), (0.0, 0.0)),
+                               '8' : ((0.0, 0.0), (0.0, 0.75)), '9': ((0.0, 0.75), (-1.0, 0.5)),
+                               '10': ((-1.0, 0.5), (-1.0, 0.0))}
             self.nodes = {'0' : (-3.0, -2.0), '1': (0.0, 1.5), '2': (1.0, -1.0), '3': (-4.0, -3.0), '4': (1.0, -2.5),
-                         '5' : (2.5, 1.0), '6': (-2.5, 1.0), '7': (-4.2, -1.5), '8': (0.0, 3.0), '9': (-1.0, 0.0),
-                         '10': (0.0, 0.0), '11': (0.0, 0.75), '12': (-1.0, 0.5)}
+                          '5' : (2.5, 1.0), '6': (-2.5, 1.0), '7': (-4.2, -1.5), '8': (0.0, 3.0), '9': (-1.0, 0.0),
+                          '10': (0.0, 0.0), '11': (0.0, 0.75), '12': (-1.0, 0.5)}
         # for development
         ##################################################
         super().__init__()
+        self.set_icon(self)
         # Start Main Window
         self.main_window()
+
+    def set_icon(self, root):
+        """
+        Creates Icon from raw byte data to not need external files for creating .exe
+        :return:
+        """
+        icon_image = ImageTk.PhotoImage(data=GUIStatics.return_icon_bytestring())
+        root.tk.call('wm', 'iconphoto', root._w, icon_image)
 
     def main_window(self):
         """
@@ -88,11 +96,12 @@ class GUI(tk.Tk):
         :return:
         """
 
+
         print("Starting...Please wait.")  # Console output when running as .exe
-        try:
-            self.iconbitmap('tiny_fem_icon.ico')
-        except tk.TclError:
-            ...  # Todo: Kann Icon mit Exe mitgepackt werden? Oder Alternativ supp Ordner erstellen, Exe in Hauptordner und in Supp noch Beispiele etc.
+        # try:
+        #     self.iconbitmap('tiny_fem_icon.ico')
+        # except tk.TclError:
+        #     ...  # Todo: Kann Icon mit Exe mitgepackt werden? Oder Alternativ supp Ordner erstellen, Exe in Hauptordner und in Supp noch Beispiele etc.
 
         self.title('TinyFEM - MAIN WINDOW')
         self.geometry(f"{GUIStatics.MAIN_WINDOW_SIZE_X}x{GUIStatics.MAIN_WINDOW_SIZE_Y}")
@@ -134,7 +143,7 @@ class GUI(tk.Tk):
                     size_y = 20
                 width = random.choice(['1', '2', '3', '4'])
                 color = random.choice(
-                    ['#383334', '#584043', '#8D565B', '#D5B7BA', '#A14750', '#582026', '#402628', '#870C18'])
+                        ['#383334', '#584043', '#8D565B', '#D5B7BA', '#A14750', '#582026', '#402628', '#870C18'])
                 self.canvas.create_rectangle(pos_x - size_x, pos_y - size_y, pos_x + size_x, pos_y + size_y,
                                              fill="", outline=color, width=width, dash=(6, 1), activefill=color)
                 self.canvas.create_text(175, GUIStatics.CANVAS_SIZE_Y - 75, text='ENTER GEOMETRY\n     TO START... :)',
@@ -142,7 +151,6 @@ class GUI(tk.Tk):
                 self.canvas.after(150, animate)
             else:
                 return None
-
 
         self.canvas = tk.Canvas(self, width=GUIStatics.CANVAS_SIZE_X, height=GUIStatics.CANVAS_SIZE_Y,
                                 bg=GUIStatics.CANVAS_BG)
@@ -153,6 +161,7 @@ class GUI(tk.Tk):
 
         ##################################################
         self.equation = 'HE'  # Initialized value for equation
+
         ##################################################
         # Buttons
         def assign_BCs():
@@ -201,7 +210,7 @@ class GUI(tk.Tk):
             window_create_mesh_wait.geometry(f"{200}x{150}")
             window_create_mesh_wait.resizable(False, False)
             tk.Label(window_create_mesh_wait, text="Creating Mesh...\nPlease Wait",
-                                                     font=GUIStatics.STANDARD_FONT_MID_BOLD).place(relx=0.15, rely=0.1)
+                     font=GUIStatics.STANDARD_FONT_MID_BOLD).place(relx=0.15, rely=0.1)
             window_create_mesh_wait_label = tk.Label(window_create_mesh_wait, text="",
                                                      font=GUIStatics.STANDARD_FONT_MID_BOLD)
             window_create_mesh_wait_label.place(relx=0.35, rely=0.6)
@@ -251,8 +260,10 @@ class GUI(tk.Tk):
             if self.calculation_parameters['equation'] == 'HH' and not self.calculation_parameters['freq']:
                 GUIStatics.window_error(self, 'Please set frequency first!')
                 return
-            params_mesh = (self.nodes_mesh_gen, self.single_nodes_dict, self.boundary_nodes_dict, self.triangulation, self.triangulation_region_dict)
-            params_boundaries_materials = (self.region_parameters, self.boundary_parameters, self.node_parameters, self.calculation_parameters)
+            params_mesh = (self.nodes_mesh_gen, self.single_nodes_dict, self.boundary_nodes_dict, self.triangulation,
+                           self.triangulation_region_dict)
+            params_boundaries_materials = (
+            self.region_parameters, self.boundary_parameters, self.node_parameters, self.calculation_parameters)
             calcfem = CalcFEM(params_mesh, params_boundaries_materials)
             self.solution = calcfem.calc_fem()
             print("XXX - self.solution", self.solution)
@@ -274,6 +285,7 @@ class GUI(tk.Tk):
             window_help.title('HELP - MAIN')
             window_help.geometry(f"{800}x{600}")
             window_help.resizable(False, False)
+            self.set_icon(window_help)
 
             help_txt_t = f"Welcome to TinyFEM"
             help_txt_author_version = (f"Author: {AUTHOR}\n"
@@ -298,11 +310,14 @@ class GUI(tk.Tk):
                              f"   Click SHOW MESH to display mesh\n\n"
                              f"7) Click SOLVE to start FEM-Solver and open solution window\n")
 
-            tk.Label(window_help, text=help_txt_t, font=GUIStatics.STANDARD_FONT_BIGGER_BOLD, anchor="center", justify="center") \
+            tk.Label(window_help, text=help_txt_t, font=GUIStatics.STANDARD_FONT_BIGGER_BOLD, anchor="center",
+                     justify="center") \
                 .place(relx=0.1, rely=0.1)
-            tk.Label(window_help, text=help_txt_author_version, font=GUIStatics.STANDARD_FONT_MID, anchor="center", justify="center") \
+            tk.Label(window_help, text=help_txt_author_version, font=GUIStatics.STANDARD_FONT_MID, anchor="center",
+                     justify="center") \
                 .place(relx=0.1, rely=0.175)
-            tk.Label(window_help, text='Instructions', font=GUIStatics.STANDARD_FONT_BIG_BOLD, anchor="w", justify="left") \
+            tk.Label(window_help, text='Instructions', font=GUIStatics.STANDARD_FONT_BIG_BOLD, anchor="w",
+                     justify="left") \
                 .place(relx=0.1, rely=0.25)
             tk.Label(window_help, text=help_txt_inst, font=GUIStatics.STANDARD_FONT_MID, anchor="w", justify="left") \
                 .place(relx=0.1, rely=0.29)
@@ -313,10 +328,10 @@ class GUI(tk.Tk):
 
         # Button show Mesh and show Geometry
         button_show_mesh = tk.Button(self, text="SHOW MESH", command=show_mesh, width=12,
-                                           font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1, state='disabled')
+                                     font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1, state='disabled')
         button_show_mesh.place(relx=0.23, rely=0.035)
         self.button_show_geom = tk.Button(self, text="SHOW GEOMETRY", command=show_geometry, width=12,
-                                           font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1, state='disabled')
+                                          font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1, state='disabled')
         self.button_show_geom.place(relx=0.34, rely=0.035)
 
         # FEM Parameters
@@ -344,6 +359,13 @@ class GUI(tk.Tk):
         dropdown_equation_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=15, height=1)
         dropdown_equation_select.place(relx=widgets_x_start + 0.065, rely=0.215)
         var_equations.trace('w', trace_equation)
+        tooltip_text_dropdown_equation_select = 'None'
+        if self.equation == 'HE':
+            tooltip_text_dropdown_equation_select = (f" Solves the stationary Heat Equation ")
+        elif self.equation == 'HH':
+            tooltip_text_dropdown_equation_select = (f" Solves the Helmholtz Equation ")
+        Tooltip(dropdown_equation_select, tooltip_text_dropdown_equation_select)
+
 
         # Button Assign Boundary Conditions /Material Parameters / Calculation Parameters
         self.button_define_bcs = tk.Button(self, text="BOUNDARY CONDITIONS", command=assign_BCs, width=25,
@@ -385,17 +407,17 @@ class GUI(tk.Tk):
         # Debug
         # Reformat Boundaryconditions via CreateBCParams todo: THIS IS ONLY NEEDED FOR DEVELOPMENT
         button_create_bc = tk.Button(self, text="FORM BCS", command=self.create_BC_params, width=10,
-                                           height=1, font=('Arial', 6))
+                                     height=1, font=('Arial', 6))
         button_create_bc.place(relx=0.01, rely=0.01)
         button_debug = tk.Button(self, text="DEBUG", command=self.debug, width=10,
-                                           height=1, font=('Arial', 6))
+                                 height=1, font=('Arial', 6))
         button_debug.place(relx=0.07, rely=0.01)
 
         ##################################################
         # Developing
         # placeholder for text FOR DEVELOPING
-        #self.text_label = tk.Label(self, text="Init")
-        #self.text_label.place(relx=0.02, rely=0.965)
+        # self.text_label = tk.Label(self, text="Init")
+        # self.text_label.place(relx=0.02, rely=0.965)
 
         # Developing -> uncomment self.regions etc. in init!
         if self.DEV:
@@ -404,8 +426,6 @@ class GUI(tk.Tk):
             self.draw_geometry_from_definebcs()  # todo delete this
         # Developing
         ##################################################
-
-
 
     def window_assign_calculation_params(self):
         """
@@ -424,6 +444,7 @@ class GUI(tk.Tk):
         window_calc_params.title('ASSIGN CALCULATION PARAMETERS')
         window_calc_params.geometry(f"{350}x{500}")
         window_calc_params.resizable(False, False)
+        self.set_icon(window_calc_params)
 
         widgets_x_start = 0.01
         GUIStatics.create_divider(window_calc_params, widgets_x_start, 0.05, 335)
@@ -434,9 +455,8 @@ class GUI(tk.Tk):
             .place(relx=widgets_x_start + 0.025, rely=0.16)
 
         density_slider = tk.Scale(window_calc_params, from_=1, to=5, orient=tk.HORIZONTAL,
-                                       label="", font=GUIStatics.STANDARD_FONT_SMALL)
+                                  label="", font=GUIStatics.STANDARD_FONT_SMALL)
         density_slider.place(relx=widgets_x_start + 0.325, rely=0.125)
-
 
         if self.equation == 'HH':
             GUIStatics.create_divider(window_calc_params, widgets_x_start, 0.3, 335)
@@ -445,10 +465,10 @@ class GUI(tk.Tk):
             entry_freq_var = tk.StringVar()
             entry_freq_var.set('0')
             entry_freq_field = tk.Entry(window_calc_params, textvariable=entry_freq_var,
-                                                  font=GUIStatics.STANDARD_FONT_SMALL, width=8)
+                                        font=GUIStatics.STANDARD_FONT_SMALL, width=8)
             entry_freq_field.place(relx=widgets_x_start + 0.025 + 0.3, rely=0.325)
             button_freq_set = tk.Button(window_calc_params, text="SET VALUE", command=set_freq,
-                                                  width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
+                                        width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
             button_freq_set.place(relx=widgets_x_start + 0.6, rely=0.325)
 
         def accept_calcparams():
@@ -468,10 +488,8 @@ class GUI(tk.Tk):
             self.calculation_parameters['equation'] = self.equation
 
         button_accept = tk.Button(window_calc_params, text="ACCEPT PARAMETERs", command=accept_calcparams,
-                                          width=19, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
-        button_accept.place(relx=widgets_x_start + 0.05, rely= 0.895)
-
-
+                                  width=19, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
+        button_accept.place(relx=widgets_x_start + 0.05, rely=0.895)
 
     def window_assign_region_conditions(self):
         """
@@ -485,6 +503,7 @@ class GUI(tk.Tk):
             :return:
             """
             region_nbr = dropdown_region_select_var.get().split('R-')[-1]
+            entry_materials_values_button.config(state='normal')
             if self.equation == 'HE':
                 value_set_k = self.region_parameters[region_nbr]['material']['k']
                 entry_material_k_value.set(str(value_set_k))
@@ -493,7 +512,6 @@ class GUI(tk.Tk):
                 value_set_rho = self.region_parameters[region_nbr]['material']['rho']
                 entry_material_c_value.set(str(value_set_c))
                 entry_material_rho_value.set(str(value_set_rho))
-
 
         def set_region_values():
             """
@@ -522,12 +540,11 @@ class GUI(tk.Tk):
                 self.region_parameters[region_nbr]['material']['c'] = entry_c
                 self.region_parameters[region_nbr]['material']['rho'] = entry_rho
 
-
         window_bcs = tk.Toplevel(self)
         window_bcs.title('ASSIGN MATERIALS PARAMETERS')
         window_bcs.geometry(f"{350}x{500}")
         window_bcs.resizable(False, False)
-
+        self.set_icon(window_bcs)
 
         widgets_x_start = 0.01
         GUIStatics.create_divider(window_bcs, widgets_x_start, 0.05, 335)
@@ -544,40 +561,41 @@ class GUI(tk.Tk):
         dropdown_region_select.place(relx=widgets_x_start + 0.025, rely=0.18)
         dropdown_region_select_var.trace('w', trace_region)
 
-        tk.Label(window_bcs, text="Material Parameters:", font=GUIStatics.STANDARD_FONT_SMALL)\
+        tk.Label(window_bcs, text="Material Parameters:", font=GUIStatics.STANDARD_FONT_SMALL) \
             .place(relx=widgets_x_start + 0.025, rely=0.27)
 
         if self.equation == 'HE':
-            tk.Label(window_bcs, text="Heat conductivity k [W/mK]:", font=GUIStatics.STANDARD_FONT_SMALL)\
+            tk.Label(window_bcs, text="Heat conductivity k [W/mK]:", font=GUIStatics.STANDARD_FONT_SMALL) \
                 .place(relx=widgets_x_start + 0.025, rely=0.33)
             entry_material_k_value = tk.StringVar()
             entry_material_k_value.set('0')
             entry_material_k_value_field = tk.Entry(window_bcs, textvariable=entry_material_k_value,
-                                                  font=GUIStatics.STANDARD_FONT_SMALL, width=8)
+                                                    font=GUIStatics.STANDARD_FONT_SMALL, width=8)
             entry_material_k_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.33)
             pos_y_set_button = 0.33
 
         elif self.equation == 'HH':
-            tk.Label(window_bcs, text="Speed of sound [m/s]:", font=GUIStatics.STANDARD_FONT_SMALL)\
+            tk.Label(window_bcs, text="Speed of sound [m/s]:", font=GUIStatics.STANDARD_FONT_SMALL) \
                 .place(relx=widgets_x_start + 0.025, rely=0.33)
             entry_material_c_value = tk.StringVar()
             entry_material_c_value.set('0')
             entry_material_c_value_field = tk.Entry(window_bcs, textvariable=entry_material_c_value,
-                                                  font=GUIStatics.STANDARD_FONT_SMALL, width=8)
+                                                    font=GUIStatics.STANDARD_FONT_SMALL, width=8)
             entry_material_c_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.33)
 
-            tk.Label(window_bcs, text="Density [m/s]:", font=GUIStatics.STANDARD_FONT_SMALL)\
+            tk.Label(window_bcs, text="Density [m/s]:", font=GUIStatics.STANDARD_FONT_SMALL) \
                 .place(relx=widgets_x_start + 0.025, rely=0.38)
             entry_material_rho_value = tk.StringVar()
             entry_material_rho_value.set('0')
             entry_material_rho_value_field = tk.Entry(window_bcs, textvariable=entry_material_rho_value,
-                                                  font=GUIStatics.STANDARD_FONT_SMALL, width=8)
+                                                      font=GUIStatics.STANDARD_FONT_SMALL, width=8)
             entry_material_rho_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.38)
             pos_y_set_button = 0.38
 
-        entry_materials_values_field = tk.Button(window_bcs, text="SET VALUE", command=set_region_values,
-                                          width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
-        entry_materials_values_field.place(relx=widgets_x_start + 0.025, rely=pos_y_set_button + 0.075)
+        entry_materials_values_button = tk.Button(window_bcs, text="SET VALUE", command=set_region_values,
+                                                 width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
+        entry_materials_values_button.place(relx=widgets_x_start + 0.025, rely=pos_y_set_button + 0.075)
+        entry_materials_values_button.config(state='disabled')
 
         def accept_regions():
             """
@@ -600,8 +618,8 @@ class GUI(tk.Tk):
             window_bcs.destroy()  # closes top window
 
         button_accept = tk.Button(window_bcs, text="ACCEPT REGIONs", command=accept_regions,
-                                          width=14, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
-        button_accept.place(relx=widgets_x_start + 0.05, rely= 0.895)
+                                  width=14, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
+        button_accept.place(relx=widgets_x_start + 0.05, rely=0.895)
 
     def window_assign_boundary_conditions(self):
         """
@@ -653,10 +671,11 @@ class GUI(tk.Tk):
             if last_highlight_element:
                 self.canvas.delete(last_highlight_element)
             boundary_nbr = dropdown_boundary_select_var.get().split('B-')[-1]
+            button_boundary_value_set.config(state='normal')
             value_set = self.boundary_parameters[boundary_nbr]['bc']['value']
             type_set = self.boundary_parameters[boundary_nbr]['bc']['type']
 
-            if type_set in  ['Neumann', 'Dirichlet']:
+            if type_set in ['Neumann', 'Dirichlet']:
                 entry_boundary_value.set(str(value_set))
                 entry_boundary_value_B.set('None')
             elif type_set == 'Robin':
@@ -669,8 +688,9 @@ class GUI(tk.Tk):
                 entry_boundary_value_B.set('None')
             nodes = self.boundary_parameters[boundary_nbr]['coordinates']
             self.highlight_element = self.canvas.create_line(GUIStatics.transform_node_to_canvas(nodes[0]),
-                                                     GUIStatics.transform_node_to_canvas(nodes[1]),
-                                                     width=6, fill=GUIStatics.CANVAS_HIGHLIGHT_ELEMENT, dash=(1, 1), tags='highlight_element')
+                                                             GUIStatics.transform_node_to_canvas(nodes[1]),
+                                                             width=6, fill=GUIStatics.CANVAS_HIGHLIGHT_ELEMENT,
+                                                             dash=(1, 1), tags='highlight_element')
 
         def trace_boundary_type(*args):
             """
@@ -686,39 +706,44 @@ class GUI(tk.Tk):
                     entry_label_b.config(text='NONE')
                     entry_label_a_note.config(text='[K]')
                     entry_label_b_note.config(text='[-]')
+                    entry_boundary_value_field.config(state='normal')
                     entry_boundary_value_B_field.config(state='disabled')
                 elif boundary_type_selected == 'Neumann':
                     entry_label_a.config(text='Flux q:')
                     entry_label_b.config(text='NONE')
-                    entry_label_a_note.config(text='[K]')
+                    entry_label_a_note.config(text='[W/m²]')
                     entry_label_b_note.config(text='[-]')
+                    entry_boundary_value_field.config(state='normal')
                     entry_boundary_value_B_field.config(state='disabled')
                 elif boundary_type_selected == 'Robin':
                     entry_label_a.config(text='Fluid Temp:')
                     entry_label_b.config(text='Heat TC h:')
                     entry_label_a_note.config(text='[K]')
-                    entry_label_b_note.config(text='[-]')
+                    entry_label_b_note.config(text='[W/(m²K)]')
+                    entry_boundary_value_field.config(state='normal')
                     entry_boundary_value_B_field.config(state='normal')
 
             elif equation_selected == 'HH':
                 if boundary_type_selected == 'Dirichlet':
-                    entry_label_a.config(text='Pressure:')
+                    entry_label_a.config(text='Pressure P:')
                     entry_label_b.config(text='NONE')
                     entry_label_a_note.config(text='[Pa]')
                     entry_label_b_note.config(text='[-]')
+                    entry_boundary_value_field.config(state='normal')
                     entry_boundary_value_B_field.config(state='disabled')
                 elif boundary_type_selected == 'Neumann':
-                    entry_label_a.config(text='Impedance:')
+                    entry_label_a.config(text='Impedance Z:')
                     entry_label_b.config(text='NONE')
-                    entry_label_a_note.config(text='[XXX]')
+                    entry_label_a_note.config(text='[Pa s/m]')
                     entry_label_b_note.config(text='[-]')
+                    entry_boundary_value_field.config(state='normal')
                     entry_boundary_value_B_field.config(state='disabled')
                 elif boundary_type_selected == 'Robin':
                     entry_label_a.config(text='NONE')
                     entry_label_b.config(text='NONE')
                     entry_label_a_note.config(text='[-]')
                     entry_label_b_note.config(text='[-]')
-                    entry_boundary_value_B_field.config(state='disabled')
+                    entry_boundary_value_field.config(state='disabled')
                     entry_boundary_value_B_field.config(state='disabled')
 
         def trace_node(*args):
@@ -743,12 +768,14 @@ class GUI(tk.Tk):
         window_bcs.title('ASSIGN SYSTEM PARAMETERS')
         window_bcs.geometry(f"{350}x{500}")
         window_bcs.resizable(False, False)
+        self.set_icon(window_bcs)
 
         widgets_x_start = 0.01
         GUIStatics.create_divider(window_bcs, widgets_x_start, 0.05, 335)
         tk.Label(window_bcs, text="Boundary Conditions", font=GUIStatics.STANDARD_FONT_MID_BOLD) \
             .place(relx=widgets_x_start, rely=0.075)
-        tk.Label(window_bcs, text=f"{'Select Boundary' + 15 * ' ' + 'Select Boundary Type'}", font=GUIStatics.STANDARD_FONT_MID) \
+        tk.Label(window_bcs, text=f"{'Select Boundary' + 15 * ' ' + 'Select Boundary Type'}",
+                 font=GUIStatics.STANDARD_FONT_MID) \
             .place(relx=widgets_x_start + 0.025, rely=0.125)
 
         boundaries = [f"B-{nbr}" for nbr in self.boundary_parameters.keys()]
@@ -766,30 +793,53 @@ class GUI(tk.Tk):
         dropdown_boundary_type.config(font=GUIStatics.STANDARD_FONT_SMALL, width=8, height=1)
         dropdown_boundary_type.place(relx=widgets_x_start + 0.48, rely=0.18)
         dropdown_boundary_type_var.trace('w', trace_boundary_type)
+        tooltip_text_dropdown_boundary_type = 'None'
+        if self.equation == 'HE':
+            tooltip_text_dropdown_boundary_type = (f" Dirichlet: Constant Temperature \n"
+                                                   f" Neumann: Heat Flux              \n"
+                                                   f" Robin: Convective Heat Flux     ")
+        elif self.equation == 'HH':
+            tooltip_text_dropdown_boundary_type = (f" Dirichlet: Constant Pressure          \n"
+                                                   f" Neumann: Impedance Boundary Condition \n"
+                                                   f" Robin: Not implemented                ")
+        Tooltip(dropdown_boundary_type, tooltip_text_dropdown_boundary_type)
 
-        entry_label_a = tk.Label(window_bcs, text="Value A:", font=GUIStatics.STANDARD_FONT_SMALL)
+        init_value_A = 'None'
+        entry_label_a_note_text = 'None'
+        if self.equation == 'HE':
+            init_value_A = 'Temp T:'
+            entry_label_a_note_text = '[K]'
+        elif self.equation == 'HH':
+            init_value_A = 'Pressure P:'
+            entry_label_a_note_text = '[Pa]'
+
+        tooltip_text_field_A = 'Enter Value - Placeholder...'
+        entry_label_a = tk.Label(window_bcs, text=init_value_A, font=GUIStatics.STANDARD_FONT_SMALL)
         entry_label_a.place(relx=widgets_x_start + 0.025, rely=0.27)
-        entry_label_a_note = tk.Label(window_bcs, text="For Dirichlet &\nNeumann     ", font=GUIStatics.STANDARD_FONT_SMALLER)
-        entry_label_a_note.place(relx=widgets_x_start + 0.35, rely=0.26)
+        entry_label_a_note = tk.Label(window_bcs, text=entry_label_a_note_text,
+                                      font=GUIStatics.STANDARD_FONT_SMALLER)
+        entry_label_a_note.place(relx=widgets_x_start + 0.455, rely=0.27)
         entry_boundary_value = tk.StringVar()
         entry_boundary_value.set('None')
         entry_boundary_value_field = tk.Entry(window_bcs, textvariable=entry_boundary_value,
                                               font=GUIStatics.STANDARD_FONT_SMALL, width=8)
-        entry_boundary_value_field.place(relx=widgets_x_start + 0.025 + 0.15, rely=0.27)
+        entry_boundary_value_field.place(relx=widgets_x_start + 0.025 + 0.25, rely=0.27)
 
-        entry_label_b = tk.Label(window_bcs, text="Value B:", font=GUIStatics.STANDARD_FONT_SMALL)
+
+        entry_label_b = tk.Label(window_bcs, text="NONE", font=GUIStatics.STANDARD_FONT_SMALL)
         entry_label_b.place(relx=widgets_x_start + 0.025, rely=0.33)
-        entry_label_b_note = tk.Label(window_bcs, text="For Robin", font=GUIStatics.STANDARD_FONT_SMALLER)
-        entry_label_b_note.place(relx=widgets_x_start + 0.35, rely=0.33)
+        entry_label_b_note = tk.Label(window_bcs, text="[-]", font=GUIStatics.STANDARD_FONT_SMALLER)
+        entry_label_b_note.place(relx=widgets_x_start + 0.455, rely=0.33)
         entry_boundary_value_B = tk.StringVar()
         entry_boundary_value_B.set('None')
         entry_boundary_value_B_field = tk.Entry(window_bcs, textvariable=entry_boundary_value_B,
-                                              font=GUIStatics.STANDARD_FONT_SMALL, width=8)
-        entry_boundary_value_B_field.place(relx=widgets_x_start + 0.025 + 0.15, rely=0.33)
+                                                font=GUIStatics.STANDARD_FONT_SMALL, width=8, state='disabled')
+        entry_boundary_value_B_field.place(relx=widgets_x_start + 0.025 + 0.25, rely=0.33)
 
         button_boundary_value_set = tk.Button(window_bcs, text="SET VALUE", command=set_boundary_value,
-                                          width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
+                                              width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
         button_boundary_value_set.place(relx=widgets_x_start + 0.6, rely=0.29)
+        button_boundary_value_set.config(state='disabled')
 
         if equation_set == 'HH':
             GUIStatics.create_divider(window_bcs, widgets_x_start, 0.42, 335)
@@ -807,16 +857,17 @@ class GUI(tk.Tk):
             dropdown_node_select.place(relx=widgets_x_start + 0.025, rely=0.545)
             dropdown_node_select_var.trace('w', trace_node)
 
-            tk.Label(window_bcs, text="Power:", font=GUIStatics.STANDARD_FONT_SMALL) \
+            tk.Label(window_bcs, text="Sound Source:", font=GUIStatics.STANDARD_FONT_SMALL) \
                 .place(relx=widgets_x_start + 0.025, rely=0.635)
+            tk.Label(window_bcs, text="[W/m]", font=GUIStatics.STANDARD_FONT_SMALLER).place(relx=widgets_x_start + 0.455, rely=0.635)
             entry_node_value = tk.StringVar()
             entry_node_value.set('None')
             entry_node_value_field = tk.Entry(window_bcs, textvariable=entry_node_value,
-                                                  font=GUIStatics.STANDARD_FONT_SMALL, width=8)
-            entry_node_value_field.place(relx=widgets_x_start + 0.025 + 0.15, rely=0.635)
+                                              font=GUIStatics.STANDARD_FONT_SMALL, width=8)
+            entry_node_value_field.place(relx=widgets_x_start + 0.025 + 0.25, rely=0.635)
             entry_node_value_set = tk.Button(window_bcs, text="SET VALUE", command=set_node_value,
-                                                  width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
-            entry_node_value_set.place(relx=widgets_x_start + 0.38, rely=0.63)
+                                             width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
+            entry_node_value_set.place(relx=widgets_x_start + 0.6, rely=0.63)
 
         def accept_bcs():
             """
@@ -846,9 +897,8 @@ class GUI(tk.Tk):
             GUIStatics.update_text_field(self.text_information, self.text_information_str)
             window_bcs.destroy()  # closes top window
 
-
         button_accept = tk.Button(window_bcs, text="ACCEPT BCs", command=accept_bcs,
-                                          width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
+                                  width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
         button_accept.place(relx=widgets_x_start + 0.05, rely=0.895)
 
     def create_BC_params(self):
@@ -874,7 +924,8 @@ class GUI(tk.Tk):
         GUIStatics.add_canvas_border(self.canvas)
         self.canvas.create_text(GUIStatics.CANVAS_SIZE_X / 2, GUIStatics.CANVAS_SIZE_Y / 2,
                                 text='CREATE GEOMETRY', fill='Gray', font=("Helvetica", 16))
-        return_geometry = Geometry(self.receive_geometry)
+        return_geometry = Geometry(self.receive_geometry, self.geometry_input)
+        print("XXX", self.geometry_input)
 
     def receive_geometry(self, geometry):
         """
@@ -885,7 +936,7 @@ class GUI(tk.Tk):
 
         self.geometry_input = geometry
         geometry_input_str = str(geometry)  # todo, for testing
-        #self.text_label.config(text=geometry_input_str, font=("Helvetica", 6))  # todo, for testing
+        # self.text_label.config(text=geometry_input_str, font=("Helvetica", 6))  # todo, for testing
 
         format_for_params = CreateBCParams(self.geometry_input)
         self.regions, self.boundaries, self.nodes = format_for_params.main()
@@ -916,9 +967,9 @@ class GUI(tk.Tk):
         for region_nbr, values in self.regions.items():
             coordinates = values['coordinates']
             area_neg_pos = values['area_neg_pos']
-            region_parameters[region_nbr] = {'coordinates': coordinates,
+            region_parameters[region_nbr] = {'coordinates' : coordinates,
                                              'area_neg_pos': area_neg_pos,
-                                             'material': {'k': 1.0, 'c': 340, 'rho': 1.21}}
+                                             'material'    : {'k': 1.0, 'c': 340, 'rho': 1.21}}
         for boundary_nbr, nodes in self.boundaries.items():
             coordinates = [nodes[0], nodes[1]]
             boundary_parameters[boundary_nbr] = {'coordinates': coordinates, 'bc': {'type': None, 'value': None}}
@@ -926,7 +977,8 @@ class GUI(tk.Tk):
             coordinates = node
             node_parameters[node_nbr] = {'coordinates': coordinates, 'bc': {'type': None, 'value': None}}
         try:
-            calculation_parameters = {'mesh_density': None, 'freq': None, 'equation': 'HE', 'units': self.geometry_input['units']}
+            calculation_parameters = {'mesh_density': None, 'freq': None, 'equation': 'HE',
+                                      'units'       : self.geometry_input['units']}
         except TypeError:
             calculation_parameters = {'mesh_density': None, 'freq': None, 'equation': 'HE',
                                       'units'       : 'm'}
@@ -935,15 +987,14 @@ class GUI(tk.Tk):
         self.node_parameters = node_parameters
         self.calculation_parameters = calculation_parameters
 
-
     def init_information_text_field(self):
         """
         Initializes the information text field with the geometry provided
         :return:
         """
         text_regions = [
-            f"{region_nbr}: {values['coordinates']}, ({'+' if values['area_neg_pos'] == 'Positive' else '-'})\n"
-            for region_nbr, values in self.regions.items()]
+                f"{region_nbr}: {values['coordinates']}, ({'+' if values['area_neg_pos'] == 'Positive' else '-'})\n"
+                for region_nbr, values in self.regions.items()]
         text_boundaries = [f"{bound_nbr}: {values} | " for bound_nbr, values in self.boundaries.items()]
         text_nodes = [f"{node_nbr}: {values} | " for node_nbr, values in self.nodes.items()]
         self.text_information_str = f"Regions:\n" + ''.join(text_regions) \
@@ -1058,7 +1109,7 @@ class GUI(tk.Tk):
             for node in self.nodes_mesh_gen:
                 node_transformed = GUIStatics.transform_node_to_canvas(node)
                 nx, ny = node_transformed[0], node_transformed[1]
-                self.canvas.create_oval(nx-2, ny-2, nx+2, ny+2, fill="gray")
+                self.canvas.create_oval(nx - 2, ny - 2, nx + 2, ny + 2, fill="gray")
 
         # draw elements
         for triangle in self.triangulation:
@@ -1117,8 +1168,6 @@ class GUI(tk.Tk):
             f.write(write_output)
 
 
-
 if __name__ == '__main__':
     gui = GUI()
     gui.mainloop()
-

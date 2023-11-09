@@ -5,14 +5,14 @@ from tkinter import filedialog
 import json
 from guistatics import GUIStatics
 import copy
-
+from PIL import ImageTk
 
 class Geometry(tk.Toplevel):
     """
     Define Geometry Window
     """
 
-    def __init__(self, callback_geometry: Callable[[dict], Any]):
+    def __init__(self, callback_geometry: Callable[[dict], Any], geometry_input):
         """
         Constructor, inherits from tk toplevel
         :param callback_geometry: callback method from class GUI
@@ -20,20 +20,34 @@ class Geometry(tk.Toplevel):
 
         # Callback geometry to return geometry values to guimain
         self.callback_geometry = callback_geometry
-        self.geometry_input = None  # for callback
-        self.polygons = {'0': {'coordinates': [], 'area_neg_pos': 'Positive'}}  # init value
-        # self.polygons = {'0': {'coordinates': [[0, 0], [1, 0.5], [1.5, 1.5], [0.75, 2.0]], 'area_neg_pos': 'Positive'},
-        #                  '1': {'coordinates': [[-1, -1], [-2, -1], [-3, -3], [-2, -3]], 'area_neg_pos': 'Positive'},
-        #                  '2': {'coordinates': [[1, -0.5], [3, -1], [3, -3.5], [2, -2.5], [0.5, -4]],
-        #                        'area_neg_pos': 'Negative'}}  # TEST TODO
+        if not geometry_input:
+            self.geometry_input = None  # for callback
+            self.polygons = {'0': {'coordinates': [], 'area_neg_pos': 'Positive'}}  # init value
+            self.points = {}  # init value
+            self.units = 'm'
+        else:
+            self.geometry_input = geometry_input
+            self.polygons = geometry_input['polygons']
+            self.points = geometry_input['points']
+            self.units = geometry_input['units']
+
+
         self.polygon_nodes = [0]  # needed for update for select polygon dropdown (numbers for polygons in list)
-        self.points = {}  # init value
         # self.points = {'0': [0, 1], '1': [2, 3], '2': [-2, 3]}  # testing todo
-        self.units = 'm'
+
         self.other = 'None'  # json dump does not support None
         self.highlight_element = None  # highlighting nodes and points
         super().__init__()
+        self.set_icon(self)
         self.main_window()
+
+    def set_icon(self, root):
+        """
+        Creates Icon from raw byte data to not need external files for creating .exe
+        :return:
+        """
+        icon_image = ImageTk.PhotoImage(data=GUIStatics.return_icon_bytestring())
+        root.tk.call('wm', 'iconphoto', root._w, icon_image)
 
     def main_window(self):
         """
@@ -154,6 +168,7 @@ class Geometry(tk.Toplevel):
             window_help.title('HELP - GEOMETRY')
             window_help.geometry(f"{800}x{600}")
             window_help.resizable(False, False)
+            self.set_icon(window_help)
 
             help_txt_t = f"GEOMETRY"
             help_txt_inst = (f"1) SAVE / LOAD to save or load geometry input \n\n"
@@ -816,13 +831,18 @@ class Geometry(tk.Toplevel):
         button_debug.place(relx=0.96, rely=0.005)
         ##################################################
 
+        self.update_graphics()  # if Geometry class is loaded with input self.geometry_input, see init
+
     def update_graphics(self):
         """
         Updates the canvas, draws static elements (coordsystem, grid) and draws defined polygons and single points
         :return:
         """
+        try:
+            selected_polygon = self.polygon_selected
+        except AttributeError:
+            selected_polygon = None
 
-        selected_polygon = self.polygon_selected
 
         # delete all
         all_canvas_elements = self.canvas.find_all()

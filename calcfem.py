@@ -160,6 +160,11 @@ class CalcFEM:
             bc_type = vals['bc']['type']
             if bc_type == 'Neumann':
                 bc_val_A = vals['bc']['value']
+                if self.equation == 'HH':
+                    try:
+                        bc_val_A = 1 / bc_val_A  # neumann value is 1/Z
+                    except ZeroDivisionError:
+                        bc_val_A = 10e10
                 bc_val_B = 0
             elif bc_type == 'Robin':
                 bc_val_A = vals['bc']['value'][0]
