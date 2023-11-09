@@ -108,3 +108,6 @@ GUI (automatisch nach solve_system()) -> Class ShowSolution
     Rückgabewerte: Keine
 #######################################################################################
 
+Compile:
+pyinstaller --onefile --icon=tiny_fem_icon.ico gui.py
+

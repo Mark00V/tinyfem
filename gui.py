@@ -266,7 +266,6 @@ class GUI(tk.Tk):
             self.region_parameters, self.boundary_parameters, self.node_parameters, self.calculation_parameters)
             calcfem = CalcFEM(params_mesh, params_boundaries_materials)
             self.solution = calcfem.calc_fem()
-            print("XXX - self.solution", self.solution)
             ShowSolution(self.solution, self.nodes_mesh_gen, self.triangulation, self.calculation_parameters)  # opens window for solution
 
         # Button define Geometry

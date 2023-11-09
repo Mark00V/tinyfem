@@ -319,7 +319,7 @@ class CalcFEM:
 
         :return:
         """
-
+        print(f"Solving system...")
         self.solution = np.linalg.solve(self.sysmatrix_diri, self.force_vector_diri)
 
     def create_force_vector(self):
@@ -371,7 +371,9 @@ class CalcFEM:
 
         elemsteif = None
         elemmass = None
+        print(f"Calculating element matrices...")
         for idx, triangle in enumerate(self.triangulation):
+            print(f"{idx} / {len(self.triangulation)}", end='\r')  # This does not show in pycharm, only via cmd / .exe
             b_region = get_region_number(idx)
             materials = self.region_parameters[b_region]['material']
             k = materials['k']
