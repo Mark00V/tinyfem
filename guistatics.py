@@ -253,7 +253,7 @@ class GUIStatics:
         GUIStatics.create_divider(window_error, 0.025, 0.05, 275)
 
         # error message
-        tk.Label(window_error, text=error_message, font=GUIStatics.STANDARD_FONT_MID_BOLD) \
+        tk.Label(window_error, text=error_message, font=GUIStatics.STANDARD_FONT_BUTTON_MID) \
             .place(relx=0.05, rely=0.2)
 
         GUIStatics.create_divider(window_error, 0.025, 0.95, 275)

@@ -2,7 +2,7 @@
 KNOWN BUGS:
 -> check_geometry() in Class Geometry: Funktioniert nicht für Linien mit Steigung inf
 -> testing/output_gui_4_calcfem_C6 -> Fehlerhafte Zuordnung von Knoten zu Boundaries, vermutlich bei Netzerstellung bei Abzug negatives Element.. boundary_nodes_dict fehlerhaft
-
+-> Something is wring with saving the mesh in class Geometry
 
 #######################################################################################
 TODOs:

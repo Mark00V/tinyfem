@@ -142,7 +142,7 @@ class Geometry(tk.Toplevel):
                 with open(file_path, "w") as file:
                     file.write(json.dumps(self.geometry_input))
 
-            if not self.points:
+            if self.points == {'None': 'None'}:
                 self.points = {'None'}  # workaround for json dumping
 
             # set geometry window to foreground

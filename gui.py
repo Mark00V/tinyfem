@@ -196,14 +196,19 @@ class GUI(tk.Tk):
                 Helper function for thread
                 :return:
                 """
-                mesh = CreateMesh(self.region_parameters, self.boundary_parameters,
-                                  self.node_parameters, self.calculation_parameters)
-                mesh_generator_output = mesh.create_mesh()
-                self.nodes_mesh_gen = mesh_generator_output[0]
-                self.single_nodes_dict = mesh_generator_output[1]
-                self.boundary_nodes_dict = mesh_generator_output[2]
-                self.triangulation = mesh_generator_output[3]
-                self.triangulation_region_dict = mesh_generator_output[4]
+                try:
+                    mesh = CreateMesh(self.region_parameters, self.boundary_parameters,
+                                      self.node_parameters, self.calculation_parameters)
+                    mesh_generator_output = mesh.create_mesh()
+                    self.nodes_mesh_gen = mesh_generator_output[0]
+                    self.single_nodes_dict = mesh_generator_output[1]
+                    self.boundary_nodes_dict = mesh_generator_output[2]
+                    self.triangulation = mesh_generator_output[3]
+                    self.triangulation_region_dict = mesh_generator_output[4]
+                except IndexError:
+                    GUIStatics.window_error(self, '        MESHING ERROR         \n'
+                                                               'Mesh could not be generated! \n'
+                                                               'Check geometry!              \n')
 
             window_create_mesh_wait = tk.Toplevel(self)
             window_create_mesh_wait.title('CREATING MESH')
