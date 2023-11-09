@@ -182,7 +182,7 @@ class CalcFEM:
                     bc_std_g = bc_val_B * bc_val_A  # corresponds to h * T_ext
                 elif self.equation == 'HH':
                     # transform values A, B, C into standard ROBIN form
-                    bc_std_a = bc_val_B  # only impedance
+                    bc_std_a = bc_val_A  # only impedance implemented
                     bc_std_b = 0  # only impedance
                     bc_std_g = 0  # only impedance
                 for e0, e1 in zip(bc_nodes[:-1], bc_nodes[1:]):

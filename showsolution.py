@@ -17,7 +17,7 @@ class ShowSolution(tk.Toplevel):
     Define Solution Window
     """
 
-    def __init__(self, solution, nodes, triangulation):
+    def __init__(self, solution, nodes, triangulation, calculation_parameters):
         """
         Constructor, inherits from tk toplevel
         :param
@@ -27,6 +27,8 @@ class ShowSolution(tk.Toplevel):
         self.solution = solution
         self.nodes = nodes
         self.triangulation = triangulation
+        self.calculation_parameters = calculation_parameters
+        self.solution_orig = solution
 
         super().__init__()
         self.set_icon(self)
@@ -105,10 +107,34 @@ class ShowSolution(tk.Toplevel):
             window_help.resizable(False, False)
             self.set_icon(window_help)
 
+        def show_spl():
+            """
+            this is ugly
+            :return:
+            """
+            self.calculate_spl()
+            fig, ax = self.create_mpl_fig(spl_flag=True)
+            canvas_mpl = FigureCanvasTkAgg(fig, master=self)
+            self.canvas_mpl_widget = canvas_mpl.get_tk_widget()
+            self.canvas_mpl_widget.place(relx=canvas_x + 0.0075 + 0.003, rely=canvas_y + 0.006)
+
+        def show_pressure():
+            """
+            this is also ugly
+            :return:
+            """
+            self.solution = self.solution_orig
+            fig, ax = self.create_mpl_fig()
+            canvas_mpl = FigureCanvasTkAgg(fig, master=self)
+            self.canvas_mpl_widget = canvas_mpl.get_tk_widget()
+            self.canvas_mpl_widget.place(relx=canvas_x + 0.0075 + 0.003, rely=canvas_y + 0.006)
+
 
         # Help Button
         tk.Button(self, text="HELP", command=show_help, width=8,
                                            font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.9, rely=0.025)
+
+        GUIStatics.create_divider(self, widgets_x_start, 0.08, 230)
         # export solution as csv file button
         tk.Button(self, text="EXPORT CSV FILE", command=export_solution_csv, width=20,
                                            font=GUIStatics.STANDARD_FONT_BUTTON_BIG_BOLD, height=1).place(relx=widgets_x_start, rely=0.1)
@@ -117,11 +143,19 @@ class ShowSolution(tk.Toplevel):
         tk.Button(self, text="EXPORT IMAGE FILE", command=export_image, width=20,
                                            font=GUIStatics.STANDARD_FONT_BUTTON_BIG_BOLD, height=1).place(relx=widgets_x_start, rely=0.15)
 
+        GUIStatics.create_divider(self, widgets_x_start, 0.21, 230)
         # get min/max value buttons
         tk.Button(self, text="MIN VAL", command=get_min_value, width=8,
                                            font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start, rely=0.23)
-        tk.Button(self, text="MIN VAL", command=get_min_value, width=8,
+        tk.Button(self, text="MAX VAL", command=get_max_value, width=8,
                                            font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start + 0.095, rely=0.23)
+
+        if self.calculation_parameters['equation'] == 'HH':
+            tk.Button(self, text="SOUND PRESSURE LEVEL", command=show_spl, width=24,
+                                               font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start, rely=0.3)
+            tk.Button(self, text="PRESSURE", command=show_pressure, width=24,
+                                               font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start, rely=0.35)
+        GUIStatics.create_divider(self, widgets_x_start, 0.4, 230)
 
     def convert_solution_to_string(self):
 
@@ -138,9 +172,17 @@ class ShowSolution(tk.Toplevel):
             export_string += add
         return export_string
 
+    def calculate_spl(self):
+        """
+        Calculates sound pressure level
+        :return:
+        """
+        solution = self.solution_orig
+        pref = 20 * 10 ** (-6)
+        solutionspl = abs(20 * np.log10(solution / pref))
+        self.solution = solutionspl
 
-
-    def create_mpl_fig(self):
+    def create_mpl_fig(self, spl_flag=False):
         """
 
         :return:
@@ -154,24 +196,41 @@ class ShowSolution(tk.Toplevel):
         aspectxy = 1
         triang_mpl = tri.Triangulation(all_points[:, 0], all_points[:, 1], triangles)
 
+        title_text = 'None'
+        legend_text = 'None'
+        cmap = 'viridis'
+        if self.calculation_parameters['equation'] == 'HE':
+            title_text = 'Temperature Field'
+            legend_text = '\nTemperature [K]'
+            cmap = 'jet'
+        elif self.calculation_parameters['equation'] == 'HH':
+            if spl_flag:
+                title_text = f'Sound Pressure Distribution @ {self.calculation_parameters["freq"]} Hz'
+                legend_text = '\nSPL [dB]'
+                cmap = 'inferno'
+            else:
+                title_text = f'Pressure Field @ {self.calculation_parameters["freq"]} Hz'
+                legend_text = '\nPressure [Pa]'
+                cmap = 'cool'
+
         fig = Figure(figsize=(9.15, 7.15), dpi=100, facecolor='lightgray')
         ax = fig.add_subplot(111)
         label_font_title = {'fontsize': 14, 'fontfamily': 'sans-serif'}
-        ax.set_title("Solution", **label_font_title)
+        ax.set_title(title_text, **label_font_title)
         label_font_axes = {'fontsize': 12, 'fontfamily': 'sans-serif'}
-        ax.set_xlabel('x [m]', **label_font_axes)
-        ax.set_ylabel('y [m]', **label_font_axes)
+        ax.set_xlabel(f'x [{self.calculation_parameters["units"]}]', **label_font_axes)
+        ax.set_ylabel(f'y [{self.calculation_parameters["units"]}]', **label_font_axes)
         ax.set_aspect(aspectxy)
 
-        contour = ax.tricontourf(triang_mpl, values, cmap='viridis', levels=20)
+        contour = ax.tricontourf(triang_mpl, values, cmap=cmap, levels=20)
         ax.set_facecolor('lightgray')  # backgroundcolor of contourmap
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.2)
 
-        fig.colorbar(contour, cax=cax)
-        ax.scatter(all_points[:, 0], all_points[:, 1], c=values, cmap='viridis', marker='.',
-                             edgecolors='w', s=10)
-        ax.triplot(triang_mpl, 'w-', linewidth=0.3)
+        legend = fig.colorbar(contour, cax=cax)
+        legend.set_label(legend_text)
+        ax.scatter(all_points[:, 0], all_points[:, 1], c=values, cmap=cmap, marker='.', s=1)
+        ax.triplot(triang_mpl, 'w-', linewidth=0.1)
 
         return fig, ax
 
@@ -180,5 +239,6 @@ if __name__ == '__main__':
     solution = np.array([1.5, 1.0, 1.0, 1.75, 2.0, 2.0])
     nodes = np.array([[0.0, 0.0], [0.5, 0.0], [1.0,  0.0], [1.0, 0.5], [1.0,  1.0], [0.5, 0.5]])
     triangles = np.array([[1., 5., 0.], [5., 3., 4.], [1., 3., 5.], [3., 1., 2.]])
-    show_solution = ShowSolution(solution, nodes, triangles)  # Develop
+    calculation_parameters = {'mesh_density': None, 'freq': 300, 'equation': 'HH', 'units': 'm'}
+    show_solution = ShowSolution(solution, nodes, triangles, calculation_parameters)  # Develop
     show_solution.mainloop()

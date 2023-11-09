@@ -267,7 +267,7 @@ class GUI(tk.Tk):
             calcfem = CalcFEM(params_mesh, params_boundaries_materials)
             self.solution = calcfem.calc_fem()
             print("XXX - self.solution", self.solution)
-            ShowSolution(self.solution, self.nodes_mesh_gen, self.triangulation)  # opens window for solution
+            ShowSolution(self.solution, self.nodes_mesh_gen, self.triangulation, self.calculation_parameters)  # opens window for solution
 
         # Button define Geometry
         tk.Frame(self, height=2, width=230, bg=GUIStatics.CANVAS_BORDER_COLOR) \
@@ -925,7 +925,6 @@ class GUI(tk.Tk):
         self.canvas.create_text(GUIStatics.CANVAS_SIZE_X / 2, GUIStatics.CANVAS_SIZE_Y / 2,
                                 text='CREATE GEOMETRY', fill='Gray', font=("Helvetica", 16))
         return_geometry = Geometry(self.receive_geometry, self.geometry_input)
-        print("XXX", self.geometry_input)
 
     def receive_geometry(self, geometry):
         """
