@@ -29,7 +29,7 @@ class CreateMesh:
 
 
     # For more printing in Development
-    DEV = False
+    DEV = True
 
     def __init__(self, region_parameters, boundary_parameters, node_parameters, calculation_parameters):
         # input parameters
@@ -50,7 +50,7 @@ class CreateMesh:
         self.triangulation_region_dict = None
 
         # Develop
-        self.file_path_dev = r'testing/output_gui_4_calcfem_' + 'C6' + '.txt'
+        self.file_path_dev = r'testing/output_gui_4_calcfem_' + '10' + '.txt'
 
     @timing_decorator
     def create_mesh(self):
@@ -355,7 +355,7 @@ class CreateMesh:
         start_point = line[0]
         end_point = line[1]
         distance = np.linalg.norm(start_point - end_point)
-        num_subdivisions = math.floor(distance / self.density) + 1
+        num_subdivisions = math.floor(distance / self.density) + 2
         subdivision_points = np.linspace(start_point, end_point, num_subdivisions)
 
         return subdivision_points
@@ -515,7 +515,7 @@ class CreateMesh:
         triangle_counter = 0
         triangle_region_dict = dict()
         c_pos = True
-        print('"Triangulation of regions...')
+        print('Triangulation of regions...')
         for region_nbr, region in self.region_parameters.items():
             print(f"Region {region_nbr} / {len(self.region_parameters.items())}", end='\r')  # This does not show in pycharm, only via cmd / .exe
             if region['area_neg_pos'] == 'Positive':
@@ -612,9 +612,9 @@ if __name__ == '__main__':
     createmesh = CreateMesh(*params1)  # Todo - Develop: For testing mesh
     createmesh.develop()
     nodes, single_nodes_dict, boundary_nodes_dict, triangulation, triangulation_region_dict = createmesh.create_mesh()
-    #CreateMesh.plot_polygon_points(nodes, createmesh.positive_regions, createmesh.negative_regions)
-    for bnd, vals in boundary_nodes_dict.items():
-        print(bnd, vals)
+    CreateMesh.plot_polygon_points(nodes, createmesh.positive_regions, createmesh.negative_regions)
+    # for bnd, vals in boundary_nodes_dict.items():
+    #     print(bnd, vals)
     # params
     print(f"\n\n"
           f"Number of nodes:     {len(nodes)}")
