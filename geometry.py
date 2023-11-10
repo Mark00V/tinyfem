@@ -353,9 +353,9 @@ class Geometry(tk.Toplevel):
             polygon_nodes = self.polygons[this_polygon]['coordinates']
             try:
                 x_entry = float(add_node_x_entry_val.get().replace(',', '.'))
-                y_entry = float(add_node_x_entry_val.get().replace(',', '.'))
+                y_entry = float(add_node_y_entry_val.get().replace(',', '.'))
             except ValueError:
-                # todo: warning window oder so falls text eingegben..
+                GUIStatics.window_error(self, "Enter coordinates as integer or float!")
                 x_entry = 0.0
                 y_entry = 0.0
             polygon_nodes.append([x_entry, y_entry])
@@ -916,5 +916,5 @@ class Geometry(tk.Toplevel):
 
 
 if __name__ == '__main__':
-    geo = Geometry(lambda x: x)  # Todo - Develop: For testing Geometry gui, argument simulates callback
+    geo = Geometry(lambda x: x, None)  # Todo - Develop: For testing Geometry gui, argument simulates callback
     geo.mainloop()

@@ -19,7 +19,7 @@ from PIL import ImageTk
 
 #################################################
 # Other
-AUTHOR = 'Elias Perras'
+AUTHOR = 'Elias Perras, Marius Mellmann'
 VERSION_MAJOR = 1
 VERSION_MINOR = 0
 VERSION_PATCH = 0
@@ -292,7 +292,7 @@ class GUI(tk.Tk):
             self.set_icon(window_help)
 
             help_txt_t = f"Welcome to TinyFEM"
-            help_txt_author_version = (f"Author: {AUTHOR}\n"
+            help_txt_author_version = (f"Authors: {AUTHOR}\n"
                                        f"Version: {VERSION_MAJOR}.{VERSION_MINOR}.{VERSION_PATCH}")
             help_txt_inst = (f"1) Click Button GEOMETRY to define geometry in GEOMETRY EDITOR\n\n"
                              f"2) After defining geometry select equation to solve\n"
@@ -318,7 +318,7 @@ class GUI(tk.Tk):
                      justify="center") \
                 .place(relx=0.1, rely=0.1)
             tk.Label(window_help, text=help_txt_author_version, font=GUIStatics.STANDARD_FONT_MID, anchor="center",
-                     justify="center") \
+                     justify="left") \
                 .place(relx=0.1, rely=0.175)
             tk.Label(window_help, text='Instructions', font=GUIStatics.STANDARD_FONT_BIG_BOLD, anchor="w",
                      justify="left") \
@@ -587,7 +587,7 @@ class GUI(tk.Tk):
                                                     font=GUIStatics.STANDARD_FONT_SMALL, width=8)
             entry_material_c_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.33)
 
-            tk.Label(window_bcs, text="Density [m/s]:", font=GUIStatics.STANDARD_FONT_SMALL) \
+            tk.Label(window_bcs, text="Density [kg/m³]:", font=GUIStatics.STANDARD_FONT_SMALL) \
                 .place(relx=widgets_x_start + 0.025, rely=0.38)
             entry_material_rho_value = tk.StringVar()
             entry_material_rho_value.set('0')
@@ -720,7 +720,7 @@ class GUI(tk.Tk):
                     entry_boundary_value_field.config(state='normal')
                     entry_boundary_value_B_field.config(state='disabled')
                 elif boundary_type_selected == 'Robin':
-                    entry_label_a.config(text='Fluid Temp:')
+                    entry_label_a.config(text='Fluid Temp T:')
                     entry_label_b.config(text='Heat TC h:')
                     entry_label_a_note.config(text='[K]')
                     entry_label_b_note.config(text='[W/(m²K)]')
