@@ -57,12 +57,31 @@ class CreateMesh:
         self.boundary_nodes = list()
         self.normalize_density()
         self.get_negative_areas()
+        self.adjust_density()
         self.triangulate_regions()
         self.get_single_nodes_pos()
         self.get_boundary_nodes_pos()
 
 
         return self.nodes, self.single_nodes_dict, self.boundary_nodes_dict, self.triangulation, self.triangulation_region_dict
+
+    def adjust_density(self):
+        """
+        Adjust density for small areas (either x or y)
+        :return:
+        """
+        self.region_size_dict = dict()
+        for reg_nbr, values in self.region_parameters.items():
+            region_nodes = np.array(values['coordinates'])
+            min_x, min_y, max_x, max_y = self.get_min_max_values(region_nodes)
+            rect_size_x = np.linalg.norm(max_x - min_x)
+            rect_size_y = np.linalg.norm(max_y - min_y)
+            self.region_size_dict[reg_nbr] = {'rect_size_x': rect_size_x, 'rect_size_y': rect_size_y}
+        regions_max_x = max([elem['rect_size_x'] for elem in self.region_size_dict.values()])
+        regions_max_y = max([elem['rect_size_y'] for elem in self.region_size_dict.values()])
+        for reg_nbr, values in self.region_size_dict.items():
+            self.region_size_dict[reg_nbr]['factor_x'] = self.region_size_dict[reg_nbr]['rect_size_x'] / regions_max_x
+            self.region_size_dict[reg_nbr]['factor_y'] = self.region_size_dict[reg_nbr]['rect_size_y'] / regions_max_y
 
     @timing_decorator
     @staticmethod
@@ -269,9 +288,9 @@ class CreateMesh:
     def normalize_density(self):
         """
         density ist dict mit stufen: 1: sehr grob ... 5: sehr fein
-        1: 2 node pro Einheitsunit (Einheitsunit = distance 1.0 in x, y Richtung)
-        2: 4 nodes pro Einheitsunit
-        3: 10 nodes pro Einheitsunit
+        1: 3 node pro Einheitsunit (Einheitsunit = distance 1.0 in x, y Richtung)
+        2: 8 nodes pro Einheitsunit
+        3: 15 nodes pro Einheitsunit
         4: 30 nodes pro Einheitsunit
         5: 80 nodes pro Einheitsunit
         :return:
@@ -305,20 +324,33 @@ class CreateMesh:
                 self.negative_areas.append(reg)
 
     @timing_decorator
-    def seed_region(self, region):
+    def seed_region(self, region, region_nbr):
         """
         Creates seed points for region
         :return:
         """
+        factor_dict = {1: 1,
+                       0.5: 1,
+                       0.25: 2,
+                       0.1: 3,
+                       0: 3
+                       }
+        factor_x = self.region_size_dict[region_nbr]['factor_x']
+        factor_y = self.region_size_dict[region_nbr]['factor_y']
+        factor_x_adj = sorted([val for val in factor_dict.keys() if val <= factor_x])[-1]
+        factor_x_adj = factor_dict[factor_x_adj]
+        factor_y_adj = sorted([val for val in factor_dict.keys() if val <= factor_y])[-1]
+        factor_y_adj = factor_dict[factor_y_adj]
+        factor_keep = max([factor_x_adj, factor_y_adj])
+
 
         if region['area_neg_pos'] == 'Positive':
             region_nodes = np.array(region['coordinates'])
             min_x, min_y, max_x, max_y = self.get_min_max_values(region_nodes)
             rect_size_x = np.linalg.norm(max_x - min_x)
             rect_size_y = np.linalg.norm(max_y - min_y)
-            nbr_points_x = math.floor(rect_size_x / self.density) + 1
-            nbr_points_y = math.floor(rect_size_y / self.density) + 1
-
+            nbr_points_x = math.floor(factor_x_adj * rect_size_x / self.density) + 1
+            nbr_points_y = math.floor(factor_y_adj * rect_size_y / self.density) + 1
             x_points = np.linspace(min_x, max_x, nbr_points_x)
             y_points = np.linspace(min_y, max_y, nbr_points_y)
             x_grid, y_grid = np.meshgrid(x_points, y_points)
@@ -333,11 +365,11 @@ class CreateMesh:
                     negative_area_coords = np.array(negative_area['coordinates'])
                     if CreateMesh.check_vertice_in_polygon_area(point, negative_area_coords) \
                             or CreateMesh.check_vertice_in_polygon_outline(point, negative_area_coords,
-                                                                           tolerance=self.density / 4):
+                                                                           tolerance=self.density / (4 * factor_keep)):
                         point_in_any_negative_area = True
                 point_in_polygon_area = CreateMesh.check_vertice_in_polygon_area(point, region_nodes)
                 point_in_polygon_outline = CreateMesh.check_vertice_in_polygon_outline(point, region_nodes,
-                                                                                       tolerance=self.density / 4)
+                                                                                       tolerance=self.density / (4 * factor_keep))
                 if point_in_polygon_area and not point_in_polygon_outline and not point_in_any_negative_area:
                     keep_points.append(idn)
             filtered_seed_points = rect_seed_points[keep_points]
@@ -345,13 +377,14 @@ class CreateMesh:
             return filtered_seed_points
 
     @timing_decorator
-    def create_line_vertices(self, line: np.array) -> np.array:
+    def create_line_vertices(self, line: np.array, region_nbr) -> np.array:
         """
         Creates points on a line specified by line. The number of points is given by density which specifies the average
         distance between 2 points (floored!)
         :param line: np.array([x_coord0, y_coord0], [x_coord1, y_coord1])
         :return: np.array
         """
+
         start_point = line[0]
         end_point = line[1]
         distance = np.linalg.norm(start_point - end_point)
@@ -361,12 +394,13 @@ class CreateMesh:
         return subdivision_points
 
     @timing_decorator
-    def seed_boundary(self, region):
+    def seed_boundary(self, region, region_nbr):
         """
 
         :param region:
         :return:
         """
+
         region_nodes = np.array(region['coordinates'])
         if not np.array_equal(region_nodes[0], region_nodes[-1]):
             region_nodes = np.append(region_nodes, region_nodes[0].reshape(1, -1), axis=0)
@@ -376,31 +410,33 @@ class CreateMesh:
             end_point = region_nodes[nv + 1]
             line = np.array([start_point, end_point])
             if nv == 0:
-                interpolation = self.create_line_vertices(line)
+                interpolation = self.create_line_vertices(line, region_nbr)
                 outline_vertices = interpolation[:-1]
                 self.boundary_nodes.append(interpolation)
             else:
-                interpolation = self.create_line_vertices(line)
+                interpolation = self.create_line_vertices(line, region_nbr)
                 outline_vertices = np.append(outline_vertices, interpolation[:-1], axis=0)
                 self.boundary_nodes.append(interpolation)
 
         return outline_vertices
 
     @timing_decorator
-    def triangulate_region(self, region):
+    def triangulate_region(self, region, region_nbr):
         """
         Creates seed points for all regions
         :return:
         """
 
-        seed_points_area = self.seed_region(region)
+
+        seed_points_area = self.seed_region(region, region_nbr)
         #CreateMesh.plot_polygon_points(seed_points_area, self.positive_regions, self.negative_regions)  # dev
-        seed_points_boundary = self.seed_boundary(region)
+        seed_points_boundary = self.seed_boundary(region, region_nbr)
         #CreateMesh.plot_polygon_points(seed_points_boundary, self.positive_regions, self.negative_regions)  # dev
         seed_points = np.append(seed_points_area, seed_points_boundary, axis=0)
 
         # check if negative area inside:
         for reg in self.negative_areas:
+            print("QWE - TODO: NEGATIVE AREAS -> seed_points_boundary = self.seed_boundary(reg, 0) 0 sollte region_nbr sein...", reg)
             neg_inside = True
             reg_nodes = reg['coordinates']
             for node in reg_nodes:
@@ -408,7 +444,7 @@ class CreateMesh:
                     neg_inside = False
                     break
             if neg_inside:
-                seed_points_boundary = self.seed_boundary(reg)
+                seed_points_boundary = self.seed_boundary(reg, 0)
                 seed_points = np.append(seed_points, seed_points_boundary, axis=0)
                 #CreateMesh.plot_polygon_points(seed_points_boundary, self.positive_regions, self.negative_regions)  # dev
 
@@ -519,7 +555,7 @@ class CreateMesh:
         for region_nbr, region in self.region_parameters.items():
             print(f"Region {region_nbr} / {len(self.region_parameters.items())}", end='\r')  # This does not show in pycharm, only via cmd / .exe
             if region['area_neg_pos'] == 'Positive':
-                nodes_region, triangles_region = self.triangulate_region(region)  # todo besserer algo für boundaries
+                nodes_region, triangles_region = self.triangulate_region(region, region_nbr)  # todo besserer algo für boundaries
                 if c_pos:
                     nodes_all = np.append(nodes_all, nodes_region, axis=0)
                     triangles_all = np.append(triangles_all, triangles_region, axis=0)
