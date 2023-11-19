@@ -7,17 +7,19 @@ import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 from matplotlib.patches import Polygon
 from matplotlib.path import Path
+import matplotlib
 
 ############################################################
 FILENBR = 1
-EQ = 'HE'  # either HE for Heat Equation or HH for Helmholtz
-HH_M = 'P'  # Either P for Pressure or SPL for sound pressure levle
+EQ = 'HH'  # either HE for Heat Equation or HH for Helmholtz
+HH_M = 'SPL'  # Either P for Pressure or SPL for sound pressure levle
 ############################################################
 
 DATA_PATH_WLG = os.path.join('Verification', 'Verifikation WLG')
-DATA_PATH_HH = os.path.join('Verification', 'Verifikation WLG')
-DATA_FILE = 'veri_wlg_' + str(FILENBR) + '.txt'
-POLY_FILE = 'veri_wlg_' + str(FILENBR) + '_geom.txt'
+DATA_PATH_HH = os.path.join('Verification', 'Verifikation_HH')
+str_me = 'veri_wlg_' if EQ == 'HE' else 'veri_HH_'
+DATA_FILE = str_me + str(FILENBR) + '_100Hz.txt'       # input file for verification
+POLY_FILE = str_me + str(FILENBR) + '_geom.txt'  # for creating mesh in tinyfem
 PATH_SOL = os.path.join(DATA_PATH_WLG, DATA_FILE) if EQ == 'HE' else os.path.join(DATA_PATH_HH, DATA_FILE)
 PATH_POLY = os.path.join(DATA_PATH_WLG, POLY_FILE) if EQ == 'HE' else os.path.join(DATA_PATH_HH, POLY_FILE)
 
@@ -69,8 +71,8 @@ def plot_solution(solution_cloud, polygon_merged):
 
     # Define polygon corner points TODO: read from data file
 
-    polygon = Polygon(polygon_merged, closed=True, facecolor='white', linewidth=0)
-    plt.gca().add_patch(polygon)
+    #polygon = Polygon(polygon_merged, closed=True, facecolor='white', linewidth=0)
+    #plt.gca().add_patch(polygon)
 
     # Create a triangulation
     triangulation = tri.Triangulation(x, y)
@@ -83,9 +85,10 @@ def plot_solution(solution_cloud, polygon_merged):
             cmap = 'cool'
         else:
             cmap = 'inferno'
-    contour = plt.tripcolor(triangulation, z, cmap=cmap)
+    contour = plt.tripcolor(triangulation, z, cmap=cmap, vmin=90, vmax=115)
     plt.colorbar()
-    contour.set_clip_path(polygon)
+    #contour.set_clip_path(polygon)
+    plt.gca().set_aspect('equal')
 
     # Customize labels and title
     plt.xlabel('X')
@@ -129,6 +132,8 @@ def read_polygon(polyfile):
             polynodes = eval(line[1:])
             polynodes = polynodes + [polynodes[0]]
             polynodes = np.array(polynodes)
+            if FILENBR == 2 and EQ == 'HE':
+                polynodes *= 3
             polygons.append(polynodes)
 
 
@@ -153,10 +158,10 @@ def read_polygon(polyfile):
 
 
 def main():
-    ...
-    #solution_cloud = open_file(PATH_SOL)
+    matplotlib.use('TkAgg')
+    solution_cloud = open_file(PATH_SOL)
     polygon_merged, poly_tinyfem  = read_polygon(PATH_POLY)
-    #plot_solution(solution_cloud, polygon_merged)
+    plot_solution(solution_cloud, polygon_merged)
     print(poly_tinyfem)
 
 main()

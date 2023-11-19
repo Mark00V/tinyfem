@@ -50,7 +50,7 @@ class CreateMesh:
         self.triangulation_region_dict = None
 
         # Develop
-        self.file_path_dev = r'testing/output_gui_4_calcfem_' + '10' + '.txt'
+        self.file_path_dev = r'testing/output_gui_4_calcfem_HE_' + '1' + '.txt'
 
     @timing_decorator
     def create_mesh(self):

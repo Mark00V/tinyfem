@@ -1,36 +1,6 @@
-import tkinter as tk
+import numpy as np
 
-class Tooltip:
-    def __init__(self, widget, text):
-        self.widget = widget
-        self.text = text
-        self.tooltip = None
-        self.widget.bind("<Enter>", self.show_tooltip)
-        self.widget.bind("<Leave>", self.hide_tooltip)
-
-    def show_tooltip(self, event):
-        x, y, _, _ = self.widget.bbox("insert")
-        x += self.widget.winfo_rootx() + 80
-        y += self.widget.winfo_rooty() + 50
-
-        self.tooltip = tk.Toplevel(self.widget)
-        self.tooltip.wm_overrideredirect(True)
-        self.tooltip.wm_geometry(f"+{x}+{y}")
-
-        label = tk.Label(self.tooltip, text=self.text, background="lightyellow", relief="solid", borderwidth=1)
-        label.pack()
-
-    def hide_tooltip(self, event):
-        if self.tooltip:
-            self.tooltip.destroy()
-            self.tooltip = None
-
-root = tk.Tk()
-root.title("Tooltip Example")
-
-label = tk.Label(root, text="Hover over me for a tooltip.")
-label.pack(pady=20)
-
-tooltip = Tooltip(label, "This is a tooltip message.")
-
-root.mainloop()
+x = np.array([[0.3, 0.2], [0.4, 0.21], [0.5, 0.24], [0.6, 0.3], [0.7, 0.4], [0.76, 0.5], [0.79, 0.6], [0.8, 0.7], [0.8, 0.2]]) * 3
+y = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.8, 1.0], [0.8, 0.8], [0.8, 0.2], [0.2, 0.2], [0.0, 0.2]]) * 3
+print(x.tolist())
+print(y.tolist())
