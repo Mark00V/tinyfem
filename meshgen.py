@@ -29,7 +29,7 @@ class CreateMesh:
 
 
     # For more printing in Development
-    DEV = True
+    DEV = False
 
     def __init__(self, region_parameters, boundary_parameters, node_parameters, calculation_parameters):
         # input parameters
@@ -436,7 +436,7 @@ class CreateMesh:
 
         # check if negative area inside:
         for reg in self.negative_areas:
-            print("QWE - TODO: NEGATIVE AREAS -> seed_points_boundary = self.seed_boundary(reg, 0) 0 sollte region_nbr sein...", reg)
+            #print("QWE - TODO: NEGATIVE AREAS -> seed_points_boundary = self.seed_boundary(reg, 0) 0 sollte region_nbr sein...", reg)
             neg_inside = True
             reg_nodes = reg['coordinates']
             for node in reg_nodes:

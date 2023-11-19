@@ -130,9 +130,9 @@ class ShowSolution(tk.Toplevel):
             self.canvas_mpl_widget.place(relx=canvas_x + 0.0075 + 0.003, rely=canvas_y + 0.006)
 
 
-        # Help Button
-        tk.Button(self, text="HELP", command=show_help, width=8,
-                                           font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.9, rely=0.025)
+        # Help Button todo: WIP
+        # tk.Button(self, text="HELP", command=show_help, width=8,
+        #                                    font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.9, rely=0.025)
 
         GUIStatics.create_divider(self, widgets_x_start, 0.08, 230)
         # export solution as csv file button
@@ -144,11 +144,11 @@ class ShowSolution(tk.Toplevel):
                                            font=GUIStatics.STANDARD_FONT_BUTTON_BIG_BOLD, height=1).place(relx=widgets_x_start, rely=0.15)
 
         GUIStatics.create_divider(self, widgets_x_start, 0.21, 230)
-        # get min/max value buttons
-        tk.Button(self, text="MIN VAL", command=get_min_value, width=8,
-                                           font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start, rely=0.23)
-        tk.Button(self, text="MAX VAL", command=get_max_value, width=8,
-                                           font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start + 0.095, rely=0.23)
+        # get min/max value buttons TODO: WIP
+        # tk.Button(self, text="MIN VAL", command=get_min_value, width=8,
+        #                                    font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start, rely=0.23)
+        # tk.Button(self, text="MAX VAL", command=get_max_value, width=8,
+        #                                    font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start + 0.095, rely=0.23)
 
         if self.calculation_parameters['equation'] == 'HH':
             tk.Button(self, text="SOUND PRESSURE LEVEL", command=show_spl, width=24,

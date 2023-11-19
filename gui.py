@@ -16,6 +16,7 @@ from guistatics import GUIStatics, Tooltip
 from meshgen import CreateMesh
 from showsolution import ShowSolution
 from PIL import ImageTk
+import numpy as np
 
 #################################################
 # Other
@@ -269,8 +270,16 @@ class GUI(tk.Tk):
                            self.triangulation_region_dict)
             params_boundaries_materials = (
             self.region_parameters, self.boundary_parameters, self.node_parameters, self.calculation_parameters)
-            calcfem = CalcFEM(params_mesh, params_boundaries_materials)
-            self.solution = calcfem.calc_fem()
+            try:
+                calcfem = CalcFEM(params_mesh, params_boundaries_materials)
+                self.solution = calcfem.calc_fem()
+            except np.linalg.LinAlgError:
+                err_message = ('Singular Matrix encountered!\n'
+                               'Check Boundary Conditions \n'
+                               'and/or \n'
+                               'try lower/higher mesh density.')
+                GUIStatics.window_error(self, err_message)
+                return None
             ShowSolution(self.solution, self.nodes_mesh_gen, self.triangulation, self.calculation_parameters)  # opens window for solution
 
         # Button define Geometry
@@ -326,9 +335,37 @@ class GUI(tk.Tk):
             tk.Label(window_help, text=help_txt_inst, font=GUIStatics.STANDARD_FONT_MID, anchor="w", justify="left") \
                 .place(relx=0.1, rely=0.29)
 
+        def show_license():
+            """
+            Button action to show help window for GUI
+            :return:
+            """
+            window_lic = tk.Toplevel(self)
+            window_lic.title('LICENSE INFORMATION')
+            window_lic.geometry(f"{800}x{600}")
+            window_lic.resizable(False, False)
+            self.set_icon(window_lic)
+
+            lic_info_str = ('LICENSE INFORMATION - TinyFEM and included libraries\n\n'
+                            'TinyFEM uses the following external libraries:\n'
+                            'PIL, NUMPY, ZLIB, MATPLOTLIB, SCIPY\n'
+                            'License information is included below (please scroll down)\n\n')
+            lics = GUIStatics.return_license_info()
+            lic_info_str += lics
+
+            lic_info = tk.Text(window_lic, height=38, width=108, wrap=tk.WORD,
+                                            font=GUIStatics.STANDARD_FONT_SMALL, bg='light gray', fg='black')
+            lic_info.place(relx=0.025, rely=0.05)
+            lic_info.insert(tk.END, lic_info_str)
+            lic_info.config(state='disabled')
+
+
         # Help Button
-        tk.Button(self, text="HELP", command=show_help, width=8,
-                  font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.9, rely=0.025)
+        tk.Button(self, text="HELP", command=show_help, width=7,
+                  font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.92, rely=0.025)
+        # License Button
+        tk.Button(self, text="LICENSE", command=show_license, width=7,
+                  font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.85, rely=0.025)
 
         # Button show Mesh and show Geometry
         button_show_mesh = tk.Button(self, text="SHOW MESH", command=show_mesh, width=12,
@@ -410,12 +447,12 @@ class GUI(tk.Tk):
 
         # Debug
         # Reformat Boundaryconditions via CreateBCParams todo: THIS IS ONLY NEEDED FOR DEVELOPMENT
-        button_create_bc = tk.Button(self, text="FORM BCS", command=self.create_BC_params, width=10,
-                                     height=1, font=('Arial', 6))
-        button_create_bc.place(relx=0.01, rely=0.01)
-        button_debug = tk.Button(self, text="DEBUG", command=self.debug, width=10,
-                                 height=1, font=('Arial', 6))
-        button_debug.place(relx=0.07, rely=0.01)
+        # button_create_bc = tk.Button(self, text="FORM BCS", command=self.create_BC_params, width=10,
+        #                              height=1, font=('Arial', 6))
+        # button_create_bc.place(relx=0.01, rely=0.01)
+        # button_debug = tk.Button(self, text="DEBUG", command=self.debug, width=10,
+        #                          height=1, font=('Arial', 6))
+        # button_debug.place(relx=0.07, rely=0.01)
 
         ##################################################
         # Developing

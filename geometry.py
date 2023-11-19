@@ -826,9 +826,10 @@ class Geometry(tk.Toplevel):
             print(f"self.points: {self.points}")
             print(f"self.geometry_input: {geometry_input}")
 
-        button_debug = tk.Button(self, text="DEBUG", command=debug,
-                                 width=5, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
-        button_debug.place(relx=0.96, rely=0.005)
+        # For Debug
+        # button_debug = tk.Button(self, text="DEBUG", command=debug,
+        #                          width=5, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
+        # button_debug.place(relx=0.96, rely=0.005)
         ##################################################
 
         self.update_graphics()  # if Geometry class is loaded with input self.geometry_input, see init
