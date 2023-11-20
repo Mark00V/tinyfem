@@ -1,6 +1,6 @@
 # TinyFEM
 A tiny FEM software with graphical interface to define geometry and solve the heat and Helmholtz equations. 
-![thumbnail]([supp/tinyfem_demo.jpg](https://github.com/Mark00V/tinyfem/blob/main/supp/tinyfem_demo.jpg])
+![thumbnail](https://github.com/Mark00V/tinyfem/blob/main/supp/tinyfem_demo.jpg])
 ## Table of Contents
 - About
 - Running TinyFEM
