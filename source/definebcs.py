@@ -1,4 +1,26 @@
 """
+#######################################################################
+LICENSE INFORMATION
+This file is part of TinyFEM.
+
+TinyFEM is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+TinyFEM is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with TinyFEM. If not, see <https://www.gnu.org/licenses/>.
+#######################################################################
+
+#######################################################################
+Description:
+File performs some transformations for boundary conditions.
+
 Define the boundarie conditions and region parameters
 This class is independend from GUI and only prepares output to be flagged and set in boundary and parameter gui
 
@@ -26,7 +48,8 @@ self.regions: {'0': {'coordinates': [(0.1, -0.2), (1.5, -0.2), (1.5, 1.1), (0.0,
 self.boundaries: {'0': ((0.1, -0.2), (1.5, -0.2)), '1': ((1.5, -0.2), (1.5, 1.1)), '2': ((1.5, 1.1), (0.0, 1.1)), '3': ((0.0, 1.1), (0.1, -0.2)), '4': ((0.6, 0.5), (0.8, 0.8)), '5': ((0.8, 0.8), (0.8, 0.2)), '6': ((0.8, 0.2), (0.6, 0.5)), '7': ((1.5, -1.5), (2.5, 0.0)), '8': ((2.5, 0.0), (2.5, 2.5)), '9': ((2.5, 2.5), (1.5, 2.5)), '10': ((1.5, 2.5), (1.5, 1.1)), '11': ((1.5, -0.2), (1.5, -1.5))}
 self.nodes: {'0': (0.5, 0.5), '1': (2.0, 0.2), '2': (0.1, -0.2), '3': (1.5, -0.2), '4': (1.5, 1.1), '5': (0.0, 1.1), '6': (0.6, 0.5), '7': (0.8, 0.8), '8': (0.8, 0.2), '9': (1.5, -1.5), '10': (2.5, 0.0), '11': (2.5, 2.5), '12': (1.5, 2.5)}
 
-no nodes:
+no nodes: ...
+#######################################################################
 """
 
 

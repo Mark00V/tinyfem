@@ -1,3 +1,28 @@
+"""
+#######################################################################
+LICENSE INFORMATION
+This file is part of TinyFEM.
+
+TinyFEM is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+TinyFEM is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with TinyFEM. If not, see <https://www.gnu.org/licenses/>.
+#######################################################################
+
+#######################################################################
+Description:
+Generation of the mesh for defined geometry
+#######################################################################
+"""
+
 import numpy as np
 import matplotlib.path as mpath
 import math
@@ -50,7 +75,7 @@ class CreateMesh:
         self.triangulation_region_dict = None
 
         # Develop
-        self.file_path_dev = r'testing/output_gui_4_calcfem_HE_' + '1' + '.txt'
+        self.file_path_dev = r'testing/output_gui_4_calcfem_' + '2' + '.txt'
 
     @timing_decorator
     def create_mesh(self):
@@ -136,13 +161,9 @@ class CreateMesh:
 
             # if point is on line -> True
             direction_vector = end_point - start_point
-            with warnings.catch_warnings(record=True) as w:
-                normal_vector = np.array([-direction_vector[1], direction_vector[0]])  # todo: manchmal hier runtime warning...
-                normal_vector_ = normal_vector / np.linalg.norm(normal_vector)
-                if w:
-                    for warning in w:
-                        if issubclass(warning.category, RuntimeWarning):
-                            ...
+            normal_vector = np.array([-direction_vector[1], direction_vector[0]])  # todo: manchmal hier runtime warning...
+            normal_vector_ = normal_vector / np.linalg.norm(normal_vector)
+
             first_point_new_rect = np.array(
                 [(start_point[0] - tolerance * normal_vector_[0]), (start_point[1] - tolerance * normal_vector_[1])])
             second_point_new_rect = np.array(
@@ -648,7 +669,7 @@ if __name__ == '__main__':
     createmesh = CreateMesh(*params1)  # Todo - Develop: For testing mesh
     createmesh.develop()
     nodes, single_nodes_dict, boundary_nodes_dict, triangulation, triangulation_region_dict = createmesh.create_mesh()
-    CreateMesh.plot_polygon_points(nodes, createmesh.positive_regions, createmesh.negative_regions)
+    #CreateMesh.plot_polygon_points(nodes, createmesh.positive_regions, createmesh.negative_regions)
     # for bnd, vals in boundary_nodes_dict.items():
     #     print(bnd, vals)
     # params

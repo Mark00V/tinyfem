@@ -1,9 +1,34 @@
+"""
+#######################################################################
+LICENSE INFORMATION
+This file is part of TinyFEM.
+
+TinyFEM is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+TinyFEM is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with TinyFEM. If not, see <https://www.gnu.org/licenses/>.
+#######################################################################
+
+#######################################################################
+Description:
+Plotting of solution and transformation of solution
+#######################################################################
+"""
+
 import tkinter as tk
 import math
 from typing import Callable, Any
 from tkinter import filedialog
 import json
-from guistatics import GUIStatics
+from source.guistatics import GUIStatics
 import numpy as np
 from tkinter import ttk
 from matplotlib.figure import Figure
@@ -50,10 +75,7 @@ class ShowSolution(tk.Toplevel):
         self.resizable(False, False)
         self.title('TinyFEM - SOLUTION')
         self.geometry(f"{GUIStatics.GEOM_WINDOW_SIZE_X}x{GUIStatics.GEOM_WINDOW_SIZE_Y}")
-        try:
-            self.iconbitmap('tiny_fem_icon.ico')
-        except tk.TclError:
-            ...  # todo: Muss für exe mitgepackt werden...???
+
         ##################################################
         # Position of elements
         # canvas
@@ -91,7 +113,7 @@ class ShowSolution(tk.Toplevel):
                     file.write(export_string)
 
         def export_image():
-            file_path = "Output_solution.png"  # Specify the file path and format here
+            file_path = "../Output_solution.png"  # Specify the file path and format here
             fig.savefig(file_path, dpi=200)
 
         def get_min_value():
@@ -130,7 +152,7 @@ class ShowSolution(tk.Toplevel):
             self.canvas_mpl_widget.place(relx=canvas_x + 0.0075 + 0.003, rely=canvas_y + 0.006)
 
 
-        # Help Button todo: WIP
+        # Help Button WIP
         # tk.Button(self, text="HELP", command=show_help, width=8,
         #                                    font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.9, rely=0.025)
 

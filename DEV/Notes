@@ -1,23 +1,15 @@
 #######################################################################################
 KNOWN BUGS:
--> check_geometry() in Class Geometry: Funktioniert nicht für Linien mit Steigung inf
--> testing/output_gui_4_calcfem_C6 -> Fehlerhafte Zuordnung von Knoten zu Boundaries, vermutlich bei Netzerstellung bei Abzug negatives Element.. boundary_nodes_dict fehlerhaft
--> Something is wring with saving the mesh in class Geometry
+-> check_geometry() in Class Geometry: DOes not work for 90° inclined lines
+-> Singular matrix for some meshes...
+-> compiled exe: save solution file does not work
 
 #######################################################################################
 TODOs:
---> Neumann für HH lediglich Impedanz -> In GUI umbenennen oder so...
---> GUI: Add button show geometry (nachdem Mesh generiert wurde)
---> GUI: Schreibe in Infofenster alle Infos!
+--> GUI: More infos about mesh, bcs etc.
 --> Output solution consecutive filename
 --> Docstrings and typehints
---> Weitere Überprüfung Geometrie auf Kompatibilität (Entweder in Klasse Geometry oder CreateBCParams)
---> Hilfe-Button in Fenstern GUI, GEOMETRY und SHOWSOLUTION mit kleiner Erläuterung
---> GEOMETRY: Bei Laden von Geometrie verschwindet Fenster GEOMETRY in Hintergrund
---> Unit sollte aus Geometry in Solution übernommen werden und für Achsen angezeigt werden
---> Bei ungültiger Geometrie wird CompatibilityError geraist --> sollte in Fehler-Fenster angezeigt werden
---> Trace für Anzeige Class Geometry Nodes und Polygons ähnlich Boundary Definition
---> Polygonerstellung und Punkteerstellung grafisch in Class Geometry ähnlich outdated Version von "Acoustics"
+--> Compatibility checks for geometry
 #######################################################################################
 CODEFLOW:
 
@@ -109,5 +101,5 @@ GUI (automatisch nach solve_system()) -> Class ShowSolution
 #######################################################################################
 
 Compile:
-pyinstaller --onefile --icon=tiny_fem_icon.ico gui.py
+pyinstaller --onefile --icon=tiny_fem_icon.ico main.py
 

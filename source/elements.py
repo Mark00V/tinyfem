@@ -1,3 +1,28 @@
+"""
+#######################################################################
+LICENSE INFORMATION
+This file is part of TinyFEM.
+
+TinyFEM is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+TinyFEM is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with TinyFEM. If not, see <https://www.gnu.org/licenses/>.
+#######################################################################
+
+#######################################################################
+Description:
+Definitions of elements for regions and boundaries
+#######################################################################
+"""
+
 import numpy as np
 from typing import Tuple, Union
 import math
@@ -260,7 +285,7 @@ class ElementMatrices:
     @staticmethod
     def boundary_element_p1(nodes: list, bc_std_a: float, bc_std_b: float, bc_std_g: float) -> np.array:
         """
-        TODO: Muss das Element überhaupt transformiert werden????
+        todo: transformation for inclined boundary correct / necessary?
 
         value_A: input from self.boundary_parameters[...]['bc']['value'] -> Value from Tuple[0] for Robin BC, Value for Neumann BC
         value_B: input from self.boundary_parameters[...]['bc']['value'] -> Value from Tuple[1] for Robin BC, None for Neumann BC
@@ -274,7 +299,6 @@ class ElementMatrices:
         def phi_p1(node: int, xi: float):
             """
             form function for 1D line element
-            todo: transformation for inclined boundary correct?
             :param node: node for formfunction
             :param xi:
             :return:

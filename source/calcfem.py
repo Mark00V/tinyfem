@@ -1,10 +1,32 @@
-# TODO:
-# Systematik Einarbeitung boundary conditions überarbeiten... Außerdem ist Neumann für HH lediglich Impedanz -> In GUI umbenennen oder so...
+"""
+#######################################################################
+LICENSE INFORMATION
+This file is part of TinyFEM.
+
+TinyFEM is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+TinyFEM is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with TinyFEM. If not, see <https://www.gnu.org/licenses/>.
+#######################################################################
+
+#######################################################################
+Description:
+File performs FEM calculations.
+#######################################################################
+"""
 
 
 from scipy.interpolate import griddata
 import numpy as np
-from elements import ElementMatrices
+from source.elements import ElementMatrices
 import matplotlib.tri as tri
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -12,7 +34,7 @@ import math
 from typing import List, Tuple, Union
 from scipy.sparse import coo_matrix
 import copy
-from guistatics import GUIStatics
+from source.guistatics import GUIStatics
 
 import matplotlib  # delete later, only used for development in matplotlib.use('Qt5Agg')
 
@@ -120,6 +142,7 @@ class CalcFEM:
         ########################################################################
         # solve system
         # self.develop_print_input()
+        self.print_matrix(self.sysmatrix_diri)
         self.solve_linear_system()
 
         ########################################################################

@@ -1,7 +1,26 @@
 """
-Description:
-...
+#######################################################################
+LICENSE INFORMATION
+This file is part of TinyFEM.
 
+TinyFEM is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+TinyFEM is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with TinyFEM. If not, see <https://www.gnu.org/licenses/>.
+#######################################################################
+
+#######################################################################
+Description:
+Main file for starting GUI
+#######################################################################
 """
 
 import math
@@ -9,12 +28,12 @@ import random
 import threading
 import time
 import tkinter as tk
-from calcfem import CalcFEM
-from definebcs import CreateBCParams
-from geometry import Geometry
-from guistatics import GUIStatics, Tooltip
-from meshgen import CreateMesh
-from showsolution import ShowSolution
+from source.calcfem import CalcFEM
+from source.definebcs import CreateBCParams
+from source.geometry import Geometry
+from source.guistatics import GUIStatics, Tooltip
+from source.meshgen import CreateMesh
+from source.showsolution import ShowSolution
 from PIL import ImageTk
 import numpy as np
 
@@ -24,7 +43,6 @@ AUTHOR = 'Elias Perras, Marius Mellmann'
 VERSION_MAJOR = 1
 VERSION_MINOR = 0
 VERSION_PATCH = 0
-
 #################################################
 
 
@@ -99,10 +117,6 @@ class GUI(tk.Tk):
 
 
         print("Starting...Please wait.")  # Console output when running as .exe
-        # try:
-        #     self.iconbitmap('tiny_fem_icon.ico')
-        # except tk.TclError:
-        #     ...  # Todo: Kann Icon mit Exe mitgepackt werden? Oder Alternativ supp Ordner erstellen, Exe in Hauptordner und in Supp noch Beispiele etc.
 
         self.title('TinyFEM - MAIN WINDOW')
         self.geometry(f"{GUIStatics.MAIN_WINDOW_SIZE_X}x{GUIStatics.MAIN_WINDOW_SIZE_Y}")
@@ -162,7 +176,6 @@ class GUI(tk.Tk):
 
         ##################################################
         self.equation = 'HE'  # Initialized value for equation
-
         ##################################################
         # Buttons
         def assign_BCs():
@@ -215,6 +228,8 @@ class GUI(tk.Tk):
             window_create_mesh_wait.title('CREATING MESH')
             window_create_mesh_wait.geometry(f"{200}x{150}")
             window_create_mesh_wait.resizable(False, False)
+            icon_image = ImageTk.PhotoImage(data=GUIStatics.return_icon_bytestring())
+            window_create_mesh_wait.tk.call('wm', 'iconphoto', window_create_mesh_wait._w, icon_image)
             tk.Label(window_create_mesh_wait, text="Creating Mesh...\nPlease Wait",
                      font=GUIStatics.STANDARD_FONT_MID_BOLD).place(relx=0.15, rely=0.1)
             window_create_mesh_wait_label = tk.Label(window_create_mesh_wait, text="",
@@ -263,24 +278,65 @@ class GUI(tk.Tk):
             TODO: threading during waittime
             :return:
             """
-            if self.calculation_parameters['equation'] == 'HH' and not self.calculation_parameters['freq']:
-                GUIStatics.window_error(self, 'Please set frequency first!')
-                return
-            params_mesh = (self.nodes_mesh_gen, self.single_nodes_dict, self.boundary_nodes_dict, self.triangulation,
-                           self.triangulation_region_dict)
-            params_boundaries_materials = (
-            self.region_parameters, self.boundary_parameters, self.node_parameters, self.calculation_parameters)
-            try:
-                calcfem = CalcFEM(params_mesh, params_boundaries_materials)
-                self.solution = calcfem.calc_fem()
-            except np.linalg.LinAlgError:
-                err_message = ('Singular Matrix encountered!\n'
-                               'Check Boundary Conditions \n'
-                               'and/or \n'
-                               'try lower/higher mesh density.')
-                GUIStatics.window_error(self, err_message)
-                return None
-            ShowSolution(self.solution, self.nodes_mesh_gen, self.triangulation, self.calculation_parameters)  # opens window for solution
+
+            def thread_solve_system():
+                """
+                Helper function for thread
+                :return:
+                """
+                if self.calculation_parameters['equation'] == 'HH' and not self.calculation_parameters['freq']:
+                    GUIStatics.window_error(self, 'Please set frequency first!')
+                    return
+                params_mesh = (
+                self.nodes_mesh_gen, self.single_nodes_dict, self.boundary_nodes_dict, self.triangulation,
+                self.triangulation_region_dict)
+                params_boundaries_materials = (
+                        self.region_parameters, self.boundary_parameters, self.node_parameters,
+                        self.calculation_parameters)
+                try:
+                    calcfem = CalcFEM(params_mesh, params_boundaries_materials)
+                    self.solution = calcfem.calc_fem()
+                except np.linalg.LinAlgError:
+                    err_message = ('Singular Matrix encountered!\n'
+                                   'Check Boundary Conditions \n'
+                                   'and/or \n'
+                                   'try lower/higher mesh density.')
+                    GUIStatics.window_error(self, err_message)
+                    return None
+
+                ShowSolution(self.solution, self.nodes_mesh_gen, self.triangulation,
+                             self.calculation_parameters)  # opens window for solution
+
+            window_solve_system_wait = tk.Toplevel(self)
+            window_solve_system_wait.title('SOLVING')
+            window_solve_system_wait.geometry(f"{200}x{150}")
+            window_solve_system_wait.resizable(False, False)
+            icon_image = ImageTk.PhotoImage(data=GUIStatics.return_icon_bytestring())
+            window_solve_system_wait.tk.call('wm', 'iconphoto', window_solve_system_wait._w, icon_image)
+            tk.Label(window_solve_system_wait, text="Solving System...\nPlease Wait",
+                     font=GUIStatics.STANDARD_FONT_MID_BOLD).place(relx=0.15, rely=0.1)
+            window_solve_system_wait_label = tk.Label(window_solve_system_wait, text="",
+                                                     font=GUIStatics.STANDARD_FONT_MID_BOLD)
+            window_solve_system_wait_label.place(relx=0.35, rely=0.6)
+            thread_mesh = threading.Thread(target=thread_solve_system)
+            thread_mesh.start()
+
+            def update_wait_label():
+                """
+                Helper function to update text in window appearing when mesh is calculated
+                :return:
+                """
+                wait_text = ''
+                while thread_mesh.is_alive():
+                    if wait_text == '.....':
+                        wait_text = ''
+                    wait_text += '.'
+                    window_solve_system_wait_label.config(text=wait_text)
+                    time.sleep(0.5)
+                window_solve_system_wait.destroy()
+
+            update_thread = threading.Thread(target=update_wait_label)
+            update_thread.start()
 
         # Button define Geometry
         tk.Frame(self, height=2, width=230, bg=GUIStatics.CANVAS_BORDER_COLOR) \
@@ -305,36 +361,43 @@ class GUI(tk.Tk):
                                        f"Version: {VERSION_MAJOR}.{VERSION_MINOR}.{VERSION_PATCH}")
             help_txt_inst = (f"1) Click Button GEOMETRY to define geometry in GEOMETRY EDITOR\n\n"
                              f"2) After defining geometry select equation to solve\n"
-                             f"     Heat Equation: Solves the stationary coupled heat equation -> T = d^2(T)/d(T^2)\n"
-                             f"     Helmholtz Equation: Solves the coupled Helmholtz equation -> d^2(P)/d(P^2) = -k^2 P\n\n"
+                             f"   Heat Equation: Solves the stationary coupled heat equation -> T = d^2(T)/d(T^2)\n"
+                             f"   Helmholtz Equation: Solves the coupled Helmholtz equation -> d^2(P)/d(P^2) = -k^2 P\n\n"
                              f"3) Select Boundary by clicking Button BOUNDARY CONDITIONS\n"
-                             f"     Select Boundary and Boundary Condition -> Dirichlet: Static values on Boundary\n"
+                             f"   Select Boundary and Boundary Condition -> Dirichlet: Static values on Boundary\n"
                              f"                               -> Neumann:   Flux on Boundary (WIP, not implemented yet)\n"
-                             f"     Input value and click SET VALUE\n"
-                             f"     Click ACCEPT BCs when finished\n\n"
+                             f"   Input value and click SET VALUE\n"
+                             f"   Click ACCEPT BCs when finished\n\n"
                              f"4) Select Material Parameters by clicking Button MATERIAL PARAMETERS\n"
-                             f"     Select region, input value and click SET VALUE\n"
-                             f"     Click ACCEPT REGIONs when finished\n\n"
+                             f"   Select region, input value and click SET VALUE\n"
+                             f"   Click ACCEPT REGIONs when finished\n\n"
                              f"5) Set Calculation Parameters by clicking Button CALCULATION PARAMETERS\n"
-                             f"     Select Mesh Density (1: very coarse, 2: coarse, 3: medium, 4: fine, 5: very fine\n"
-                             f"     If Helmholtz Equation is selected, set frequency\n"
-                             f"     Click ACCEPT CALCULATION PARAMETERS when finished\n\n"
+                             f"   Select Mesh Density (1: very coarse, 2: coarse, 3: medium, 4: fine, 5: very fine\n"
+                             f"   If Helmholtz Equation is selected, set frequency\n"
+                             f"   Click ACCEPT CALCULATION PARAMETERS when finished\n\n"
                              f"6) Click CREATE MESH\n"
                              f"   Click SHOW MESH to display mesh\n\n"
                              f"7) Click SOLVE to start FEM-Solver and open solution window\n")
 
             tk.Label(window_help, text=help_txt_t, font=GUIStatics.STANDARD_FONT_BIGGER_BOLD, anchor="center",
                      justify="center") \
-                .place(relx=0.1, rely=0.1)
+                .place(relx=0.1, rely=0.025)
             tk.Label(window_help, text=help_txt_author_version, font=GUIStatics.STANDARD_FONT_MID, anchor="center",
                      justify="left") \
-                .place(relx=0.1, rely=0.175)
+                .place(relx=0.1, rely=0.08)
             tk.Label(window_help, text='Instructions', font=GUIStatics.STANDARD_FONT_BIG_BOLD, anchor="w",
                      justify="left") \
-                .place(relx=0.1, rely=0.25)
+                .place(relx=0.1, rely=0.155)
             tk.Label(window_help, text=help_txt_inst, font=GUIStatics.STANDARD_FONT_MID, anchor="w", justify="left") \
-                .place(relx=0.1, rely=0.29)
+                .place(relx=0.1, rely=0.21)
+            lic_text = ("TinyFEM is licensed under the GNU GENERAL PUBLIC LICENSE Version 3\n"
+                        "No warranty of any kind is given for accuracy and correctness of the results.\n"
+                        "Any use is solely at the user's discretion. Commercial use is not recommended.")
 
+            tk.Label(window_help, text=lic_text, font=GUIStatics.STANDARD_FONT_SMALL, anchor="w", justify="left") \
+                .place(relx=0.1, rely=0.85)
+
+        # not necessary
         def show_license():
             """
             Button action to show help window for GUI
@@ -363,9 +426,10 @@ class GUI(tk.Tk):
         # Help Button
         tk.Button(self, text="HELP", command=show_help, width=7,
                   font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.92, rely=0.025)
-        # License Button
-        tk.Button(self, text="LICENSE", command=show_license, width=7,
-                  font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.85, rely=0.025)
+
+        # License Button, not necessary
+        # tk.Button(self, text="LICENSE", command=show_license, width=7,
+        #           font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.85, rely=0.025)
 
         # Button show Mesh and show Geometry
         button_show_mesh = tk.Button(self, text="SHOW MESH", command=show_mesh, width=12,
@@ -446,7 +510,7 @@ class GUI(tk.Tk):
         self.text_information.config(state='disabled')
 
         # Debug
-        # Reformat Boundaryconditions via CreateBCParams todo: THIS IS ONLY NEEDED FOR DEVELOPMENT
+        # Reformat Boundaryconditions via CreateBCParams, only needed for development
         # button_create_bc = tk.Button(self, text="FORM BCS", command=self.create_BC_params, width=10,
         #                              height=1, font=('Arial', 6))
         # button_create_bc.place(relx=0.01, rely=0.01)
@@ -975,8 +1039,8 @@ class GUI(tk.Tk):
         """
 
         self.geometry_input = geometry
-        geometry_input_str = str(geometry)  # todo, for testing
-        # self.text_label.config(text=geometry_input_str, font=("Helvetica", 6))  # todo, for testing
+        geometry_input_str = str(geometry)
+        # self.text_label.config(text=geometry_input_str, font=("Helvetica", 6))  # for testing
 
         format_for_params = CreateBCParams(self.geometry_input)
         self.regions, self.boundaries, self.nodes = format_for_params.main()
@@ -1204,7 +1268,7 @@ class GUI(tk.Tk):
                         f"self.triangulation_region_dict = {self.triangulation_region_dict}\n")
         write_output = write_output.replace('array', 'np.array')
         write_output = write_output.replace('np.np.', 'np.')
-        with open('output_from_gui.txt', 'w') as f:
+        with open('../DEV/output_from_gui.txt', 'w') as f:
             f.write(write_output)
 
 

@@ -1,9 +1,34 @@
+"""
+#######################################################################
+LICENSE INFORMATION
+This file is part of TinyFEM.
+
+TinyFEM is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+TinyFEM is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with TinyFEM. If not, see <https://www.gnu.org/licenses/>.
+#######################################################################
+
+#######################################################################
+Description:
+Definition for geometry.
+#######################################################################
+"""
+
 import tkinter as tk
 import math
 from typing import Callable, Any
 from tkinter import filedialog
 import json
-from guistatics import GUIStatics
+from source.guistatics import GUIStatics
 import copy
 from PIL import ImageTk
 
@@ -33,7 +58,7 @@ class Geometry(tk.Toplevel):
 
 
         self.polygon_nodes = [0]  # needed for update for select polygon dropdown (numbers for polygons in list)
-        # self.points = {'0': [0, 1], '1': [2, 3], '2': [-2, 3]}  # testing todo
+        # self.points = {'0': [0, 1], '1': [2, 3], '2': [-2, 3]}  # testing
 
         self.other = 'None'  # json dump does not support None
         self.highlight_element = None  # highlighting nodes and points
@@ -728,7 +753,7 @@ class Geometry(tk.Toplevel):
                     node_count_error = True
                     GUIStatics.window_error(self, f"Polygon {nbr} has less than three nodes!")
 
-            # check if lines in polygons intersect todo: works only if lines are not vertical...(missing slope)
+            # check if lines in polygons intersect !works only if lines are not vertical...(missing slope)!
             intersect_error = False
             for nbr, polygonvals in self.polygons.items():
                 nodes = copy.deepcopy(polygonvals['coordinates'])
@@ -758,13 +783,13 @@ class Geometry(tk.Toplevel):
                     break
 
             # check if negative polygon entirely inside one positive polygon
-            # TODO
+            # WIP
 
             # check if adjacent polygons share 2 nodes
-            # todo
+            # WIP
 
             # check if single point inside positive polygon
-            # todo
+            # WIP
 
             if node_count_error or intersect_error:
                 comp = False
@@ -875,7 +900,7 @@ class Geometry(tk.Toplevel):
             color_code_node = color_code_plus_node if polygon_neg_pos == 'Positive' else color_code_minus_node
             self.canvas.create_polygon(polygon_nodes_transformed, fill=color_code, outline='#341010', width=2)
 
-            # add text to polygon, todo: position besser finden
+            # add text to polygon, WIP: improve position finding
             middle_node = math.floor(len(polygon_nodes_transformed) / 2)
             if middle_node == 0:
                 middle_node = 1
@@ -908,7 +933,7 @@ class Geometry(tk.Toplevel):
         Callback method to return defined geometry to main class GUI
         :return:
         """
-        # todo: check if geometry is valid e.g. polgones have to be connects,
+        # WIP: check if geometry is valid e.g. polgones have to be connects,
         #  only one polygon can be subtracted, points have to be in valid area, etc.
         self.geometry_input = {'polygons': self.polygons, 'points': self.points, 'units': self.units, 'other': None}
 
@@ -917,5 +942,5 @@ class Geometry(tk.Toplevel):
 
 
 if __name__ == '__main__':
-    geo = Geometry(lambda x: x, None)  # Todo - Develop: For testing Geometry gui, argument simulates callback
+    geo = Geometry(lambda x: x, None)  # Develop: For testing Geometry gui, argument simulates callback
     geo.mainloop()

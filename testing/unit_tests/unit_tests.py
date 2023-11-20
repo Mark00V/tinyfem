@@ -1,5 +1,5 @@
 import numpy as np
-from meshgen import CreateMesh
+from source.meshgen import CreateMesh
 import unittest
 
 region_parameters1 = {'0': {'coordinates': [(-4.0, -3.0), (1.0, -2.5), (2.5, 1.0), (-2.5, 1.0), (-4.2, -1.5)],
