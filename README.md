@@ -39,7 +39,7 @@ The following non-standard libraries are needed to run TinyFEM:
 - scipy: https://scipy.org/ -> pip install scipy
 
 ## License
-The code in this repository is licensed under the [GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007](LICENSE).
+The code in this repository is licensed under the [GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007](LICENSE.md).
 
 _The authors: Elias Perras, Marius Mellmann_
 
