@@ -26,6 +26,7 @@ File performs FEM calculations.
 
 from scipy.interpolate import griddata
 import numpy as np
+#from source.celements import ElementMatrices  # little bit of improvement (10%)
 from source.elements import ElementMatrices
 import matplotlib.tri as tri
 import matplotlib.pyplot as plt
@@ -35,9 +36,26 @@ from typing import List, Tuple, Union
 from scipy.sparse import coo_matrix
 import copy
 from source.guistatics import GUIStatics
-
 import matplotlib  # delete later, only used for development in matplotlib.use('Qt5Agg')
+import time
+import scipy.sparse as sp
+from scipy.sparse.linalg import spsolve
+from scipy.sparse import csc_matrix
 
+time_it_dict = dict()
+
+def timing_decorator(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()  # Record the start time
+        result = func(*args, **kwargs)  # Call the original function
+        end_time = time.time()  # Record the end time
+        execution_time = end_time - start_time
+        try:
+            time_it_dict[func.__name__] += execution_time
+        except KeyError:
+            time_it_dict[func.__name__] = execution_time
+        return result
+    return wrapper
 
 class CalcFEM:
 
@@ -76,10 +94,9 @@ class CalcFEM:
         self.sysboundaries = None  # Boundary matrix e.g. impedance matrix for system
 
         # development
-        self.file_path_dev = r'testing/output_gui_4_calcfem_' + 'C6' + '.txt'
+        self.file_path_dev = r'K:/OneDrive/Science/PyCharmProjects/tinyfem/testing/output_gui_4_calcfem_' + '11' + '.txt'
 
-
-
+    @timing_decorator
     def calc_fem(self):
         """
         main method for calculation, calculates elementmatrices, assembly of system matrices,
@@ -141,7 +158,7 @@ class CalcFEM:
 
         ########################################################################
         # solve system
-        # self.develop_print_input()
+        #self.develop_print_input()
         self.print_matrix(self.sysmatrix_diri)
         self.solve_linear_system()
 
@@ -155,6 +172,7 @@ class CalcFEM:
         return self.solution
         ########################################################################
 
+    @timing_decorator
     def calc_system_matrices_robin_neumann_bc(self):
         """
 
@@ -168,6 +186,21 @@ class CalcFEM:
             omega = freq * 2 * math.pi
             self.sysarray_neumann_robin = self.syssteifarray - omega ** 2 * self.sysmassarray + omega * 1j * self.sysboundaries
 
+
+        # Sparse takes longer...
+        # syssteif_s = csc_matrix(self.syssteifarray)
+        # sysmass_s = csc_matrix(self.sysmassarray)
+        # sysbound_s = csc_matrix(self.sysboundaries)
+        #
+        # if self.equation == 'HE':
+        #     self.sysarray_neumann_robin = (syssteif_s + sysbound_s).toarray()
+        # elif self.equation == 'HH':  # todo: include in elementmatrices
+        #     freq = float(self.calculation_parameters['freq'])
+        #     omega = freq * 2 * math.pi
+        #     self.sysarray_neumann_robin = (syssteif_s - omega ** 2 * sysmass_s + omega * 1j * sysbound_s).toarray()
+
+
+    @timing_decorator
     def calc_boundary_elements(self):
         """
         calculates the boundary elements for neumann / robin BC
@@ -217,6 +250,7 @@ class CalcFEM:
                         self.allboundary_elements_forcevektor.append([e0[0], force_vector_matrix[0][0]])  # todo, only works for p=1
                         self.allboundary_elements_forcevektor.append([e1[0], force_vector_matrix[1][0]])
 
+    @timing_decorator
     def assembly_system_matrix_boundaries(self):
         """
         Assembles the system boundaries matrix e.g. for impedance of boundaries
@@ -235,6 +269,7 @@ class CalcFEM:
                     ztb = int(alloc_mat[ielem, b])
                     self.sysboundaries[zta, ztb] = self.sysboundaries[zta, ztb] + boundary_mat[a, b]
 
+    @timing_decorator
     def implement_robin_force_vector(self):
         """
 
@@ -248,6 +283,7 @@ class CalcFEM:
             value = elem[1]
             self.force_vector_neumann_robin[pos] = self.force_vector_neumann_robin[pos] + value
 
+    @timing_decorator
     def implement_acoustic_sources(self):
         """
         Implements acoustic source, if any, into force vector for calculation Helmholtz equation
@@ -256,6 +292,7 @@ class CalcFEM:
         for pos, val in self.acoustic_source:
             self.force_vector[pos] = self.force_vector[pos] + val
 
+    @timing_decorator
     def calculate_acoustic_sources(self):
         """
         calculates acoustic source values
@@ -275,6 +312,7 @@ class CalcFEM:
                 mpsource = 4 * math.pi / rho * ((2 * rho * omega) / ((2 * math.pi) ** 2)) ** 0.5
                 self.acoustic_source.append([node_pos, mpsource])
 
+    @timing_decorator
     def implement_dirichlet_boundary_conditions(self):
         """
 
@@ -302,6 +340,7 @@ class CalcFEM:
             self.sysmatrix_diri, self.force_vector_diri = self.implement_dirichlet_condition(dirichlet_list, self.sysarray_neumann_robin, self.force_vector_neumann_robin)
         else:  # no dirichlet conditions specified
             self.sysmatrix_diri, self.force_vector_diri = self.sysarray_neumann_robin, self.force_vector_neumann_robin
+
 
     @staticmethod
     def implement_dirichlet_condition(dirichlet_list: np.array, system_matrix: np.array, force_vector: np.array):
@@ -337,18 +376,23 @@ class CalcFEM:
 
         return sysmatrix_adj, force_vector_adj
 
+    @timing_decorator
     def solve_linear_system(self):
         """
 
         :return:
         """
         print(f"Solving system...")
-        self.solution = np.linalg.solve(self.sysmatrix_diri, self.force_vector_diri)
+        sysmat = sp.csr_matrix(self.sysmatrix_diri)
+        forcevec = self.force_vector_diri
+        self.solution = spsolve(sysmat, forcevec)
 
+    @timing_decorator
     def create_force_vector(self):
         maxnode = len(self.nodes_mesh_gen)
         self.force_vector = np.zeros(maxnode, dtype=np.double)
 
+    @timing_decorator
     def calc_system_matrices_init(self):
         """
 
@@ -371,12 +415,14 @@ class CalcFEM:
                     self.syssteifarray[zta, ztb] = self.syssteifarray[zta, ztb] + elesteifmat[a, b]
                     self.sysmassarray[zta, ztb] = self.sysmassarray[zta, ztb] + elemassmat[a, b]
 
+    @timing_decorator
     def calc_elementmatrices(self):
         """
 
         :return:
         """
 
+        @timing_decorator
         def get_region_number(idx: int):
             """
 
@@ -399,9 +445,9 @@ class CalcFEM:
             print(f"{idx} / {len(self.triangulation)}", end='\r')  # This does not show in pycharm, only via cmd / .exe
             b_region = get_region_number(idx)
             materials = self.region_parameters[b_region]['material']
-            k = materials['k']
-            c = materials['c']
-            rho = materials['rho']
+            k = float(materials['k'])
+            c = float(materials['c'])
+            rho = float(materials['rho'])
             p1, p2, p3 = int(triangle[0]), int(triangle[1]), int(triangle[2])
             x1 = self.nodes_mesh_gen[p1][0]
             y1 = self.nodes_mesh_gen[p1][1]
@@ -411,13 +457,14 @@ class CalcFEM:
             y3 = self.nodes_mesh_gen[p3][1]
             nodes = [[x1, y1], [x2, y2], [x3, y3]]
             if self.equation == 'HE':
-                elemsteif, elemmass = ElementMatrices.calc_2d_triangular_heatflow_p1(k, nodes)
+                elemsteif, elemmass = ElementMatrices.calc_2d_triangular_heatflow_p1_simp(k, nodes)
             elif self.equation == 'HH':
-                elemsteif, elemmass = ElementMatrices.calc_2d_triangular_acoustic_p1(c, rho, nodes)
+                elemsteif, elemmass = ElementMatrices.calc_2d_triangular_acoustic_p1_simp(c, rho, nodes)
             self.all_element_matrices_steif[idx] = elemsteif
             if elemmass is not None:  # since it might be a np.array
                 self.all_element_matrices_mass[idx] = elemmass
 
+    @timing_decorator
     def get_region_for_node_nbr(self, node):
         """
         Gets the region number for a node
@@ -428,6 +475,7 @@ class CalcFEM:
             if node in val:
                 return key
 
+    @timing_decorator
     def develop_print_input(self):
         print("\n\n\n------------------DEBUG--------------------")
         print(f"self.equation = {self.equation}")
@@ -600,4 +648,10 @@ if __name__ == '__main__':
     #                         '4': {'coordinates': (0.0, 1.0), 'bc': {'type': None, 'value': None}},
     #                         '5': {'coordinates': (1.0, 2.0), 'bc': {'type': None, 'value': None}}}
     # calcfem.calculation_parameters = {'mesh_density': 1, 'freq': None, 'equation': 'HE'}
+    # timing for dev:
+    print(f"\nTotal execution time          : {time_it_dict['calc_fem']:.4f}")
 
+    print(f"\nTiming of functions: ")
+    time_it_dict = dict(sorted(time_it_dict.items(), key=lambda x: x[1]))
+    for func, exectime in time_it_dict.items():
+        print(f"{str(func)[:29].ljust(30)}: {exectime:.4f}")

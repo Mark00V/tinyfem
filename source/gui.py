@@ -303,6 +303,12 @@ class GUI(tk.Tk):
                                    'try lower/higher mesh density.')
                     GUIStatics.window_error(self, err_message)
                     return None
+                except np.core._exceptions._ArrayMemoryError:
+                    err_message = ('Mesh too large!\n'
+                                   '(Sparse matrix calculation WIP)\n'
+                                   'Try lower mesh density.')
+                    GUIStatics.window_error(self, err_message)
+                    return None
 
                 ShowSolution(self.solution, self.nodes_mesh_gen, self.triangulation,
                              self.calculation_parameters)  # opens window for solution
@@ -511,12 +517,12 @@ class GUI(tk.Tk):
 
         # Debug
         # Reformat Boundaryconditions via CreateBCParams, only needed for development
-        # button_create_bc = tk.Button(self, text="FORM BCS", command=self.create_BC_params, width=10,
-        #                              height=1, font=('Arial', 6))
-        # button_create_bc.place(relx=0.01, rely=0.01)
-        # button_debug = tk.Button(self, text="DEBUG", command=self.debug, width=10,
-        #                          height=1, font=('Arial', 6))
-        # button_debug.place(relx=0.07, rely=0.01)
+        button_create_bc = tk.Button(self, text="FORM BCS", command=self.create_BC_params, width=10,
+                                     height=1, font=('Arial', 6))
+        button_create_bc.place(relx=0.01, rely=0.01)
+        button_debug = tk.Button(self, text="DEBUG", command=self.debug, width=10,
+                                 height=1, font=('Arial', 6))
+        button_debug.place(relx=0.07, rely=0.01)
 
         ##################################################
         # Developing

@@ -75,7 +75,7 @@ class CreateMesh:
         self.triangulation_region_dict = None
 
         # Develop
-        self.file_path_dev = r'testing/output_gui_4_calcfem_' + '2' + '.txt'
+        self.file_path_dev = r'K:/OneDrive/Science/PyCharmProjects/tinyfem/testing/output_gui_4_calcfem_' + '2' + '.txt'
 
     @timing_decorator
     def create_mesh(self):
