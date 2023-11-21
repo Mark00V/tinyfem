@@ -34,6 +34,7 @@ import warnings
 import copy
 import time
 import matplotlib  # delete later, only used for development in matplotlib.use('Qt5Agg')
+from suppfun import check_vertice_in_polygon_outline, point_in_list, check_vertice_in_polygon_area
 
 time_it_dict = dict()
 
@@ -174,7 +175,7 @@ class CreateMesh:
                 [(end_point[0] + tolerance * normal_vector_[0]), (end_point[1] + tolerance * normal_vector_[1])])
             check_polygon = np.array([first_point_new_rect, second_point_new_rect, fourth_point_new_rect,
                                       third_point_new_rect, first_point_new_rect])
-            is_on_line = CreateMesh.check_vertice_in_polygon_area(point, check_polygon)
+            is_on_line = check_vertice_in_polygon_area(point, check_polygon)
             if is_on_line:
                 point_on_line = True
                 break
@@ -384,12 +385,12 @@ class CreateMesh:
 
                 for negative_area in self.negative_areas:
                     negative_area_coords = np.array(negative_area['coordinates'])
-                    if CreateMesh.check_vertice_in_polygon_area(point, negative_area_coords) \
-                            or CreateMesh.check_vertice_in_polygon_outline(point, negative_area_coords,
+                    if check_vertice_in_polygon_area(point, negative_area_coords) \
+                            or check_vertice_in_polygon_outline(point, negative_area_coords,
                                                                            tolerance=self.density / (4 * factor_keep)):
                         point_in_any_negative_area = True
-                point_in_polygon_area = CreateMesh.check_vertice_in_polygon_area(point, region_nodes)
-                point_in_polygon_outline = CreateMesh.check_vertice_in_polygon_outline(point, region_nodes,
+                point_in_polygon_area = check_vertice_in_polygon_area(point, region_nodes)
+                point_in_polygon_outline = check_vertice_in_polygon_outline(point, region_nodes,
                                                                                        tolerance=self.density / (4 * factor_keep))
                 if point_in_polygon_area and not point_in_polygon_outline and not point_in_any_negative_area:
                     keep_points.append(idn)
@@ -461,7 +462,7 @@ class CreateMesh:
             neg_inside = True
             reg_nodes = reg['coordinates']
             for node in reg_nodes:
-                if not CreateMesh.check_vertice_in_polygon_area(node, region['coordinates']):
+                if not check_vertice_in_polygon_area(node, region['coordinates']):
                     neg_inside = False
                     break
             if neg_inside:
@@ -480,8 +481,8 @@ class CreateMesh:
         for node in self.node_parameters.values():
             # check if node in boundary_parameters, if not -> user defined -> if in region and not yet seedpoint-> add
             if node['coordinates'] not in boundary_nodes \
-                    and CreateMesh.check_vertice_in_polygon_area(node['coordinates'], region['coordinates']) \
-                    and not CreateMesh.point_in_list(node['coordinates'], seed_points):
+                    and check_vertice_in_polygon_area(node['coordinates'], region['coordinates']) \
+                    and not point_in_list(node['coordinates'], seed_points):
                 seed_points = np.append(seed_points, np.array(node['coordinates']).reshape(1, -1), axis=0)
 
         #seed_points = np.unique(seed_points, axis=0) # this should not be necessary if done right!
@@ -499,12 +500,12 @@ class CreateMesh:
                                         [seed_points[triangle[2]][0], seed_points[triangle[2]][1]]])
             center_point = np.mean(triangle_points, axis=0)
             # check if triangle in region
-            if CreateMesh.check_vertice_in_polygon_area(center_point, region['coordinates']):
+            if check_vertice_in_polygon_area(center_point, region['coordinates']):
                 triangle_in_region = True
             # check if triangle in negative region
             for reg in self.negative_areas:
                 negative_reg_nodes = reg['coordinates']
-                if CreateMesh.check_vertice_in_polygon_area(center_point, negative_reg_nodes):
+                if check_vertice_in_polygon_area(center_point, negative_reg_nodes):
                     triangle_in_negative_region = True
 
             if triangle_in_region and not triangle_in_negative_region:
