@@ -1,6 +1,6 @@
 # TinyFEM
 A tiny FEM software with graphical interface to define geometry and solve the heat and Helmholtz equations. 
-![thumbnail](https://github.com/Mark00V/tinyfem/blob/main/Supp/tinyfem_demo.jpg)
+![thumbnail](Supp/tinyfem_demo.jpg)
 ## Table of Contents
 - About
 - Running TinyFEM
@@ -13,7 +13,7 @@ A tiny FEM software with graphical interface to define geometry and solve the he
 - Including geometry creation.
 - Including definition of boundary conditions (Heat equation: Dirichlet, Neumann and Robin BC for most practical cases, Helmholtz equation: Dirichlet and Neumann BC for most practical cases).
 - Including solver and graphical representation of solution.
-- Please refer to [EXAMPLES](https://github.com/Mark00V/tinyfem/blob/main/examples/examples_tinyfem.pdf) for capabilities demonstration.
+- Please refer to [EXAMPLES](examples/examples_tinyfem.pdf) for capabilities demonstration.
 ### Limitations
 - Solving the Helmholtz Equation: The worst option for shape functions for approximation of the solution of the Helmholtz or wave equation are linear elements. This software uses linear elements. Use at least 10 elements per wavelength.
 - Meshing: Vast differences in the size of the areas leads to insufficient mesh density for the smaller areas and thus less accurate results.
@@ -23,11 +23,11 @@ A tiny FEM software with graphical interface to define geometry and solve the he
 
 This software was created solely for demonstration purposes and out of curiosity and makes no claim to the correctness of the results. Program errors, technical errors, and incorrect usage (such as defining incompatible geometry) do not necessarily lead to errors, and the results may appear plausible but may be partially or entirely incorrect.
 
-However, the technical correctness has been verified by comparing it with other FEM frameworks, and reasonable agreement was found for the analyzed examples (see: [VERIFICATION](https://github.com/Mark00V/tinyfem/blob/main/Supp/verification_tinyfem.pdf)). In case of doubt, the results must be independently verified.
+However, the technical correctness has been verified by comparing it with other FEM frameworks, and reasonable agreement was found for the analyzed examples (see: [VERIFICATION](verification_tinyfem.pdf)). In case of doubt, the results must be independently verified.
 
 ## Running TinyFEM
 ### Workflow
-- Please refer to the [QUICK DOCUMENTATION](https://github.com/Mark00V/tinyfem/blob/main/Supp/quick_documentation_tinyfem.pdf) for the workflow.
+- Please refer to the [QUICK DOCUMENTATION](Supp/quick_documentation_tinyfem.pdf) for the workflow.
 - Warning: Definition of geometry is tricky. Follow guidelines in the documentation.
 - Warning: If you want to define geometry much smaller than the geometry pane, scale the problem. This has no effect on the solution. Otherwise, definition of boundary conditions will be difficult.
 - While saving the geometry is possible, saving boundary definition is not (WIP).
