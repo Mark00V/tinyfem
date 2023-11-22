@@ -36,6 +36,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.tri as tri
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from PIL import ImageTk
+import datetime
 
 class ShowSolution(tk.Toplevel):
     """
@@ -88,7 +89,7 @@ class ShowSolution(tk.Toplevel):
         ##################################################
 
         # Create a Matplotlib figure
-        fig, ax = self.create_mpl_fig()
+        self.fig, ax = self.create_mpl_fig()
 
         # canvas qith Matplotlib figure (canvas on top of canvas
         self.canvas_main = tk.Canvas(self, width=GUIStatics.CANVAS_SIZE_X, height=GUIStatics.CANVAS_SIZE_Y,
@@ -96,7 +97,7 @@ class ShowSolution(tk.Toplevel):
         self.canvas_main.place(relx=canvas_x + 0.0075, rely=canvas_y)
         GUIStatics.add_canvas_border(self.canvas_main)
 
-        canvas_mpl = FigureCanvasTkAgg(fig, master=self)
+        canvas_mpl = FigureCanvasTkAgg(self.fig, master=self)
         self.canvas_mpl_widget = canvas_mpl.get_tk_widget()
         self.canvas_mpl_widget.place(relx=canvas_x + 0.0075+0.003, rely=canvas_y+0.006)
 
@@ -113,8 +114,9 @@ class ShowSolution(tk.Toplevel):
                     file.write(export_string)
 
         def export_image():
-            file_path = "../Output_solution.png"  # Specify the file path and format here
-            fig.savefig(file_path, dpi=200)
+            now = datetime.datetime.now().strftime('%Y_%m_%d_%H%M%S')
+            file_path = f"fig_solution_{now}.png"
+            self.fig.savefig(file_path, dpi=200)
 
         def get_min_value():
             GUIStatics.window_error(self, "Work In Progress...")
@@ -135,8 +137,8 @@ class ShowSolution(tk.Toplevel):
             :return:
             """
             self.calculate_spl()
-            fig, ax = self.create_mpl_fig(spl_flag=True)
-            canvas_mpl = FigureCanvasTkAgg(fig, master=self)
+            self.fig, ax = self.create_mpl_fig(spl_flag=True)
+            canvas_mpl = FigureCanvasTkAgg(self.fig, master=self)
             self.canvas_mpl_widget = canvas_mpl.get_tk_widget()
             self.canvas_mpl_widget.place(relx=canvas_x + 0.0075 + 0.003, rely=canvas_y + 0.006)
 
@@ -146,8 +148,8 @@ class ShowSolution(tk.Toplevel):
             :return:
             """
             self.solution = self.solution_orig
-            fig, ax = self.create_mpl_fig()
-            canvas_mpl = FigureCanvasTkAgg(fig, master=self)
+            self.fig, ax = self.create_mpl_fig()
+            canvas_mpl = FigureCanvasTkAgg(self.fig, master=self)
             self.canvas_mpl_widget = canvas_mpl.get_tk_widget()
             self.canvas_mpl_widget.place(relx=canvas_x + 0.0075 + 0.003, rely=canvas_y + 0.006)
 

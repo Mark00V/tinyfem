@@ -36,6 +36,7 @@ from source.meshgen import CreateMesh
 from source.showsolution import ShowSolution
 from PIL import ImageTk
 import numpy as np
+import datetime
 
 #################################################
 # Other
@@ -73,6 +74,8 @@ class GUI(tk.Tk):
         self.boundary_nodes_dict = None
         self.triangulation = None
         self.triangulation_region_dict = None
+        # Other
+        GUIStatics.CANVAS_SCALE_FACTOR = 100
 
         # some output for user
         self.text_information_str = ''
@@ -445,6 +448,23 @@ class GUI(tk.Tk):
                                           font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1, state='disabled')
         self.button_show_geom.place(relx=0.34, rely=0.035)
 
+        # Zoom in and out
+        def zoom_in():
+            if GUIStatics.CANVAS_SCALE_FACTOR < 300 and self.geometry_input:
+                GUIStatics.CANVAS_SCALE_FACTOR += 50
+                self.draw_geometry_from_definebcs()
+
+        def zoom_out():
+            if GUIStatics.CANVAS_SCALE_FACTOR > 50 and self.geometry_input:
+                GUIStatics.CANVAS_SCALE_FACTOR -= 50
+                self.draw_geometry_from_definebcs()
+
+
+        tk.Button(self, text="ZOOM +", command=zoom_in, width=8,
+                                          font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.44, rely=0.035)
+        tk.Button(self, text="ZOOM -", command=zoom_out, width=8,
+                                          font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.50, rely=0.035)
+
         # FEM Parameters
         GUIStatics.create_divider(self, widgets_x_start, 0.17, 230)
         tk.Label(self, text="FEM PARAMETERS", font=GUIStatics.STANDARD_FONT_MID_BOLD) \
@@ -634,9 +654,9 @@ class GUI(tk.Tk):
         # button_create_bc = tk.Button(self, text="FORM BCS", command=self.create_BC_params, width=10,
         #                              height=1, font=('Arial', 6))
         # button_create_bc.place(relx=0.01, rely=0.01)
-        button_debug = tk.Button(self, text="DEBUG", command=self.debug, width=10,
-                                 height=1, font=('Arial', 6))
-        button_debug.place(relx=0.07, rely=0.01)
+        # button_debug = tk.Button(self, text="DEBUG", command=self.debug, width=10,
+        #                          height=1, font=('Arial', 6))
+        # button_debug.place(relx=0.07, rely=0.01)
 
         ##################################################
         # Developing
@@ -1359,7 +1379,7 @@ class GUI(tk.Tk):
         for debugging
         :return:
         """
-
+        now = datetime.datetime.now().strftime('%Y_%m_%d_%H%M%S')
         write_output = (f"self.region_parameters = {self.region_parameters}\n"
                         f"self.boundary_parameters = {self.boundary_parameters}\n"
                         f"self.node_parameters = {self.node_parameters}\n"
@@ -1371,7 +1391,8 @@ class GUI(tk.Tk):
                         f"self.triangulation_region_dict = {self.triangulation_region_dict}\n")
         write_output = write_output.replace('array', 'np.array')
         write_output = write_output.replace('np.np.', 'np.')
-        with open('output.txt', 'w') as f:
+        file_path = f"output_{now}.txt"
+        with open(file_path, 'w') as f:
             f.write(write_output)
 
 

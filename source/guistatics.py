@@ -72,7 +72,7 @@ class GUIStatics:
     CANVAS_SIZE_X = 920  # Needs to be even!
     CANVAS_SIZE_Y = 720  # Needs to be even!
     GRID_SPACE = 10  # Needs to be divisor of GUIStatics.CANVAS_SIZE_X and GUIStatics.CANVAS_SIZE_Y
-    CANVAS_SCALE_FACTOR = 100
+    CANVAS_SCALE_FACTOR = 100  # Standard = 100
 
     # colors
     CANVAS_BORDER_COLOR = '#5F1010'  # Rosewood
@@ -98,6 +98,7 @@ class GUIStatics:
     STANDARD_FONT_SMALLEST = ('Arial', 7)
     STANDARD_FONT_SMALL_BOLD = ('Arial Black', 9)
     SAVELOAD_FONT = ('Verdana', 10)
+
 
     # ICON as bytestring
 
@@ -210,6 +211,7 @@ class GUIStatics:
         x_it = 0
         for x in range(int(width / 2), width, GUIStatics.GRID_SPACE * 2):
             x_text = x_it / GUIStatics.CANVAS_SCALE_FACTOR
+            x_text = f"{x_text:.1f}"
             x_it += GUIStatics.GRID_SPACE * 2
             if x_text == 0:
                 x_text = 0
@@ -219,6 +221,7 @@ class GUIStatics:
         x_it = 0
         for x in range(int(width / 2), 0, -GUIStatics.GRID_SPACE * 2):
             x_text = x_it / GUIStatics.CANVAS_SCALE_FACTOR
+            x_text = f"{x_text:.1f}"
             x_it += GUIStatics.GRID_SPACE * 2
             x_text = '-' + str(x_text)
             if x_text == '-0.0':
@@ -229,6 +232,7 @@ class GUIStatics:
         y_it = 0
         for y in range(int(height / 2), height, GUIStatics.GRID_SPACE * 2):
             y_text = y_it / GUIStatics.CANVAS_SCALE_FACTOR
+            y_text = f"{y_text:.1f}"
             y_it += GUIStatics.GRID_SPACE * 2
             y_text = '-' + str(y_text)
             if y_text == '-0.0':
@@ -239,6 +243,7 @@ class GUIStatics:
         y_it = 0
         for y in range(int(height / 2), 0, -GUIStatics.GRID_SPACE * 2):
             y_text = y_it / GUIStatics.CANVAS_SCALE_FACTOR
+            y_text = f"{y_text:.1f}"
             y_it += GUIStatics.GRID_SPACE * 2
             y_text = str(y_text)
             if y_text == '0.0':

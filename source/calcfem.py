@@ -94,7 +94,7 @@ class CalcFEM:
         self.sysboundaries = None  # Boundary matrix e.g. impedance matrix for system
 
         # development
-        self.file_path_dev = r'K:/OneDrive/Science/PyCharmProjects/tinyfem/testing/output_gui_4_calcfem_' + '11' + '.txt'
+        self.file_path_dev = r'K:/OneDrive/Science/PyCharmProjects/tinyfem/testing/output_gui_4_calcfem_' + '13' + '.txt'
 
     @timing_decorator
     def calc_fem(self):
@@ -500,6 +500,21 @@ class CalcFEM:
             content = f.read()
         exec(content)
 
+    def plot_solution_dev2(self):
+        solution = self.solution
+        all_points = self.nodes_mesh_gen
+
+        x = all_points[:, 0]
+        y = all_points[:, 1]
+        z = solution
+        contour = plt.tricontourf(x, y, z, levels=20, cmap='viridis')
+
+        plt.xlabel("X-axis Label")
+        plt.ylabel("Y-axis Label")
+        plt.title("Contour Plot Example")
+        plt.colorbar(contour)  # Add a colorbar for reference
+        plt.show()
+
     def plot_solution_dev(self):
         """
         Plots the solution via matplotlib
@@ -509,6 +524,7 @@ class CalcFEM:
         triangles = self.triangulation
 
         dataz = np.real(solution)
+
         values = dataz
         aspectxy = 1
         triang_mpl = tri.Triangulation(all_points[:, 0], all_points[:, 1], triangles)

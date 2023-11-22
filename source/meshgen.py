@@ -75,7 +75,7 @@ class CreateMesh:
         self.triangulation_region_dict = None
 
         # Develop
-        self.file_path_dev = r'K:/OneDrive/Science/PyCharmProjects/tinyfem/testing/output_gui_4_calcfem_' + '2' + '.txt'
+        self.file_path_dev = r'K:/OneDrive/Science/PyCharmProjects/tinyfem/testing/output_gui_4_calcfem_' + '13' + '.txt'
 
     @timing_decorator
     def create_mesh(self):
@@ -196,7 +196,8 @@ class CreateMesh:
         :param nodes:
         :return:
         """
-        complex_coordinates = nodes[:, 0] + 1j * nodes[:, 1]
+        fac = 10e9
+        complex_coordinates = np.round(fac * nodes[:, 0]) + 1j * np.round(fac * nodes[:, 1])
         unique_complex_coordinates, counts = np.unique(complex_coordinates, return_counts=True)
         duplicate_indices = np.where(counts > 1)[0]
         if CreateMesh.DEV:
@@ -532,10 +533,12 @@ class CreateMesh:
         todo: sehr schlechter und langsamer algorithmus...
         :return:
         """
+        fac =10e9
+
         node_renumbering = dict()
         triangles_new = copy.deepcopy(triangles_this)
-        nodes_previous_complex = [node[0] + 1j * node[1] for node in nodes_previous]
-        nodes_this_complex = [node[0] + 1j * node[1] for node in nodes_this]
+        nodes_previous_complex = [np.round(fac * node[0]) + 1j * np.round(fac * node[1]) for node in nodes_previous]
+        nodes_this_complex = [np.round(fac * node[0]) + 1j * np.round(fac * node[1]) for node in nodes_this]
         node_pos_to_keep_this = np.where(~np.isin(nodes_this_complex, nodes_previous_complex))[
             0]  # knoten die behalten werden, aber umnummeriert werden für triagnles
         keep_nodes_this = nodes_this[node_pos_to_keep_this]
@@ -596,8 +599,8 @@ class CreateMesh:
         CreateMesh.check_for_duplicate_nodes_np(nodes_all)
         CreateMesh.check_for_duplicate_triangles(triangles_all)
         # dev
-        # CreateMesh.plot_polygon_points(nodes_all, self.positive_regions, self.negative_regions)
-        # CreateMesh.plot_triangles(nodes_all, triangles_all, self.positive_regions, self.negative_regions)
+        #CreateMesh.plot_polygon_points(nodes_all, self.positive_regions, self.negative_regions)
+        #CreateMesh.plot_triangles(nodes_all, triangles_all, self.positive_regions, self.negative_regions)
 
         self.nodes = nodes_all
         self.triangulation = triangles_all
