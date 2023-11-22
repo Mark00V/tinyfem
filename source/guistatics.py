@@ -72,7 +72,9 @@ class GUIStatics:
     CANVAS_SIZE_X = 920  # Needs to be even!
     CANVAS_SIZE_Y = 720  # Needs to be even!
     GRID_SPACE = 10  # Needs to be divisor of GUIStatics.CANVAS_SIZE_X and GUIStatics.CANVAS_SIZE_Y
-    CANVAS_SCALE_FACTOR = 100  # Standard = 100
+    CANVAS_SCALE_FACTOR = 100  # Standard = 100, for zooming
+    CO_X = 0  # Offset X for shifting Standard = 0
+    CO_Y = 0  # Offset Y for shifting Standard = 0
 
     # colors
     CANVAS_BORDER_COLOR = '#5F1010'  # Rosewood
@@ -146,8 +148,8 @@ class GUIStatics:
         scale_factor = GUIStatics.CANVAS_SCALE_FACTOR
         node_x = node[0]
         node_y = node[1]
-        node_new_x = node_x * scale_factor + GUIStatics.CANVAS_SIZE_X / 2
-        node_new_y = -node_y * scale_factor + GUIStatics.CANVAS_SIZE_Y / 2
+        node_new_x = node_x * scale_factor + GUIStatics.CANVAS_SIZE_X / 2 + GUIStatics.CO_X
+        node_new_y = -node_y * scale_factor + GUIStatics.CANVAS_SIZE_Y / 2 +GUIStatics.CO_Y
 
         return node_new_x, node_new_y
 
@@ -177,7 +179,7 @@ class GUIStatics:
 
     # shared method
     @staticmethod
-    def add_canvas_static_elements(canvas: tk.Canvas):
+    def add_canvas_static_elements(canvas: tk.Canvas, geo=True):
         """
         Adds coordsystem and grid to a canvas
         :param canvas:
@@ -187,11 +189,6 @@ class GUIStatics:
         width = GUIStatics.CANVAS_SIZE_X
         height = GUIStatics.CANVAS_SIZE_Y
 
-        # grid
-        for x in range(GUIStatics.GRID_SPACE, width + GUIStatics.GRID_SPACE, GUIStatics.GRID_SPACE):
-            canvas.create_line(x, 0, x, height, fill="dark gray", width=1)
-        for y in range(GUIStatics.GRID_SPACE, height, GUIStatics.GRID_SPACE):
-            canvas.create_line(0, y, width, y, fill="dark gray", width=1)
         canvas.create_line(1, 1, width, 1, fill=GUIStatics.CANVAS_BORDER_COLOR, width=4)
         canvas.create_line(1, 0, 1, height, fill=GUIStatics.CANVAS_BORDER_COLOR, width=6)
         canvas.create_line(0, height + 1, width, height + 1,
@@ -199,57 +196,65 @@ class GUIStatics:
         canvas.create_line(width + 1, 0, width + 1, height,
                            fill=GUIStatics.CANVAS_BORDER_COLOR, width=2)
 
-        # coordinatesystem
-        canvas.create_line(width / 2, 0, width / 2, height,
-                           fill=GUIStatics.CANVAS_COORD_COLOR, width=1)
-        canvas.create_line(0, height / 2, width, height / 2,
-                           fill=GUIStatics.CANVAS_COORD_COLOR, width=1)
+        if geo:  # only draws grid and axes if geometry window
+            # grid
+            for x in range(GUIStatics.GRID_SPACE, width + GUIStatics.GRID_SPACE, GUIStatics.GRID_SPACE):
+                canvas.create_line(x, 0, x, height, fill="dark gray", width=1)
+            for y in range(GUIStatics.GRID_SPACE, height, GUIStatics.GRID_SPACE):
+                canvas.create_line(0, y, width, y, fill="dark gray", width=1)
 
-        # text_values
-        text_color = '#575757'
-        div_color = '#404040'
-        x_it = 0
-        for x in range(int(width / 2), width, GUIStatics.GRID_SPACE * 2):
-            x_text = x_it / GUIStatics.CANVAS_SCALE_FACTOR
-            x_text = f"{x_text:.1f}"
-            x_it += GUIStatics.GRID_SPACE * 2
-            if x_text == 0:
-                x_text = 0
-            canvas.create_text(x + 4, height / 2 + 10, text=x_text, fill=text_color, font=("Helvetica", 6))
-            canvas.create_line(x, height / 2 + 3, x, height / 2 - 3, fill=div_color, width=1)
 
-        x_it = 0
-        for x in range(int(width / 2), 0, -GUIStatics.GRID_SPACE * 2):
-            x_text = x_it / GUIStatics.CANVAS_SCALE_FACTOR
-            x_text = f"{x_text:.1f}"
-            x_it += GUIStatics.GRID_SPACE * 2
-            x_text = '-' + str(x_text)
-            if x_text == '-0.0':
-                x_text = ''
-            canvas.create_text(x + 4, height / 2 + 10, text=x_text, fill=text_color, font=("Helvetica", 6))
-            canvas.create_line(x, height / 2 + 3, x, height / 2 - 3, fill=div_color, width=1)
+            # coordinatesystem
+            canvas.create_line(width / 2, 0, width / 2, height,
+                               fill=GUIStatics.CANVAS_COORD_COLOR, width=1)
+            canvas.create_line(0, height / 2, width, height / 2,
+                               fill=GUIStatics.CANVAS_COORD_COLOR, width=1)
 
-        y_it = 0
-        for y in range(int(height / 2), height, GUIStatics.GRID_SPACE * 2):
-            y_text = y_it / GUIStatics.CANVAS_SCALE_FACTOR
-            y_text = f"{y_text:.1f}"
-            y_it += GUIStatics.GRID_SPACE * 2
-            y_text = '-' + str(y_text)
-            if y_text == '-0.0':
-                y_text = ''
-            canvas.create_text(width / 2 + 10, y, text=y_text, fill=text_color, font=("Helvetica", 6))
-            canvas.create_line(width / 2 - 3, y, width / 2 + 3, y, fill=div_color, width=1)
+            # text_values
+            text_color = '#575757'
+            div_color = '#404040'
+            x_it = 0
+            for x in range(int(width / 2), width, GUIStatics.GRID_SPACE * 2):
+                x_text = x_it / GUIStatics.CANVAS_SCALE_FACTOR
+                x_text = f"{x_text:.1f}"
+                x_it += GUIStatics.GRID_SPACE * 2
+                if x_text == 0:
+                    x_text = 0
+                canvas.create_text(x + 4, height / 2 + 10, text=x_text, fill=text_color, font=("Helvetica", 6))
+                canvas.create_line(x, height / 2 + 3, x, height / 2 - 3, fill=div_color, width=1)
 
-        y_it = 0
-        for y in range(int(height / 2), 0, -GUIStatics.GRID_SPACE * 2):
-            y_text = y_it / GUIStatics.CANVAS_SCALE_FACTOR
-            y_text = f"{y_text:.1f}"
-            y_it += GUIStatics.GRID_SPACE * 2
-            y_text = str(y_text)
-            if y_text == '0.0':
-                y_text = ''
-            canvas.create_text(width / 2 + 10, y, text=y_text, fill=text_color, font=("Helvetica", 6))
-            canvas.create_line(width / 2 - 3, y, width / 2 + 3, y, fill=div_color, width=1)
+            x_it = 0
+            for x in range(int(width / 2), 0, -GUIStatics.GRID_SPACE * 2):
+                x_text = x_it / GUIStatics.CANVAS_SCALE_FACTOR
+                x_text = f"{x_text:.1f}"
+                x_it += GUIStatics.GRID_SPACE * 2
+                x_text = '-' + str(x_text)
+                if x_text == '-0.0':
+                    x_text = ''
+                canvas.create_text(x + 4, height / 2 + 10, text=x_text, fill=text_color, font=("Helvetica", 6))
+                canvas.create_line(x, height / 2 + 3, x, height / 2 - 3, fill=div_color, width=1)
+
+            y_it = 0
+            for y in range(int(height / 2), height, GUIStatics.GRID_SPACE * 2):
+                y_text = y_it / GUIStatics.CANVAS_SCALE_FACTOR
+                y_text = f"{y_text:.1f}"
+                y_it += GUIStatics.GRID_SPACE * 2
+                y_text = '-' + str(y_text)
+                if y_text == '-0.0':
+                    y_text = ''
+                canvas.create_text(width / 2 + 10, y, text=y_text, fill=text_color, font=("Helvetica", 6))
+                canvas.create_line(width / 2 - 3, y, width / 2 + 3, y, fill=div_color, width=1)
+
+            y_it = 0
+            for y in range(int(height / 2), 0, -GUIStatics.GRID_SPACE * 2):
+                y_text = y_it / GUIStatics.CANVAS_SCALE_FACTOR
+                y_text = f"{y_text:.1f}"
+                y_it += GUIStatics.GRID_SPACE * 2
+                y_text = str(y_text)
+                if y_text == '0.0':
+                    y_text = ''
+                canvas.create_text(width / 2 + 10, y, text=y_text, fill=text_color, font=("Helvetica", 6))
+                canvas.create_line(width / 2 - 3, y, width / 2 + 3, y, fill=div_color, width=1)
 
     @staticmethod
     def get_polygon_center(nodes: list):

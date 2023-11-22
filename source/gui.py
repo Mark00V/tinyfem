@@ -450,7 +450,7 @@ class GUI(tk.Tk):
 
         # Zoom in and out
         def zoom_in():
-            if GUIStatics.CANVAS_SCALE_FACTOR < 300 and self.geometry_input:
+            if GUIStatics.CANVAS_SCALE_FACTOR < 400 and self.geometry_input:
                 GUIStatics.CANVAS_SCALE_FACTOR += 50
                 self.draw_geometry_from_definebcs()
 
@@ -459,12 +459,35 @@ class GUI(tk.Tk):
                 GUIStatics.CANVAS_SCALE_FACTOR -= 50
                 self.draw_geometry_from_definebcs()
 
+        def shift_left():
+            if self.geometry_input:
+                GUIStatics.CO_X -= 20
+                self.draw_geometry_from_definebcs()
+        def shift_right():
+            if self.geometry_input:
+                GUIStatics.CO_X += 20
+                self.draw_geometry_from_definebcs()
+        def shift_up():
+            if self.geometry_input:
+                GUIStatics.CO_Y -= 20
+                self.draw_geometry_from_definebcs()
+        def shift_down():
+            if self.geometry_input:
+                GUIStatics.CO_Y += 20
+                self.draw_geometry_from_definebcs()
 
-        tk.Button(self, text="ZOOM +", command=zoom_in, width=8,
-                                          font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.44, rely=0.035)
-        tk.Button(self, text="ZOOM -", command=zoom_out, width=8,
-                                          font=GUIStatics.STANDARD_FONT_BUTTON_SMALL, height=1).place(relx=0.50, rely=0.035)
-
+        tk.Button(self, text="-", command=zoom_out, width=1,
+                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1).place(relx=0.46, rely=0.025)
+        tk.Button(self, text="+", command=zoom_in, width=1,
+                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1).place(relx=0.58, rely=0.025)
+        tk.Button(self, text="L", command=shift_left, width=1,
+                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1).place(relx=0.49, rely=0.025)
+        tk.Button(self, text="U", command=shift_up, width=1,
+                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1).place(relx=0.52, rely=0.01)
+        tk.Button(self, text="D", command=shift_down, width=1,
+                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1).place(relx=0.52, rely=0.04)
+        tk.Button(self, text="R", command=shift_right, width=1,
+                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1).place(relx=0.55, rely=0.025)
         # FEM Parameters
         GUIStatics.create_divider(self, widgets_x_start, 0.17, 230)
         tk.Label(self, text="FEM PARAMETERS", font=GUIStatics.STANDARD_FONT_MID_BOLD) \
@@ -747,6 +770,9 @@ class GUI(tk.Tk):
             :param args:
             :return:
             """
+            last_highlight_element = self.canvas.find_withtag('highlight_element')
+            if last_highlight_element:
+                self.canvas.delete(last_highlight_element)
             region_nbr = dropdown_region_select_var.get().split('R-')[-1]
             entry_materials_values_button.config(state='normal')
             if self.equation == 'HE':
@@ -757,6 +783,11 @@ class GUI(tk.Tk):
                 value_set_rho = self.region_parameters[region_nbr]['material']['rho']
                 entry_material_c_value.set(str(value_set_c))
                 entry_material_rho_value.set(str(value_set_rho))
+            nodes = self.region_parameters[region_nbr]['coordinates']
+            nodes = [GUIStatics.transform_node_to_canvas(node) for node in nodes]
+            self.highlight_element = self.canvas.create_polygon(nodes, fill='',
+                                                             width=6, outline='#24D1EA',
+                                                             tags='highlight_element')
 
         def set_region_values():
             """
@@ -847,6 +878,9 @@ class GUI(tk.Tk):
             Button action for setting region parameters (Materials)
             :return:
             """
+            last_highlight_element = self.canvas.find_withtag('highlight_element')
+            if last_highlight_element:
+                self.canvas.delete(last_highlight_element)
 
             self.init_information_text_field()
             self.text_information_str += '\n\nRegion Parameters:\n'
@@ -934,8 +968,8 @@ class GUI(tk.Tk):
             nodes = self.boundary_parameters[boundary_nbr]['coordinates']
             self.highlight_element = self.canvas.create_line(GUIStatics.transform_node_to_canvas(nodes[0]),
                                                              GUIStatics.transform_node_to_canvas(nodes[1]),
-                                                             width=6, fill=GUIStatics.CANVAS_HIGHLIGHT_ELEMENT,
-                                                             dash=(1, 1), tags='highlight_element')
+                                                             width=6, fill='#24D1EA',
+                                                             tags='highlight_element')
 
         def trace_boundary_type(*args):
             """
@@ -1004,7 +1038,7 @@ class GUI(tk.Tk):
             node = self.node_parameters[node_number]['coordinates']
             node = GUIStatics.transform_node_to_canvas(node)
             self.highlight_element = self.canvas.create_oval(node[0] - 10, node[1] - 10, node[0] + 10, node[1] + 10,
-                                                             width=3, outline=GUIStatics.CANVAS_HIGHLIGHT_ELEMENT,
+                                                             width=3, outline='#24D1EA',
                                                              dash=(2, 1), fill='', tags='highlight_element')
 
         equation_set = self.equation
@@ -1161,7 +1195,9 @@ class GUI(tk.Tk):
         callback method, Executed when button "DEFINE GEOMETRY" pressed, creates callback for Class Geometry
         :return:
         """
-
+        GUIStatics.CANVAS_SCALE_FACTOR = 100
+        GUIStatics.CO_X = 0
+        GUIStatics.CO_Y = 0
         self.animation = False
         all_canvas_elements = self.canvas.find_all()
         for elem in all_canvas_elements:
@@ -1254,7 +1290,7 @@ class GUI(tk.Tk):
         all_canvas_elements = self.canvas.find_all()
         for elem in all_canvas_elements:
             self.canvas.delete(elem)
-        GUIStatics.add_canvas_static_elements(self.canvas)
+        GUIStatics.add_canvas_static_elements(self.canvas, geo=False)
 
         # draw legend and stats
         nbr_of_nodes = len(self.nodes.keys())
@@ -1324,7 +1360,7 @@ class GUI(tk.Tk):
         all_canvas_elements = self.canvas.find_all()
         for elem in all_canvas_elements:
             self.canvas.delete(elem)
-        GUIStatics.add_canvas_static_elements(self.canvas)
+        GUIStatics.add_canvas_static_elements(self.canvas, geo=False)
 
         # draw regions two times so negative areas are above positives
         color_code_plus = '#B8A8A8'
