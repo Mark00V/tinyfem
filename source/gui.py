@@ -505,21 +505,135 @@ class GUI(tk.Tk):
         self.button_solve_system.config(state="disabled")
 
         # info field
+        def show_info():
+            """
+            Shows more information in separate window
+            :return:
+            """
+            window_info= tk.Toplevel(self)
+            window_info.title('INFO')
+            window_info.geometry(f"{800}x{600}")
+            window_info.resizable(False, False)
+            self.set_icon(window_info)
+
+            region_parameters = self.region_parameters
+            boundary_parameters = self.boundary_parameters
+            node_parameters = self.node_parameters
+            calculation_parameters = self.calculation_parameters
+            region_parameters_str = 'REGIONS:'
+            if region_parameters:
+                for k, v in region_parameters.items():
+                    coordinates = v['coordinates']
+                    area_neg_pos = v['area_neg_pos']
+                    mat_k = v['material']['k']
+                    mat_c = v['material']['c']
+                    mat_rho = v['material']['rho']
+                    mats = f"k = {mat_k} W/mK" if calculation_parameters['equation'] == 'HH' else f"c = {mat_c} m/s     rho = {mat_rho} kg/m³"
+                    region_parameters_str += f"\nRegion R-{k}: {area_neg_pos}\n"
+                    if area_neg_pos == 'Positive':
+                        region_parameters_str += f"Materials: {mats}\n"
+                    region_parameters_str += 'Nodes:'
+                    for nc, coord in enumerate(coordinates):
+                        region_parameters_str += f"N[{nc}] = {coord}     "
+                        if nc in {4, 8, 12, 16, 20}:
+                            region_parameters_str += '\n'
+
+            calculation_parameters_str = 'CALCULATION PARAMETERS:'
+            if calculation_parameters:
+                eq = {'HH': 'Helmholtz Equation',
+                      'HE': 'Heat Equation'}
+                freq_st = ''
+                if calculation_parameters['equation'] == 'HH':
+                    freq_st = f"\nFrequency: {calculation_parameters['freq']} Hz"
+                calculation_parameters_str += (f"\nEquation: {eq[calculation_parameters['equation']]}\n"
+                                               f"Mesh Density: {calculation_parameters['mesh_density']}{freq_st}")
+            if self.triangulation is not None:
+                calculation_parameters_str += f"\nMesh created with {len(self.triangulation)} elements."
+
+            boundary_parameters_str = 'BOUNDARIES:'
+            try:
+                if boundary_parameters:
+                    for k, v in boundary_parameters.items():
+                        coordinates = v['coordinates']
+                        bc = v['bc']
+                        bc_str = ''
+                        if self.equation == 'HE':
+                            if bc['type'] == 'Dirichlet':
+                                bc_str = f"{bc['type']}, T = {bc['value']} K"
+                            elif bc['type'] == 'Neumann':
+                                bc_str = f"{bc['type']}, q = {bc['value']} W/m²"
+                            elif bc['type'] == 'Robin':
+                                bc_str = f"{bc['type']}, T_ext = {bc['value'][0]} K, h = {bc['value'][1]} W/m²K"
+                            else:
+                                bc_str = f"No BC specified"
+                        elif self.equation == 'HH':
+                            if bc['type'] == 'Dirichlet':
+                                bc_str = f"{bc['type']}, T = {bc['value']} Pa"
+                            elif bc['type'] == 'Neumann':
+                                bc_str = f"{bc['type']}, T = {bc['value']} Pas/m"
+                            elif bc['type'] == 'Robin':
+                                bc_str = f"No BC specified"
+                            else:
+                                bc_str = f"No BC specified"
+                        boundary_parameters_str += f"\nB-{k}: N[0] = {coordinates[0]}   N[1] = {coordinates[1]}     {bc_str}"
+
+            except KeyError:
+                ...
+            except IndexError:
+                ...
+
+            node_parameters_str = 'NODES:'
+            if node_parameters:
+                for k, v in node_parameters.items():
+                    coordinates = v['coordinates']
+                    bc = v['bc']['value']
+                    bc_str = ''
+                    if bc:
+                        bc_str = f"Sound source, P = {bc} W/m"
+
+                    node_parameters_str += f"\nN-{k}: N = {coordinates}     {bc_str}"
+
+            info_string_detailed = (f"CURRENT INPUT:\n"
+                                    f"{'_' * 107}"
+                                    f"{calculation_parameters_str}\n\n"
+                                    f"{'_' * 107}"
+                                    f"{region_parameters_str}\n\n"
+                                    f"{'_' * 107}"
+                                    f"{boundary_parameters_str}\n\n"
+                                    f"{'_' * 107}"
+                                    f"{node_parameters_str}\n\n"
+                                    f"{'_' * 107}")
+
+            info_field = tk.Text(window_info, height=36, width=108, wrap=tk.WORD,
+                                            font=GUIStatics.STANDARD_FONT_SMALL, bg='light gray', fg='black')
+            info_field.place(relx=0.025, rely=0.05)
+            info_field.insert(tk.END, info_string_detailed)
+            info_field.config(state='disabled')
+
+        def write_info():
+            """
+            Writes info to file, e.g. for testing modules
+            :return:
+            """
+            self.debug()
+
         self.text_information_str = 'None'
         GUIStatics.create_divider(self, widgets_x_start, 0.5, 230)
         tk.Label(self, text="Information: ", font=GUIStatics.STANDARD_FONT_MID_BOLD) \
             .place(relx=widgets_x_start, rely=0.505)
-        self.text_information = tk.Text(self, height=28, width=44, wrap=tk.WORD,
+        self.text_information = tk.Text(self, height=24, width=44, wrap=tk.WORD,
                                         font=GUIStatics.STANDARD_FONT_SMALLEST, bg='light gray', fg='black')
         self.text_information.place(relx=widgets_x_start + 0.005, rely=0.54)
         self.text_information.insert(tk.END, self.text_information_str)
         self.text_information.config(state='disabled')
+        tk.Button(self, text="SHOW INFO", command=show_info, width=12, font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start, rely=0.925)
+        tk.Button(self, text="WRITE INFO", command=write_info, width=12, font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start + 0.1, rely=0.925)
 
         # Debug
         # Reformat Boundaryconditions via CreateBCParams, only needed for development
-        button_create_bc = tk.Button(self, text="FORM BCS", command=self.create_BC_params, width=10,
-                                     height=1, font=('Arial', 6))
-        button_create_bc.place(relx=0.01, rely=0.01)
+        # button_create_bc = tk.Button(self, text="FORM BCS", command=self.create_BC_params, width=10,
+        #                              height=1, font=('Arial', 6))
+        # button_create_bc.place(relx=0.01, rely=0.01)
         button_debug = tk.Button(self, text="DEBUG", command=self.debug, width=10,
                                  height=1, font=('Arial', 6))
         button_debug.place(relx=0.07, rely=0.01)
@@ -1245,23 +1359,6 @@ class GUI(tk.Tk):
         for debugging
         :return:
         """
-        print("\n\n\n------------------DEBUG--------------------")
-        print(f"self.geometry_input: {self.geometry_input}")
-        print(f"self.regions: {self.regions}")
-        print(f"self.boundaries = {self.boundaries}")
-        print(f"self.nodes = {self.nodes}")
-        print(f"self.equation = {self.equation}")
-
-        print(f"\nself.region_parameters = {self.region_parameters}")
-        print(f"self.boundary_parameters = {self.boundary_parameters}")
-        print(f"self.node_parameters = {self.node_parameters}")
-        print(f"self.calculation_parameters = {self.calculation_parameters}")
-
-        print(f"self.nodes_mesh_gen = {self.nodes_mesh_gen}")
-        print(f"self.single_nodes_dict = {self.single_nodes_dict}")
-        print(f"self.boundary_nodes_dict = {self.boundary_nodes_dict}")
-        print(f"self.triangulation = {self.triangulation}")
-        print(f"self.triangulation_region_dict = {self.triangulation_region_dict}")
 
         write_output = (f"self.region_parameters = {self.region_parameters}\n"
                         f"self.boundary_parameters = {self.boundary_parameters}\n"
@@ -1274,7 +1371,7 @@ class GUI(tk.Tk):
                         f"self.triangulation_region_dict = {self.triangulation_region_dict}\n")
         write_output = write_output.replace('array', 'np.array')
         write_output = write_output.replace('np.np.', 'np.')
-        with open('../DEV/output_from_gui.txt', 'w') as f:
+        with open('output.txt', 'w') as f:
             f.write(write_output)
 
 

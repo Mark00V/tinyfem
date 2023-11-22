@@ -19,7 +19,7 @@ along with TinyFEM. If not, see <https://www.gnu.org/licenses/>.
 
 #######################################################################
 Description:
-Definitions of elements for regions and boundaries
+Definitions of elements for regions and boundaries for compiled version
 #######################################################################
 """
 
@@ -292,7 +292,7 @@ class ElementMatrices:
         np.ndarray[np.ndarray[np.float64, np.intp], np.intp]]:
         """
         Calculates element matrix for heat equation for order p and triangular elements
-        todo: val_c und val_rho in Gleichungen fehlen!!!
+        Simplified with analytical solution
         :param nodes: [[x_1, y_1],[x_2, y_2],[x_3, y_3]]
         """
         x1 = nodes[0][0]
@@ -338,6 +338,7 @@ class ElementMatrices:
     def calc_2d_triangular_heatflow_p1_simp(val_k: float, nodes: List[List[float]]) -> Tuple[np.array, np.array]:
         """
         Calculates element matrix for heat equation for order p and triangular elements
+        Simplified with analytical solution
         :param nodes: [[x_1, y_1],[x_2, y_2],[x_3, y_3]]
         """
         x1 = nodes[0][0]
