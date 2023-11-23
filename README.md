@@ -4,6 +4,7 @@ A tiny FEM software with graphical interface to define geometry and solve the he
 ## Table of Contents
 - About
 - Running TinyFEM
+- Examples
 - License
 
 ## About
@@ -38,6 +39,13 @@ The following non-standard libraries are needed to run TinyFEM:
 - PIL: https://python-pillow.org/ -> pip install Pillow
 - scipy: https://scipy.org/ -> pip install scipy
 
+## Examples
+### Solving the heat equation with different materials and boundary conditions
+- Supports fixed temperature, heat flux and convective heat flux
+![Heat Equation](Supp/TinyFEM_HE.png)
+### Solving the Helmholtz equation with different materials and boundary conditions
+- Supports sound hard boundary condition, impedance boundary condition and monopol sound sources
+![Heat Equation](Supp/TinyFEM_HH.png)
 ## License
 The code in this repository is licensed under the [GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007](LICENSE.md).
 
