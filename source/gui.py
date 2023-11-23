@@ -37,6 +37,10 @@ from source.showsolution import ShowSolution
 from PIL import ImageTk
 import numpy as np
 import datetime
+import warnings
+from scipy.linalg import LinAlgWarning
+
+warnings.simplefilter('error', LinAlgWarning)
 
 #################################################
 # Other
@@ -310,6 +314,18 @@ class GUI(tk.Tk):
                     err_message = ('Mesh too large!\n'
                                    '(Sparse matrix calculation WIP)\n'
                                    'Try lower mesh density.')
+                    GUIStatics.window_error(self, err_message)
+                    return None
+                except Exception as err:
+                    err_message = (f'Unknown error encountered: {err}')
+                    GUIStatics.window_error(self, err_message)
+                    return None
+
+                if np.isnan(self.solution[0]):
+                    err_message = ('Singular Matrix encountered!\n'
+                                   'Check Boundary Conditions \n'
+                                   'and/or \n'
+                                   'try lower/higher mesh density.')
                     GUIStatics.window_error(self, err_message)
                     return None
 

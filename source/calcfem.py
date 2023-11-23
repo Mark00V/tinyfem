@@ -26,8 +26,8 @@ File performs FEM calculations.
 
 from scipy.interpolate import griddata
 import numpy as np
-#from source.celements import ElementMatrices  # little bit of improvement (10%)
-from source.elements import ElementMatrices
+from source.celements import ElementMatrices  # little bit of improvement (10%)
+#from source.elements import ElementMatrices
 import matplotlib.tri as tri
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -159,7 +159,7 @@ class CalcFEM:
         ########################################################################
         # solve system
         #self.develop_print_input()
-        self.print_matrix(self.sysmatrix_diri)
+        #self.print_matrix(self.sysmatrix_diri)
         self.solve_linear_system()
 
         ########################################################################
