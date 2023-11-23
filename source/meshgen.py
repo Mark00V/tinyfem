@@ -75,7 +75,7 @@ class CreateMesh:
         self.triangulation_region_dict = None
 
         # Develop
-        self.file_path_dev = r'K:/OneDrive/Science/PyCharmProjects/tinyfem/testing/output_gui_4_calcfem_' + '13' + '.txt'
+        self.file_path_dev = r'K:/OneDrive/Science/PyCharmProjects/tinyfem/testing/output_gui_4_calcfem_' + '14' + '.txt'
 
     @timing_decorator
     def create_mesh(self):
@@ -580,7 +580,7 @@ class CreateMesh:
         c_pos = True
         print('Triangulation of regions...')
         for region_nbr, region in self.region_parameters.items():
-            print(f"Region {region_nbr} / {len(self.region_parameters.items())}", end='\r')  # This does not show in pycharm, only via cmd / .exe
+            print(f"Region {int(region_nbr) + 1} / {len(self.region_parameters.items())}", end='\r')  # This does not show in pycharm, only via cmd / .exe
             if region['area_neg_pos'] == 'Positive':
                 nodes_region, triangles_region = self.triangulate_region(region, region_nbr)  # todo besserer algo für boundaries
                 if c_pos:

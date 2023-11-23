@@ -571,7 +571,7 @@ class GUI(tk.Tk):
                     mat_k = v['material']['k']
                     mat_c = v['material']['c']
                     mat_rho = v['material']['rho']
-                    mats = f"k = {mat_k} W/mK" if calculation_parameters['equation'] == 'HH' else f"c = {mat_c} m/s     rho = {mat_rho} kg/m³"
+                    mats = f"k = {mat_k} W/mK" if calculation_parameters['equation'] == 'HE' else f"c = {mat_c} m/s     rho = {mat_rho} kg/m³"
                     region_parameters_str += f"\nRegion R-{k}: {area_neg_pos}\n"
                     if area_neg_pos == 'Positive':
                         region_parameters_str += f"Materials: {mats}\n"

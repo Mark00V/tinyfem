@@ -94,7 +94,7 @@ class CalcFEM:
         self.sysboundaries = None  # Boundary matrix e.g. impedance matrix for system
 
         # development
-        self.file_path_dev = r'K:/OneDrive/Science/PyCharmProjects/tinyfem/testing/output_gui_4_calcfem_' + '13' + '.txt'
+        self.file_path_dev = r'K:/OneDrive/Science/PyCharmProjects/tinyfem/testing/output_gui_4_calcfem_' + '14' + '.txt'
 
     @timing_decorator
     def calc_fem(self):

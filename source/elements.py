@@ -27,6 +27,8 @@ import numpy as np
 from typing import Tuple, Union, List
 from numpy import float64
 import math
+import warnings
+warnings.filterwarnings("error", category=RuntimeWarning)
 
 class ElementMatrices:
     """
@@ -303,21 +305,34 @@ class ElementMatrices:
         y3 = nodes[2][1]
 
         # entries stiffnessmat
-        eq11 = -((x2 ** 2 - 2 * x2 * x3 + x3 ** 2 + (y2 - y3) ** 2) / (
-                    2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
-        eq12 = (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2) / (
-                    2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
-        eq13 = (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3)) / (
-                    2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
-        eq21 = eq12
-        eq22 = -((x1 ** 2 - 2 * x1 * x3 + x3 ** 2 + (y1 - y3) ** 2) / (
-                    2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
-        eq23 = (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3)) / (
-                    2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
-        eq31 = eq13
-        eq32 = eq23
-        eq33 = -((x1 ** 2 - 2 * x1 * x2 + x2 ** 2 + (y1 - y2) ** 2) / (
-                    2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        try:
+            eq11 = -((x2 ** 2 - 2 * x2 * x3 + x3 ** 2 + (y2 - y3) ** 2) / (
+                        2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+            eq12 = (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2) / (
+                        2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+            eq13 = (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3)) / (
+                        2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+            eq21 = eq12
+            eq22 = -((x1 ** 2 - 2 * x1 * x3 + x3 ** 2 + (y1 - y3) ** 2) / (
+                        2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+            eq23 = (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3)) / (
+                        2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+            eq31 = eq13
+            eq32 = eq23
+            eq33 = -((x1 ** 2 - 2 * x1 * x2 + x2 ** 2 + (y1 - y2) ** 2) / (
+                        2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        except RuntimeWarning as rw:
+            print(f"RuntimeWarning for element {nodes}: {rw}\n"
+                  f"Warning: Elementmatrix set to 0 -> Errors in Solution!")
+            eq11 = 0
+            eq12 = 0
+            eq13 = 0
+            eq21 = 0
+            eq22 = 0
+            eq23 = 0
+            eq31 = 0
+            eq32 = 0
+            eq33 = 0
         stiffness_mat = np.array([[eq11, eq12, eq13], [eq21, eq22, eq23], [eq31, eq32, eq33]])
 
         # entries massmat
@@ -348,21 +363,34 @@ class ElementMatrices:
         y3 = nodes[2][1]
 
         # entries stiffnessmat
-        eq11 = -(val_k * (x2 ** 2 - 2 * x2 * x3 + x3 ** 2 + (y2 - y3) ** 2)) / (
-                    2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
-        eq12 = (val_k * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
-                    2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
-        eq13 = (val_k * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
-                    2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
-        eq21 = eq12
-        eq22 = -(val_k * (x1 ** 2 - 2 * x1 * x3 + x3 ** 2 + (y1 - y3) ** 2)) / (
-                    2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
-        eq23 = (val_k * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
-                    2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
-        eq31 = eq13
-        eq32 = eq23
-        eq33 = -(val_k * (x1 ** 2 - 2 * x1 * x2 + x2 ** 2 + (y1 - y2) ** 2)) / (
-                    2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        try:
+            eq11 = -(val_k * (x2 ** 2 - 2 * x2 * x3 + x3 ** 2 + (y2 - y3) ** 2)) / (
+                        2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+            eq12 = (val_k * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                        2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+            eq13 = (val_k * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
+                        2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+            eq21 = eq12
+            eq22 = -(val_k * (x1 ** 2 - 2 * x1 * x3 + x3 ** 2 + (y1 - y3) ** 2)) / (
+                        2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+            eq23 = (val_k * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                        2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+            eq31 = eq13
+            eq32 = eq23
+            eq33 = -(val_k * (x1 ** 2 - 2 * x1 * x2 + x2 ** 2 + (y1 - y2) ** 2)) / (
+                        2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        except RuntimeWarning as rw:
+            print(f"RuntimeWarning for element {nodes}: {rw}\n"
+                  f"Warning: Elementmatrix set to 0 -> Errors in Solution!")
+            eq11 = 0
+            eq12 = 0
+            eq13 = 0
+            eq21 = 0
+            eq22 = 0
+            eq23 = 0
+            eq31 = 0
+            eq32 = 0
+            eq33 = 0
         stiffness_mat = np.array([[eq11, eq12, eq13], [eq21, eq22, eq23], [eq31, eq32, eq33]])
 
         return stiffness_mat, None
