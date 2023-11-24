@@ -510,8 +510,13 @@ class CreateMesh:
                 negative_reg_nodes = reg['coordinates']
                 if CreateMesh.check_vertice_in_polygon_area(center_point, negative_reg_nodes):
                     triangle_in_negative_region = True
+            # check determinant
+            # check determinant
+            edge1 = triangle_points[1] - triangle_points[0]
+            edge2 = triangle_points[2] - triangle_points[0]
+            area_tri = 0.5 * abs(np.cross(edge1, edge2))
 
-            if triangle_in_region and not triangle_in_negative_region:
+            if triangle_in_region and not triangle_in_negative_region and area_tri > 10e-9:
                 keep_triangles.append(idt)
         triangles_filtered = triangles[keep_triangles]
 
@@ -661,7 +666,7 @@ class CreateMesh:
         """
         with open(self.file_path_dev, 'r') as f:
             content = f.read()
-        exec(content)
+        exec(content)  # security reasons
 
 
 if __name__ == '__main__':

@@ -498,7 +498,7 @@ class CalcFEM:
         """
         with open(self.file_path_dev, 'r') as f:
             content = f.read()
-        exec(content)
+        exec(content) #  security reasons
 
     def plot_solution_dev2(self):
         solution = self.solution
@@ -635,7 +635,7 @@ class CalcFEM:
 if __name__ == '__main__':
     matplotlib.use('TkAgg')
     calcfem = CalcFEM((0,0,0,0,0), (0,0,0,0))  # Develop
-    calcfem.develop()  # read date via exec(!)
+    calcfem.develop()  # read date
     calcfem.calc_fem()
     calcfem.plot_solution_dev()
     # calcfem.nodes_mesh_gen = [[0.5, 0.5], [0.,  0. ], [0.5, 0. ], [1.,  0. ], [1.,  0.5], [1.,  1. ], [0.5, 1. ], [0.,  1. ], [0.,  0.5], [1.,  1.5], [1.,  2. ], [0.5, 1.5]]
