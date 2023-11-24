@@ -516,6 +516,7 @@ class CreateMesh:
             edge2 = triangle_points[2] - triangle_points[0]
             area_tri = 0.5 * abs(np.cross(edge1, edge2))
 
+
             if triangle_in_region and not triangle_in_negative_region and area_tri > 10e-9:
                 keep_triangles.append(idt)
         triangles_filtered = triangles[keep_triangles]
