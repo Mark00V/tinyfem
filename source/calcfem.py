@@ -405,6 +405,8 @@ class CalcFEM:
         print(f"Solving system...")
         sysmat = sp.csr_matrix(self.sysmatrix_diri)
         forcevec = self.force_vector_diri
+        # self.solution = pypardiso.spsolve(sysmat, forcevec)  # does not support complex values yet..
+        # removed from imports
         self.solution = spsolve(sysmat, forcevec)
 
     @timing_decorator

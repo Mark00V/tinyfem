@@ -1334,6 +1334,15 @@ class GUI(tk.Tk):
         Initializes the information text field with the geometry provided
         :return:
         """
+        self.text_information_str = f"Regions:\n" + ''.join(text_regions) \
+                                    + '\nBoundaries:\n' + ''.join(text_boundaries) \
+                                    + '\n\nNodes:\n' + ''.join(text_nodes)
+
+    def init_information_text_field_OLD(self):
+        """
+        Initializes the information text field with the geometry provided
+        :return:
+        """
         text_regions = [
                 f"{region_nbr}: {values['coordinates']}, ({'+' if values['area_neg_pos'] == 'Positive' else '-'})\n"
                 for region_nbr, values in self.regions.items()]

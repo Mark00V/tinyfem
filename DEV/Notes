@@ -104,3 +104,5 @@ Compile:
 pyinstaller --onefile --add-data "Supp/demo_gui.png;Supp" --icon=tiny_fem_icon.ico main.py # with supp file
 pyinstaller --onefile --icon=tiny_fem_icon.ico main.py
 
+Check Windows Defender:
+MpCmdRun.exe -Scan -ScanType 3 -File "K:\OneDrive\PUBLIC\TinyFEM RELEASE_ALPHA\TinyFEM.exe"
