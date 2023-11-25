@@ -101,5 +101,6 @@ GUI (automatisch nach solve_system()) -> Class ShowSolution
 #######################################################################################
 
 Compile:
+pyinstaller --onefile --add-data "Supp/demo_gui.png;Supp" --icon=tiny_fem_icon.ico main.py # with supp file
 pyinstaller --onefile --icon=tiny_fem_icon.ico main.py
 

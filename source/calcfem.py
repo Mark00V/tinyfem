@@ -41,6 +41,7 @@ import time
 import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve
 from scipy.sparse import csc_matrix
+from source.get_quad_triangulation import get_triangulation_quad_init
 
 time_it_dict = dict()
 
@@ -93,6 +94,9 @@ class CalcFEM:
         self.all_boundary_elements = None  # list contains all boundary element matrices
         self.sysboundaries = None  # Boundary matrix e.g. impedance matrix for system
 
+        # formfunction order
+        self.ffp = 1  # Das muss f+r p>1 schon bei Netzerstellung gemacht werden..:TODO
+
         # development
         self.file_path_dev = r'K:/OneDrive/Science/PyCharmProjects/tinyfem/testing/output_gui_4_calcfem_' + '14' + '.txt'
 
@@ -106,6 +110,17 @@ class CalcFEM:
 
         # set equation
         self.equation = self.calculation_parameters['equation']  # either HE (HeatEquation) or HH (HelmHoltz)
+
+        ########################################################################
+        # change triangulationa and nodes according to order of formfunctions
+        if self.ffp == 2:
+            triangulation_quad, nodes_quad = get_triangulation_quad_init(self.triangulation, self.nodes_mesh_gen)
+            self.nodes_mesh_gen = nodes_quad
+            self.triangulation = triangulation_quad
+        else:
+            ...
+        ########################################################################
+
 
         ########################################################################
         # Raw System matrix and force vector (without any boundary conditions)
@@ -205,6 +220,7 @@ class CalcFEM:
         """
         calculates the boundary elements for neumann / robin BC
         todo: Vermutlich muss hier noch Vorzeichen geändert werden abhängig davon ob normalenvektor in Region zeigt oder aus Region raus...?!?
+        TODO: Only works for p=1
         :return:
         """
 
@@ -243,11 +259,15 @@ class CalcFEM:
                     bc_std_g = 0  # only impedance
                 for e0, e1 in zip(bc_nodes[:-1], bc_nodes[1:]):
                     self.boundaries_incidence_matrix.append([e0[0], e1[0]])
-                    boundary_element_matrix, force_vector_matrix = ElementMatrices.boundary_element_p1([e0[1], e1[1]], bc_std_a, bc_std_b, bc_std_g)
+                    if self.ffp == 2:
+                        boundary_element_matrix, force_vector_matrix = ElementMatrices.boundary_element_p2(
+                                [e0[1], e1[1]], bc_std_a, bc_std_b, bc_std_g)
+                    else:
+                        boundary_element_matrix, force_vector_matrix = ElementMatrices.boundary_element_p1([e0[1], e1[1]], bc_std_a, bc_std_b, bc_std_g)
                     self.all_boundary_elements.append(boundary_element_matrix)
                     if bc_type == 'Robin':
                         #self.allboundary_elements_forcevektor.append([[e0[0], e1[0]], force_vector_matrix])
-                        self.allboundary_elements_forcevektor.append([e0[0], force_vector_matrix[0][0]])  # todo, only works for p=1
+                        self.allboundary_elements_forcevektor.append([e0[0], force_vector_matrix[0][0]])
                         self.allboundary_elements_forcevektor.append([e1[0], force_vector_matrix[1][0]])
 
     @timing_decorator
@@ -309,7 +329,7 @@ class CalcFEM:
                 node_pos = self.single_nodes_dict[node_nbr]
                 region_nbr = self.get_region_for_node_nbr(node_pos)
                 rho = self.region_parameters[region_nbr]['material']['rho']
-                mpsource = 4 * math.pi / rho * ((2 * rho * omega) / ((2 * math.pi) ** 2)) ** 0.5
+                mpsource = float(val_bc) * 4 * math.pi / rho * ((2 * rho * omega) / ((2 * math.pi) ** 2)) ** 0.5
                 self.acoustic_source.append([node_pos, mpsource])
 
     @timing_decorator
@@ -434,9 +454,12 @@ class CalcFEM:
                     return region
 
         nbr_of_elements = len(self.triangulation)
-
-        self.all_element_matrices_steif = np.zeros((nbr_of_elements, 3, 3), dtype=np.double)
-        self.all_element_matrices_mass = np.zeros((nbr_of_elements, 3, 3), dtype=np.double)
+        if self.ffp == 2:
+            self.all_element_matrices_steif = np.zeros((nbr_of_elements, 6, 6), dtype=np.double)
+            self.all_element_matrices_mass = np.zeros((nbr_of_elements, 6, 6), dtype=np.double)
+        else:
+            self.all_element_matrices_steif = np.zeros((nbr_of_elements, 3, 3), dtype=np.double)
+            self.all_element_matrices_mass = np.zeros((nbr_of_elements, 3, 3), dtype=np.double)
 
         elemsteif = None
         elemmass = None
@@ -457,9 +480,15 @@ class CalcFEM:
             y3 = self.nodes_mesh_gen[p3][1]
             nodes = [[x1, y1], [x2, y2], [x3, y3]]
             if self.equation == 'HE':
-                elemsteif, elemmass = ElementMatrices.calc_2d_triangular_heatflow_p1_simp(k, nodes)
+                if self.ffp == 2:
+                    elemsteif, elemmass = ElementMatrices.calc_2d_triangular_heatflow_p2_simp(k, nodes)
+                else:
+                    elemsteif, elemmass = ElementMatrices.calc_2d_triangular_heatflow_p1_simp(k, nodes)
             elif self.equation == 'HH':
-                elemsteif, elemmass = ElementMatrices.calc_2d_triangular_acoustic_p1_simp(c, rho, nodes)
+                if self.ffp == 2:
+                    elemsteif, elemmass = ElementMatrices.calc_2d_triangular_acoustic_p2_simp(c, rho, nodes)
+                else:
+                    elemsteif, elemmass = ElementMatrices.calc_2d_triangular_acoustic_p1_simp(c, rho, nodes)
             self.all_element_matrices_steif[idx] = elemsteif
             if elemmass is not None:  # since it might be a np.array
                 self.all_element_matrices_mass[idx] = elemmass
@@ -637,7 +666,7 @@ if __name__ == '__main__':
     calcfem = CalcFEM((0,0,0,0,0), (0,0,0,0))  # Develop
     calcfem.develop()  # read date
     calcfem.calc_fem()
-    calcfem.plot_solution_dev()
+    #calcfem.plot_solution_dev()
     # calcfem.nodes_mesh_gen = [[0.5, 0.5], [0.,  0. ], [0.5, 0. ], [1.,  0. ], [1.,  0.5], [1.,  1. ], [0.5, 1. ], [0.,  1. ], [0.,  0.5], [1.,  1.5], [1.,  2. ], [0.5, 1.5]]
     # calcfem.single_nodes_dict = {'0': 1, '1': 3, '2': 5, '3': 7, '4': 10}
     # calcfem.boundary_nodes_dict = {'0': [[1, np.array([0., 0.])], [2, np.array([0.5, 0. ])], [3, np.array([1., 0.])]], '1': [[3, np.array([1., 0.])], [4, np.array([1. , 0.5])], [5, np.array([1., 1.])]], '2': [[5, np.array([1., 1.])], [6, np.array([0.5, 1. ])], [7, np.array([0., 1.])]], '3': [[7, np.array([0., 1.])], [8, np.array([0. , 0.5])], [1, np.array([0., 0.])]], '4': [[5, np.array([1., 1.])], [9, np.array([1. , 1.5])], [10, np.array([1., 2.])]], '5': [[10, np.array([1., 2.])], [11, np.array([0.5, 1.5])], [7, np.array([0., 1.])]]}

@@ -23,17 +23,21 @@ Definitions of elements for regions and boundaries
 #######################################################################
 """
 
-import numpy as np
-from typing import Tuple, Union, List
-from numpy import float64
 import math
 import warnings
+from typing import Tuple, Union, List
+
+import numpy as np
+from numpy import float64
+
 warnings.filterwarnings("error", category=RuntimeWarning)
+
 
 class ElementMatrices:
     """
     Collection of element matrices
     """
+
     def __init__(self):
         ...
 
@@ -74,7 +78,6 @@ class ElementMatrices:
     #     mass_mat = None
     #
     #     return stiffness_mat, mass_mat
-
 
     @staticmethod
     def calc_2d_triangular_heatflow_p1(val_k: float, nodes: List[List[float]]) -> Tuple[np.array, np.array]:
@@ -133,10 +136,10 @@ class ElementMatrices:
             """
 
             jacobi_inverse_transpose_matrix = np.array(
-                [[(y1 - y3) / (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3),
-                  (y1 - y2) / (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))],
-                 [(x1 - x3) / (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)),
-                  (x1 - x2) / (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3)]], dtype=np.double)
+                    [[(y1 - y3) / (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3),
+                      (y1 - y2) / (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))],
+                     [(x1 - x3) / (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)),
+                      (x1 - x2) / (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3)]], dtype=np.double)
             ngrad = np.array([ngrad1(xi1, xi2), ngrad2(xi1, xi2),
                               ngrad3(xi1, xi2)], dtype=np.double)
 
@@ -228,17 +231,18 @@ class ElementMatrices:
             return np.array([0, 1], dtype=np.double)
 
         def gradmat(xi1: float, xi2: float,
-                    x1: float64, x2: float64, x3: float64, y1: float64, y2: float64, y3: float64) -> np.ndarray[np.ndarray[np.float64, np.intp], np.intp]:
+                    x1: float64, x2: float64, x3: float64, y1: float64, y2: float64, y3: float64) -> np.ndarray[
+            np.ndarray[np.float64, np.intp], np.intp]:
             """
             Calculates grad matrix for calculation of element stiffness matrices
             :return: np.array -> [[_, _],[_, _],[_, _]]
             """
 
             jacobi_inverse_transpose_matrix = np.array(
-                [[(y1 - y3) / (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3),
-                  (y1 - y2) / (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))],
-                 [(x1 - x3) / (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)),
-                  (x1 - x2) / (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3)]], dtype=np.double)
+                    [[(y1 - y3) / (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3),
+                      (y1 - y2) / (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))],
+                     [(x1 - x3) / (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)),
+                      (x1 - x2) / (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3)]], dtype=np.double)
             ngrad = np.array([ngrad1(xi1, xi2), ngrad2(xi1, xi2),
                               ngrad3(xi1, xi2)], dtype=np.double)
 
@@ -284,8 +288,8 @@ class ElementMatrices:
             fp = phixphit * jacobi_det * integration_weights
             mass_mat = mass_mat + fp
 
-        stiffness_mat = stiffness_mat * 1/val_rho
-        mass_mat = mass_mat * 1/val_rho * 1/(val_c**2)
+        stiffness_mat = stiffness_mat * 1 / val_rho
+        mass_mat = mass_mat * 1 / val_rho * 1 / (val_c ** 2)
         return stiffness_mat, mass_mat
 
     @staticmethod
@@ -307,20 +311,20 @@ class ElementMatrices:
         # entries stiffnessmat
         try:
             eq11 = -((x2 ** 2 - 2 * x2 * x3 + x3 ** 2 + (y2 - y3) ** 2) / (
-                        2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+                    2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
             eq12 = (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2) / (
-                        2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+                    2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
             eq13 = (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3)) / (
-                        2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+                    2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
             eq21 = eq12
             eq22 = -((x1 ** 2 - 2 * x1 * x3 + x3 ** 2 + (y1 - y3) ** 2) / (
-                        2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+                    2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
             eq23 = (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3)) / (
-                        2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+                    2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
             eq31 = eq13
             eq32 = eq23
             eq33 = -((x1 ** 2 - 2 * x1 * x2 + x2 ** 2 + (y1 - y2) ** 2) / (
-                        2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+                    2 * val_rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
         except RuntimeWarning as rw:
             print(f"RuntimeWarning for element {nodes}: {rw}\n"
                   f"Warning: Elementmatrix set to 0 -> Errors in Solution!")
@@ -365,20 +369,20 @@ class ElementMatrices:
         # entries stiffnessmat
         try:
             eq11 = -(val_k * (x2 ** 2 - 2 * x2 * x3 + x3 ** 2 + (y2 - y3) ** 2)) / (
-                        2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+                    2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
             eq12 = (val_k * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
-                        2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+                    2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
             eq13 = (val_k * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
-                        2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+                    2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
             eq21 = eq12
             eq22 = -(val_k * (x1 ** 2 - 2 * x1 * x3 + x3 ** 2 + (y1 - y3) ** 2)) / (
-                        2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+                    2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
             eq23 = (val_k * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
-                        2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+                    2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
             eq31 = eq13
             eq32 = eq23
             eq33 = -(val_k * (x1 ** 2 - 2 * x1 * x2 + x2 ** 2 + (y1 - y2) ** 2)) / (
-                        2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+                    2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
         except RuntimeWarning as rw:
             print(f"RuntimeWarning for element {nodes}: {rw}\n"
                   f"Warning: Elementmatrix set to 0 -> Errors in Solution!")
@@ -394,6 +398,247 @@ class ElementMatrices:
         stiffness_mat = np.array([[eq11, eq12, eq13], [eq21, eq22, eq23], [eq31, eq32, eq33]])
 
         return stiffness_mat, None
+
+    @staticmethod
+    def calc_2d_triangular_heatflow_p2_simp(k: float, nodes: List[List[float]]) -> Tuple[np.array, np.array]:
+        """
+        Calculates element matrix for heat equation for order p and triangular elements
+        :param nodes: [[x_1, y_1],[x_2, y_2],[x_3, y_3]]
+        """
+        x1 = nodes[0][0]
+        y1 = nodes[0][1]
+        x2 = nodes[1][0]
+        y2 = nodes[1][1]
+        x3 = nodes[2][0]
+        y3 = nodes[2][1]
+
+        eq_heat_stiff11 = -(k * (x2 ** 2 - 2 * x2 * x3 + x3 ** 2 + (y2 - y3) ** 2)) / (
+                2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff12 = -(k * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                6 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff13 = (k * (-x2 ** 2 + x1 * (x2 - x3) + x2 * x3 + (y1 - y2) * (y2 - y3))) / (
+                6 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff14 = (2 * k * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff15 = 0
+        eq_heat_stiff16 = (2 * k * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff21 = -(k * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                6 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff22 = -(k * (x1 ** 2 - 2 * x1 * x3 + x3 ** 2 + (y1 - y3) ** 2)) / (
+                2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff23 = -(k * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                6 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff24 = (2 * k * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff25 = (2 * k * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff26 = 0
+        eq_heat_stiff31 = (k * (-x2 ** 2 + x1 * (x2 - x3) + x2 * x3 + (y1 - y2) * (y2 - y3))) / (
+                6 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff32 = -(k * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                6 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff33 = -(k * (x1 ** 2 - 2 * x1 * x2 + x2 ** 2 + (y1 - y2) ** 2)) / (
+                2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff34 = 0
+        eq_heat_stiff35 = (2 * k * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff36 = (2 * k * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff41 = (2 * k * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff42 = (2 * k * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff43 = 0
+        eq_heat_stiff44 = (-4 * k * (x1 ** 2 + x2 ** 2 - x2 * x3 + x3 ** 2 - x1 * (
+                x2 + x3) + y1 ** 2 - y1 * y2 + y2 ** 2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                                  3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff45 = (4 * k * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff46 = (4 * k * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff51 = 0
+        eq_heat_stiff52 = (2 * k * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff53 = (2 * k * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff54 = (4 * k * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff55 = (-4 * k * (x1 ** 2 + x2 ** 2 - x2 * x3 + x3 ** 2 - x1 * (
+                x2 + x3) + y1 ** 2 - y1 * y2 + y2 ** 2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                                  3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff56 = (4 * k * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff61 = (2 * k * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff62 = 0
+        eq_heat_stiff63 = (2 * k * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff64 = (4 * k * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff65 = (4 * k * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_heat_stiff66 = (-4 * k * (x1 ** 2 + x2 ** 2 - x2 * x3 + x3 ** 2 - x1 * (
+                x2 + x3) + y1 ** 2 - y1 * y2 + y2 ** 2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                                  3 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+
+        stiffness_mat = np.array(
+                [[eq_heat_stiff11, eq_heat_stiff12, eq_heat_stiff13, eq_heat_stiff14, eq_heat_stiff15, eq_heat_stiff16],
+                 [eq_heat_stiff21, eq_heat_stiff22, eq_heat_stiff23, eq_heat_stiff24, eq_heat_stiff25, eq_heat_stiff26],
+                 [eq_heat_stiff31, eq_heat_stiff32, eq_heat_stiff33, eq_heat_stiff34, eq_heat_stiff35, eq_heat_stiff36],
+                 [eq_heat_stiff41, eq_heat_stiff42, eq_heat_stiff43, eq_heat_stiff44, eq_heat_stiff45, eq_heat_stiff46],
+                 [eq_heat_stiff51, eq_heat_stiff52, eq_heat_stiff53, eq_heat_stiff54, eq_heat_stiff55, eq_heat_stiff56],
+                 [eq_heat_stiff61, eq_heat_stiff62, eq_heat_stiff63, eq_heat_stiff64, eq_heat_stiff65,
+                  eq_heat_stiff66]])
+
+        return stiffness_mat, None
+
+    @staticmethod
+    def calc_2d_triangular_acoustic_p2_simp(c: float, rho: float, nodes: List[List[float64]]) -> Tuple[
+        np.ndarray[np.ndarray[np.float64, np.intp], np.intp],
+        np.ndarray[np.ndarray[np.float64, np.intp], np.intp]]:
+        """
+        Calculates element matrix for heat equation for order p and triangular elements
+        todo: val_c und val_rho in Gleichungen fehlen!!!
+        :param nodes: [[x_1, y_1],[x_2, y_2],[x_3, y_3]]
+        """
+        x1 = nodes[0][0]
+        y1 = nodes[0][1]
+        x2 = nodes[1][0]
+        y2 = nodes[1][1]
+        x3 = nodes[2][0]
+        y3 = nodes[2][1]
+
+        eq_fluid_stiff11 = -((x2 ** 2 - 2 * x2 * x3 + x3 ** 2 + (y2 - y3) ** 2) / (
+                2 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff12 = -((x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2) / (
+                6 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff13 = ((-x2 ** 2 + x1 * (x2 - x3) + x2 * x3 + (y1 - y2) * (y2 - y3)) / (
+                6 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff14 = ((2 * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff15 = 0
+        eq_fluid_stiff16 = ((2 * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff21 = -((x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2) / (
+                6 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff22 = -((x1 ** 2 - 2 * x1 * x3 + x3 ** 2 + (y1 - y3) ** 2) / (
+                2 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff23 = -((x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3)) / (
+                6 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff24 = ((2 * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff25 = ((2 * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff26 = 0
+        eq_fluid_stiff31 = -((x2 ** 2 - x1 * (x2 - x3) - x2 * x3 - (y1 - y2) * (y2 - y3)) / (
+                6 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff32 = -((x1 ** 2 + x2 * x3 - x1 * (x2 + x3) - (y1 - y2) * (y1 - y3)) / (
+                6 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff33 = -((x1 ** 2 - 2 * x1 * x2 + x2 ** 2 + (y1 - y2) ** 2) / (
+                2 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff34 = 0
+        eq_fluid_stiff35 = ((2 * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff36 = ((2 * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff41 = ((2 * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff42 = ((2 * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff43 = 0
+        eq_fluid_stiff44 = (-4 * (x1 ** 2 + x2 ** 2 - x2 * x3 + x3 ** 2 - x1 * (
+                x2 + x3) + y1 ** 2 - y1 * y2 + y2 ** 2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                                   3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_fluid_stiff45 = (4 * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_fluid_stiff46 = (4 * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_fluid_stiff51 = 0
+        eq_fluid_stiff52 = ((2 * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff53 = ((2 * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff54 = ((4 * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff55 = (-4 * (x1 ** 2 + x2 ** 2 - x2 * x3 + x3 ** 2 - x1 * (
+                x2 + x3) + y1 ** 2 - y1 * y2 + y2 ** 2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                                   3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+        eq_fluid_stiff56 = ((4 * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff61 = ((2 * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff62 = 0
+        eq_fluid_stiff63 = ((2 * (x2 ** 2 - x2 * x3 + x1 * (-x2 + x3) - (y1 - y2) * (y2 - y3))) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff64 = ((4 * (x1 ** 2 + x2 * x3 - x1 * (x2 + x3) + (y1 - y2) * (y1 - y3))) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff65 = ((4 * (x1 * (x2 - x3) - x2 * x3 + x3 ** 2 + y1 * y2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3))))
+        eq_fluid_stiff66 = (-4 * (x1 ** 2 + x2 ** 2 - x2 * x3 + x3 ** 2 - x1 * (
+                x2 + x3) + y1 ** 2 - y1 * y2 + y2 ** 2 - y1 * y3 - y2 * y3 + y3 ** 2)) / (
+                                   3 * rho * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3)))
+
+        eq_fluid_mass11 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (81 * c ** 2 * rho)
+        eq_fluid_mass12 = (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3) / (162 * c ** 2 * rho)
+        eq_fluid_mass13 = (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3) / (162 * c ** 2 * rho)
+        eq_fluid_mass14 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (162 * c ** 2 * rho)
+        eq_fluid_mass15 = (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3) / (81 * c ** 2 * rho)
+        eq_fluid_mass16 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (162 * c ** 2 * rho)
+        eq_fluid_mass21 = (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3) / (162 * c ** 2 * rho)
+        eq_fluid_mass22 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (81 * c ** 2 * rho)
+        eq_fluid_mass23 = (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3) / (162 * c ** 2 * rho)
+        eq_fluid_mass24 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (162 * c ** 2 * rho)
+        eq_fluid_mass25 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (162 * c ** 2 * rho)
+        eq_fluid_mass26 = (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3) / (81 * c ** 2 * rho)
+        eq_fluid_mass31 = (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3) / (162 * c ** 2 * rho)
+        eq_fluid_mass32 = (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3) / (162 * c ** 2 * rho)
+        eq_fluid_mass33 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (81 * c ** 2 * rho)
+        eq_fluid_mass34 = (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3) / (81 * c ** 2 * rho)
+        eq_fluid_mass35 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (162 * c ** 2 * rho)
+        eq_fluid_mass36 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (162 * c ** 2 * rho)
+        eq_fluid_mass41 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (162 * c ** 2 * rho)
+        eq_fluid_mass42 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (162 * c ** 2 * rho)
+        eq_fluid_mass43 = (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3) / (81 * c ** 2 * rho)
+        eq_fluid_mass44 = (11 * (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))) / (162 * c ** 2 * rho)
+        eq_fluid_mass45 = (4 * (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))) / (81 * c ** 2 * rho)
+        eq_fluid_mass46 = (4 * (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))) / (81 * c ** 2 * rho)
+        eq_fluid_mass51 = (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3) / (81 * c ** 2 * rho)
+        eq_fluid_mass52 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (162 * c ** 2 * rho)
+        eq_fluid_mass53 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (162 * c ** 2 * rho)
+        eq_fluid_mass54 = (4 * (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))) / (81 * c ** 2 * rho)
+        eq_fluid_mass55 = (11 * (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))) / (162 * c ** 2 * rho)
+        eq_fluid_mass56 = (4 * (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))) / (81 * c ** 2 * rho)
+        eq_fluid_mass61 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (162 * c ** 2 * rho)
+        eq_fluid_mass62 = (x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3) / (81 * c ** 2 * rho)
+        eq_fluid_mass63 = (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3)) / (162 * c ** 2 * rho)
+        eq_fluid_mass64 = (4 * (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))) / (81 * c ** 2 * rho)
+        eq_fluid_mass65 = (4 * (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))) / (81 * c ** 2 * rho)
+        eq_fluid_mass66 = (11 * (x3 * (y1 - y2) + x1 * (y2 - y3) + x2 * (-y1 + y3))) / (162 * c ** 2 * rho)
+
+        stiffness_mat = np.array(
+                [[eq_fluid_stiff11, eq_fluid_stiff12, eq_fluid_stiff13, eq_fluid_stiff14, eq_fluid_stiff15,
+                  eq_fluid_stiff16],
+                 [eq_fluid_stiff21, eq_fluid_stiff22, eq_fluid_stiff23, eq_fluid_stiff24, eq_fluid_stiff25,
+                  eq_fluid_stiff26],
+                 [eq_fluid_stiff31, eq_fluid_stiff32, eq_fluid_stiff33, eq_fluid_stiff34, eq_fluid_stiff35,
+                  eq_fluid_stiff36],
+                 [eq_fluid_stiff41, eq_fluid_stiff42, eq_fluid_stiff43, eq_fluid_stiff44, eq_fluid_stiff45,
+                  eq_fluid_stiff46],
+                 [eq_fluid_stiff51, eq_fluid_stiff52, eq_fluid_stiff53, eq_fluid_stiff54, eq_fluid_stiff55,
+                  eq_fluid_stiff56],
+                 [eq_fluid_stiff61, eq_fluid_stiff62, eq_fluid_stiff63, eq_fluid_stiff64, eq_fluid_stiff65,
+                  eq_fluid_stiff66]])
+        mass_mat = np.array(
+                [[eq_fluid_mass11, eq_fluid_mass12, eq_fluid_mass13, eq_fluid_mass14, eq_fluid_mass15, eq_fluid_mass16],
+                 [eq_fluid_mass21, eq_fluid_mass22, eq_fluid_mass23, eq_fluid_mass24, eq_fluid_mass25, eq_fluid_mass26],
+                 [eq_fluid_mass31, eq_fluid_mass32, eq_fluid_mass33, eq_fluid_mass34, eq_fluid_mass35, eq_fluid_mass36],
+                 [eq_fluid_mass41, eq_fluid_mass42, eq_fluid_mass43, eq_fluid_mass44, eq_fluid_mass45, eq_fluid_mass46],
+                 [eq_fluid_mass51, eq_fluid_mass52, eq_fluid_mass53, eq_fluid_mass54, eq_fluid_mass55, eq_fluid_mass56],
+                 [eq_fluid_mass61, eq_fluid_mass62, eq_fluid_mass63, eq_fluid_mass64, eq_fluid_mass65,
+                  eq_fluid_mass66]])
+
+        return stiffness_mat, mass_mat
 
     @staticmethod
     def boundary_element_p1(nodes: list, bc_std_a: float, bc_std_b: float, bc_std_g: float) -> np.array:
@@ -499,6 +744,98 @@ class ElementMatrices:
 
         return element_mat, force_vector_mat
 
+    @staticmethod
+    def boundary_element_p2(nodes: list, bc_std_a: float, bc_std_b: float, bc_std_g: float) -> np.array:
+        """
+        todo: transformation for inclined boundary correct / necessary?
+
+        value_A: input from self.boundary_parameters[...]['bc']['value'] -> Value from Tuple[0] for Robin BC, Value for Neumann BC
+        value_B: input from self.boundary_parameters[...]['bc']['value'] -> Value from Tuple[1] for Robin BC, None for Neumann BC
+        value_C: corresponding Materials parameter, e.g. k for HE, placeholder, currently not necessary
+        Creates boundary element (e.g. for impedance)
+        :param nodes: [[x_1, y_1],[x_2, y_2]]
+        :param value: value for the boundary element
+        :return:
+        """
+
+        def phi_p2(node: int, xi: float):
+            """
+            form function for 1D line element
+            :param node: node for formfunction
+            :param xi:
+            :return:
+            """
+
+            node = int(node)
+            if node == 1:
+                f = -2 * (1-xi) * (-(1/2) + xi)
+            elif node == 2:
+                f = -4 * (-1 + xi) * xi
+            elif node == 3:
+                f = 2 * (-(1/2) + xi) * xi
+            return f
+
+        def phi_grad_p2(node: int, xi: float):
+            """
+            form function for 1D line element
+            todo: transformation for inclined boundary correct?
+            :param node: node for formfunction
+            :param xi:
+            :return:
+            """
+
+            node = int(node)
+            if node == 1:
+                f = -2 * (1 - xi) + 2 * (-(1/2) + xi)
+            elif node == 2:
+                f = -4 * (-1 + xi) -4 * xi
+            elif node == 3:
+                f = 2 * (-(1/2) + xi) + 2 * xi
+
+            return f
+
+        numintgld2 = np.array([[0.112701665379, 0.500000000000, 0.887298334620],
+                               [0.2777777777777, 0.4444444444444, 0.2777777777777]],
+                              dtype=np.double)
+        intnodes = numintgld2[0]
+        intweights = numintgld2[1]
+
+        x_1 = nodes[0][0]
+        y_1 = nodes[0][1]
+        x_2 = nodes[1][0]
+        y_2 = nodes[1][1]
+
+        # get length and angle of element
+        delta_x = x_2 - x_1
+        delta_y = y_2 - y_1
+        angle = math.atan2(delta_y, delta_x)  # angle between horizontal axis and boundary
+        angle = (angle + 2 * math.pi) % (2 * math.pi)  # angle cant be greater than 360°
+        length = math.sqrt((x_2 - x_1) ** 2 + (y_2 - y_1) ** 2)  # length of boundary
+
+        # calculate element matrix
+        element_mat = np.zeros((3, 3), dtype=np.double)
+        nb = np.zeros((3, 3))
+        for j in range(0, 3):
+            for i in range(0, 3):
+                for ii in range(0, 3):
+                    val = phi_p2(i + 1, intnodes[j]) * phi_p2(ii + 1, intnodes[j]) * intweights[j]
+                    nb[i, ii] = val
+            element_mat = element_mat + nb
+        element_mat = element_mat * length * bc_std_a
+
+        # calculate contribution to force vector, convective part
+        force_vector_mat_conv = np.zeros((3, 1), dtype=np.double)
+        nb = np.zeros((3, 1))
+        for j in range(0, 3):
+            for i in range(0, 3):
+                val = phi_p2(i + 1, intnodes[j]) * intweights[j]
+                nb[i, 0] = val
+            force_vector_mat_conv = force_vector_mat_conv + nb
+        force_vector_mat_conv = force_vector_mat_conv * length * bc_std_g
+        force_vector_mat = force_vector_mat_conv
+
+        return element_mat, force_vector_mat
+
 
 if __name__ == "__main__":
     # Example output
@@ -514,10 +851,22 @@ if __name__ == "__main__":
     stiffness_heat_flow_p1, mass_heat_flow_p1 = elements.calc_2d_triangular_heatflow_p1(k, nodes_element)
     stiffness_heat_flow_p1_simp, mass_heat_flow_p1_simp = elements.calc_2d_triangular_heatflow_p1_simp(k, nodes_element)
     stiffness_acoustic_flow_p1, mass_acoustic_flow_p1 = elements.calc_2d_triangular_acoustic_p1(c, rho, nodes_element)
-    stiffness_acoustic_flow_p1_simp, mass_acoustic_flow_p1_simp = elements.calc_2d_triangular_acoustic_p1_simp(c, rho, nodes_element)
+    stiffness_acoustic_flow_p1_simp, mass_acoustic_flow_p1_simp = elements.calc_2d_triangular_acoustic_p1_simp(c, rho,
+                                                                                                               nodes_element)
     boundary_element = elements.boundary_element_p1(nodes_boundary, bc_val_a, bc_val_b, bc_val_g)
+    print("Order p = 1")
     print(f"Heat flow element, p = 1: \n{stiffness_heat_flow_p1}\n{mass_heat_flow_p1}")
     print(f"Heat flow element, p = 1: \n{stiffness_heat_flow_p1_simp}\n{mass_heat_flow_p1_simp}")
     print(f"\nAcoustic element, p = 1: \n{stiffness_acoustic_flow_p1}\n{mass_acoustic_flow_p1}")
     print(f"\nAcoustic element, p = 1: \n{stiffness_acoustic_flow_p1_simp}\n{mass_acoustic_flow_p1_simp}")
     print(f"\nBoundary element, p = 1: \n{boundary_element}")
+
+    print("\n\nOrder p = 2")
+    stiffness_heat_flow_p2_simp, mass_heat_flow_p2_simp = elements.calc_2d_triangular_heatflow_p2_simp(k, nodes_element)
+    stiffness_acoustic_flow_p2_simp, mass_acoustic_flow_p2_simp = elements.calc_2d_triangular_acoustic_p2_simp(c, rho,
+                                                                                                               nodes_element)
+    print(f"Heat flow element, p = 2: \n{stiffness_heat_flow_p2_simp}\n{mass_heat_flow_p2_simp}")
+    print(f"\nAcoustic element, p = 2: \n{stiffness_acoustic_flow_p2_simp}\n{mass_acoustic_flow_p2_simp}")
+    print("stiffness_heat_flow_p2_simp Det:", np.linalg.det(stiffness_heat_flow_p2_simp))
+    print("stiffness_acoustic_flow_p2_simp Det:", np.linalg.det(stiffness_acoustic_flow_p2_simp))
+    print("mass_acoustic_flow_p2_simp Det:", np.linalg.det(mass_acoustic_flow_p2_simp))

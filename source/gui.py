@@ -34,12 +34,14 @@ from source.geometry import Geometry
 from source.guistatics import GUIStatics, Tooltip
 from source.meshgen import CreateMesh
 from source.showsolution import ShowSolution
-from PIL import ImageTk
+from PIL import Image, ImageTk
 import numpy as np
 import datetime
 import warnings
 from scipy.linalg import LinAlgWarning
-
+from tkinter import PhotoImage
+import sys
+import os
 warnings.simplefilter('error', LinAlgWarning)
 
 #################################################
@@ -50,6 +52,19 @@ VERSION_MINOR = 0
 VERSION_PATCH = 0
 #################################################
 
+
+def get_demo_file():
+    if getattr(sys, 'frozen', False):
+        resource_path = sys._MEIPASS
+        img_demo_file = os.path.join(resource_path, "Supp", 'demo_gui.png')
+    else:
+        if __name__ == '__main__':
+            img_demo_file = "../Supp/demo_gui.png"
+        else:
+            img_demo_file = "Supp/demo_gui.png"
+    img_demo = PhotoImage(file=img_demo_file)
+
+    return img_demo
 
 class GUI(tk.Tk):
     """
@@ -143,7 +158,38 @@ class GUI(tk.Tk):
         # Add canvas for visualization of geometry, boundaries, mesh...
         self.animation = True  # Start Main window canvas with animation cause ppl like animations :)
 
+
         def animate():
+            """
+            serious animation...
+
+            :return:
+            """
+            if self.animation:
+                all_canvas_elements = self.canvas.find_all()
+                for elem in all_canvas_elements:
+                    self.canvas.delete(elem)
+                GUIStatics.add_canvas_border(self.canvas)
+                txt_1 = 'WELCOME TO TinyFEM'
+                subtext_1 = 'A small FEM program to solve heat transfer problems \nand wave propagation problems in the frequency domain with ease'
+                self.canvas.create_text(380, 80, text=txt_1,
+                                        fill='#5A4848', font=("Helvetica", 42))
+                self.canvas.create_text(450, 155, text=subtext_1, fill='#5F5C5C', font=("Helvetica", 18))
+
+                try:
+                    self.img_demo = get_demo_file()
+                    self.canvas.create_image(50, 250, anchor=tk.NW, image=self.img_demo)
+                except Exception as err:
+                    ...
+
+            else:
+                return None
+
+
+
+
+
+        def animate_old():
             """
             Starting screen animation j4f
             people like animations :)

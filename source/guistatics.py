@@ -26,6 +26,8 @@ Supporting methods for GUI and other
 import tkinter as tk
 import zlib
 
+import numpy as np
+
 
 class Tooltip:
     def __init__(self, widget, text):
@@ -52,6 +54,7 @@ class Tooltip:
         if self.tooltip:
             self.tooltip.destroy()
             self.tooltip = None
+
 
 class GUIStatics:
     """
@@ -101,7 +104,6 @@ class GUIStatics:
     STANDARD_FONT_SMALL_BOLD = ('Arial Black', 9)
     SAVELOAD_FONT = ('Verdana', 10)
 
-
     # ICON as bytestring
 
     @staticmethod
@@ -149,7 +151,7 @@ class GUIStatics:
         node_x = node[0]
         node_y = node[1]
         node_new_x = node_x * scale_factor + GUIStatics.CANVAS_SIZE_X / 2 + GUIStatics.CO_X
-        node_new_y = -node_y * scale_factor + GUIStatics.CANVAS_SIZE_Y / 2 +GUIStatics.CO_Y
+        node_new_y = -node_y * scale_factor + GUIStatics.CANVAS_SIZE_Y / 2 + GUIStatics.CO_Y
 
         return node_new_x, node_new_y
 
@@ -202,7 +204,6 @@ class GUIStatics:
                 canvas.create_line(x, 0, x, height, fill="dark gray", width=1)
             for y in range(GUIStatics.GRID_SPACE, height, GUIStatics.GRID_SPACE):
                 canvas.create_line(0, y, width, y, fill="dark gray", width=1)
-
 
             # coordinatesystem
             canvas.create_line(width / 2, 0, width / 2, height,
@@ -507,8 +508,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
         return lic_info
 
-
-
     @staticmethod
     def return_icon_bytestring():
         """
@@ -674,6 +673,212 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                                 b'\xf9!\xa0w')
 
         return zlib.decompress(compressed_icon_data)
+
+    @staticmethod
+    def get_animation_values():
+        nodes = np.array(
+                [np.array([1.475, 0.25833333]), np.array([1.7375, 0.25833333]), np.array([2., 0.25833333]),
+                 np.array([2.525, 0.25833333]), np.array([2.7875, 0.25833333]), np.array([3.05, 0.25833333]),
+                 np.array([3.3125, 0.25833333]), np.array([3.575, 0.25833333]), np.array([3.8375, 0.25833333]),
+                 np.array([1.475, 0.51666667]), np.array([1.7375, 0.51666667]), np.array([2., 0.51666667]),
+                 np.array([2.525, 0.51666667]), np.array([2.7875, 0.51666667]), np.array([3.05, 0.51666667]),
+                 np.array([3.3125, 0.51666667]), np.array([3.575, 0.51666667]), np.array([3.8375, 0.51666667]),
+                 np.array([0.1625, 0.775]), np.array([1.2125, 0.775]), np.array([1.475, 0.775]),
+                 np.array([1.7375, 0.775]), np.array([2., 0.775]), np.array([2.525, 0.775]), np.array([2.7875, 0.775]),
+                 np.array([3.05, 0.775]), np.array([3.3125, 0.775]), np.array([3.575, 0.775]),
+                 np.array([3.8375, 0.775]), np.array([0.1625, 1.03333333]), np.array([0.425, 1.03333333]),
+                 np.array([0.95, 1.03333333]), np.array([1.2125, 1.03333333]), np.array([1.475, 1.03333333]),
+                 np.array([1.7375, 1.03333333]), np.array([2., 1.03333333]), np.array([2.525, 1.03333333]),
+                 np.array([2.7875, 1.03333333]), np.array([3.05, 1.03333333]), np.array([3.3125, 1.03333333]),
+                 np.array([3.575, 1.03333333]), np.array([3.8375, 1.03333333]), np.array([0.1625, 1.29166667]),
+                 np.array([0.425, 1.29166667]), np.array([0.6875, 1.29166667]), np.array([0.95, 1.29166667]),
+                 np.array([1.2125, 1.29166667]), np.array([1.475, 1.29166667]), np.array([1.7375, 1.29166667]),
+                 np.array([2., 1.29166667]), np.array([2.2625, 1.29166667]), np.array([2.525, 1.29166667]),
+                 np.array([2.7875, 1.29166667]), np.array([3.05, 1.29166667]), np.array([3.3125, 1.29166667]),
+                 np.array([3.575, 1.29166667]), np.array([3.8375, 1.29166667]), np.array([0.1625, 1.55]),
+                 np.array([0.425, 1.55]), np.array([0.6875, 1.55]), np.array([0.95, 1.55]), np.array([1.2125, 1.55]),
+                 np.array([1.475, 1.55]), np.array([1.7375, 1.55]), np.array([2., 1.55]), np.array([2.2625, 1.55]),
+                 np.array([2.525, 1.55]), np.array([2.7875, 1.55]), np.array([3.05, 1.55]), np.array([3.3125, 1.55]),
+                 np.array([3.575, 1.55]), np.array([3.8375, 1.55]), np.array([0.1625, 1.80833333]),
+                 np.array([0.425, 1.80833333]), np.array([0.6875, 1.80833333]), np.array([0.95, 1.80833333]),
+                 np.array([1.2125, 1.80833333]), np.array([1.475, 1.80833333]), np.array([1.7375, 1.80833333]),
+                 np.array([2., 1.80833333]), np.array([2.2625, 1.80833333]), np.array([2.525, 1.80833333]),
+                 np.array([2.7875, 1.80833333]), np.array([3.05, 1.80833333]), np.array([3.3125, 1.80833333]),
+                 np.array([3.575, 1.80833333]), np.array([3.8375, 1.80833333]), np.array([0.1625, 2.06666667]),
+                 np.array([0.425, 2.06666667]), np.array([0.6875, 2.06666667]), np.array([0.95, 2.06666667]),
+                 np.array([1.2125, 2.06666667]), np.array([1.475, 2.06666667]), np.array([1.7375, 2.06666667]),
+                 np.array([2., 2.06666667]), np.array([2.2625, 2.06666667]), np.array([2.525, 2.06666667]),
+                 np.array([2.7875, 2.06666667]), np.array([3.05, 2.06666667]), np.array([3.3125, 2.06666667]),
+                 np.array([3.575, 2.06666667]), np.array([3.8375, 2.06666667]), np.array([0.1625, 2.325]),
+                 np.array([0.425, 2.325]), np.array([0.6875, 2.325]), np.array([0.95, 2.325]),
+                 np.array([1.2125, 2.325]), np.array([1.475, 2.325]), np.array([1.7375, 2.325]), np.array([2., 2.325]),
+                 np.array([2.2625, 2.325]), np.array([2.525, 2.325]), np.array([2.7875, 2.325]),
+                 np.array([3.05, 2.325]), np.array([3.3125, 2.325]), np.array([3.575, 2.325]),
+                 np.array([3.8375, 2.325]), np.array([0.1625, 2.58333333]), np.array([0.425, 2.58333333]),
+                 np.array([0.6875, 2.58333333]), np.array([0.95, 2.58333333]), np.array([1.2125, 2.58333333]),
+                 np.array([1.475, 2.58333333]), np.array([1.7375, 2.58333333]), np.array([2., 2.58333333]),
+                 np.array([2.2625, 2.58333333]), np.array([2.525, 2.58333333]), np.array([2.7875, 2.58333333]),
+                 np.array([3.05, 2.58333333]), np.array([3.3125, 2.58333333]), np.array([3.575, 2.58333333]),
+                 np.array([3.8375, 2.58333333]), np.array([0.1625, 2.84166667]), np.array([0.425, 2.84166667]),
+                 np.array([0.6875, 2.84166667]), np.array([0.95, 2.84166667]), np.array([1.2125, 2.84166667]),
+                 np.array([1.475, 2.84166667]), np.array([1.7375, 2.84166667]), np.array([2., 2.84166667]),
+                 np.array([2.2625, 2.84166667]), np.array([2.525, 2.84166667]), np.array([2.7875, 2.84166667]),
+                 np.array([3.05, 2.84166667]), np.array([3.3125, 2.84166667]), np.array([3.575, 2.84166667]),
+                 np.array([3.8375, 2.84166667]), np.array([4.1, 0.]), np.array([4.1, 0.23846154]),
+                 np.array([4.1, 0.47692308]), np.array([4.1, 0.71538462]), np.array([4.1, 0.95384615]),
+                 np.array([4.1, 1.19230769]), np.array([4.1, 1.43076923]), np.array([4.1, 1.66923077]),
+                 np.array([4.1, 1.90769231]), np.array([4.1, 2.14615385]), np.array([4.1, 2.38461538]),
+                 np.array([4.1, 2.62307692]), np.array([4.1, 2.86153846]), np.array([4.1, 3.1]),
+                 np.array([3.85294118, 3.1]), np.array([3.60588235, 3.1]), np.array([3.35882353, 3.1]),
+                 np.array([3.11176471, 3.1]), np.array([2.86470588, 3.1]), np.array([2.61764706, 3.1]),
+                 np.array([2.37058824, 3.1]), np.array([2.12352941, 3.1]), np.array([1.87647059, 3.1]),
+                 np.array([1.62941176, 3.1]), np.array([1.38235294, 3.1]), np.array([1.13529412, 3.1]),
+                 np.array([0.88823529, 3.1]), np.array([0.64117647, 3.1]), np.array([0.39411765, 3.1]),
+                 np.array([0.14705882, 3.1]), np.array([-0.1, 3.1]), np.array([-0.1, 2.86153846]),
+                 np.array([-0.1, 2.62307692]), np.array([-0.1, 2.38461538]), np.array([-0.1, 2.14615385]),
+                 np.array([-0.1, 1.90769231]), np.array([-0.1, 1.66923077]), np.array([-0.1, 1.43076923]),
+                 np.array([-0.1, 1.19230769]), np.array([-0.1, 0.95384615]), np.array([-0.1, 0.71538462]),
+                 np.array([-0.1, 0.47692308]), np.array([-0.1, 0.23846154]), np.array([-0.1, 0.]), np.array([0.05, 0.]),
+                 np.array([0.2, 0.]), np.array([0.2, 0.2]), np.array([0.2, 0.4]), np.array([0.2, 0.6]),
+                 np.array([0.325, 0.75]), np.array([0.45, 0.9]), np.array([0.575, 1.05]), np.array([0.7, 1.2]),
+                 np.array([0.825, 1.05]), np.array([0.95, 0.9]), np.array([1.075, 0.75]), np.array([1.2, 0.6]),
+                 np.array([1.2, 0.4]), np.array([1.2, 0.2]), np.array([1.2, 0.]), np.array([1.425, 0.]),
+                 np.array([1.65, 0.]), np.array([1.875, 0.]), np.array([2.1, 0.]), np.array([2.1, 0.2125]),
+                 np.array([2.1, 0.425]), np.array([2.1, 0.6375]), np.array([2.1, 0.85]), np.array([2.2, 1.]),
+                 np.array([2.3, 1.15]), np.array([2.4, 1.15]), np.array([2.3, 1.]), np.array([2.2, 0.85]),
+                 np.array([2.2, 0.6375]), np.array([2.2, 0.425]), np.array([2.2, 0.2125]), np.array([2.2, 0.]),
+                 np.array([2.4375, 0.]), np.array([2.675, 0.]), np.array([2.9125, 0.]), np.array([3.15, 0.]),
+                 np.array([3.3875, 0.]), np.array([3.625, 0.]), np.array([3.8625, 0.]), np.array([3., 0.6])])
+        nodes[:, 1] = nodes[:, 1] - 1.5
+
+        triangulation = np.array(
+                [np.array([230., 8., 229.]), np.array([158., 146., 131.]), np.array([143., 164., 165.]),
+                 np.array([140., 167., 168.]), np.array([167., 140., 141.]), np.array([142., 143., 165.]),
+                 np.array([148., 230., 147.]), np.array([230., 148., 8.]), np.array([8., 7., 229.]),
+                 np.array([117., 179., 180.]), np.array([179., 117., 132.]), np.array([30., 29., 197.]),
+                 np.array([154., 71., 153.]), np.array([146., 161., 162.]), np.array([145., 146., 162.]),
+                 np.array([157., 158., 131.]), np.array([158., 159., 146.]), np.array([161., 159., 160.]),
+                 np.array([159., 161., 146.]), np.array([86., 154., 155.]), np.array([154., 86., 71.]),
+                 np.array([166., 167., 141.]), np.array([142., 166., 141.]), np.array([166., 142., 165.]),
+                 np.array([148., 149., 8.]), np.array([7., 228., 229.]), np.array([231., 13., 14.]),
+                 np.array([13., 231., 24.]), np.array([57., 183., 184.]), np.array([182., 183., 72.]),
+                 np.array([183., 57., 72.]), np.array([42., 57., 184.]), np.array([178., 179., 132.]),
+                 np.array([175., 176., 132.]), np.array([178., 176., 177.]), np.array([176., 178., 132.]),
+                 np.array([102., 117., 180.]), np.array([191., 192., 193.]), np.array([191., 189., 190.]),
+                 np.array([189., 191., 193.]), np.array([195., 18., 187.]), np.array([18., 186., 187.]),
+                 np.array([186., 18., 29.]), np.array([188., 195., 187.]), np.array([23., 220., 12.]),
+                 np.array([163., 145., 162.]), np.array([6., 228., 7.]), np.array([185., 42., 184.]),
+                 np.array([42., 185., 29.]), np.array([185., 186., 29.]), np.array([174., 134., 173.]),
+                 np.array([134., 135., 173.]), np.array([135., 172., 173.]), np.array([172., 135., 136.]),
+                 np.array([133., 175., 132.]), np.array([133., 174., 175.]), np.array([174., 133., 134.]),
+                 np.array([169., 139., 168.]), np.array([139., 140., 168.]), np.array([170., 171., 137.]),
+                 np.array([171., 136., 137.]), np.array([171., 172., 136.]), np.array([181., 102., 180.]),
+                 np.array([181., 87., 102.]), np.array([87., 181., 182.]), np.array([87., 182., 72.]),
+                 np.array([207., 205., 206.]), np.array([30., 198., 43.]), np.array([198., 30., 197.]),
+                 np.array([196., 18., 195.]), np.array([29., 196., 197.]), np.array([18., 196., 29.]),
+                 np.array([194., 188., 189.]), np.array([194., 189., 193.]), np.array([188., 194., 195.]),
+                 np.array([222., 223., 224.]), np.array([3., 222., 224.]), np.array([220., 221., 12.]),
+                 np.array([221., 3., 12.]), np.array([3., 221., 222.]), np.array([2., 209., 210.]),
+                 np.array([211., 2., 210.]), np.array([2., 211., 212.]), np.array([209., 1., 208.]),
+                 np.array([1., 209., 2.]), np.array([219., 23., 218.]), np.array([219., 220., 23.]),
+                 np.array([11., 2., 212.]), np.array([151., 152., 41.]), np.array([28., 151., 41.]),
+                 np.array([151., 28., 150.]), np.array([56., 152., 153.]), np.array([71., 56., 153.]),
+                 np.array([152., 56., 41.]), np.array([163., 144., 145.]), np.array([144., 163., 164.]),
+                 np.array([144., 164., 143.]), np.array([157., 116., 156.]), np.array([116., 157., 131.]),
+                 np.array([216., 217., 50.]), np.array([49., 216., 50.]), np.array([23., 36., 218.]),
+                 np.array([36., 217., 218.]), np.array([36., 51., 217.]), np.array([217., 51., 50.]),
+                 np.array([6., 227., 228.]), np.array([17., 149., 150.]), np.array([28., 17., 150.]),
+                 np.array([149., 17., 8.]), np.array([4., 225., 226.]), np.array([3., 225., 4.]),
+                 np.array([225., 3., 224.]), np.array([138., 169., 170.]), np.array([138., 139., 169.]),
+                 np.array([138., 170., 137.]), np.array([199., 45., 44.]), np.array([45., 199., 200.]),
+                 np.array([199., 44., 43.]), np.array([198., 199., 43.]), np.array([0., 207., 208.]),
+                 np.array([1., 0., 208.]), np.array([207., 0., 205.]), np.array([205., 0., 204.]),
+                 np.array([213., 11., 212.]), np.array([35., 214., 215.]), np.array([216., 35., 215.]),
+                 np.array([35., 216., 49.]), np.array([31., 45., 200.]), np.array([116., 101., 156.]),
+                 np.array([101., 155., 156.]), np.array([101., 86., 155.]), np.array([25., 231., 14.]),
+                 np.array([231., 25., 24.]), np.array([227., 5., 226.]), np.array([5., 4., 226.]),
+                 np.array([5., 227., 6.]), np.array([0., 9., 204.]), np.array([213., 22., 11.]),
+                 np.array([22., 213., 214.]), np.array([35., 22., 214.]), np.array([31., 201., 32.]),
+                 np.array([201., 202., 32.]), np.array([201., 31., 200.]), np.array([202., 19., 32.]),
+                 np.array([203., 9., 20.]), np.array([19., 203., 20.]), np.array([9., 203., 204.]),
+                 np.array([203., 19., 202.]), np.array([111., 97., 112.]), np.array([96., 97., 111.]),
+                 np.array([13., 23., 12.]), np.array([23., 13., 24.]), np.array([30., 42., 29.]),
+                 np.array([42., 30., 43.]), np.array([42., 43., 58.]), np.array([57., 42., 58.]),
+                 np.array([75., 91., 90.]), np.array([91., 75., 76.]), np.array([75., 61., 76.]),
+                 np.array([61., 75., 60.]), np.array([61., 77., 76.]), np.array([77., 61., 62.]),
+                 np.array([86., 85., 71.]), np.array([71., 85., 70.]), np.array([127., 111., 112.]),
+                 np.array([127., 126., 111.]), np.array([127., 142., 141.]), np.array([126., 127., 141.]),
+                 np.array([125., 126., 141.]), np.array([140., 125., 141.]), np.array([6., 16., 15.]),
+                 np.array([16., 6., 7.]), np.array([121., 135., 120.]), np.array([135., 121., 136.]),
+                 np.array([45., 61., 60.]), np.array([61., 45., 46.]), np.array([135., 119., 120.]),
+                 np.array([119., 135., 134.]), np.array([119., 105., 120.]), np.array([105., 119., 104.]),
+                 np.array([87., 103., 102.]), np.array([103., 87., 88.]), np.array([3., 13., 12.]),
+                 np.array([3., 4., 13.]), np.array([11., 1., 2.]), np.array([1., 11., 10.]), np.array([65., 49., 50.]),
+                 np.array([49., 65., 64.]), np.array([63., 49., 64.]), np.array([48., 49., 63.]),
+                 np.array([47., 48., 63.]), np.array([62., 47., 63.]), np.array([48., 47., 34.]),
+                 np.array([47., 33., 34.]), np.array([61., 47., 62.]), np.array([47., 61., 46.]),
+                 np.array([32., 47., 46.]), np.array([47., 32., 33.]), np.array([78., 77., 62.]),
+                 np.array([78., 62., 63.]), np.array([56., 71., 70.]), np.array([55., 56., 70.]),
+                 np.array([145., 130., 146.]), np.array([146., 130., 131.]), np.array([130., 116., 131.]),
+                 np.array([116., 130., 115.]), np.array([51., 67., 66.]), np.array([67., 51., 52.]),
+                 np.array([51., 65., 50.]), np.array([51., 66., 65.]), np.array([126., 110., 111.]),
+                 np.array([125., 110., 126.]), np.array([110., 96., 111.]), np.array([110., 95., 96.]),
+                 np.array([66., 80., 65.]), np.array([80., 66., 81.]), np.array([95., 80., 96.]),
+                 np.array([96., 80., 81.]), np.array([17., 16., 7.]), np.array([17., 7., 8.]),
+                 np.array([40., 56., 55.]), np.array([56., 40., 41.]), np.array([124., 110., 125.]),
+                 np.array([110., 124., 109.]), np.array([124., 125., 140.]), np.array([139., 124., 140.]),
+                 np.array([73., 57., 58.]), np.array([57., 73., 72.]), np.array([87., 73., 88.]),
+                 np.array([73., 87., 72.]), np.array([43., 59., 58.]), np.array([44., 59., 43.]),
+                 np.array([59., 73., 58.]), np.array([73., 59., 74.]), np.array([59., 45., 60.]),
+                 np.array([45., 59., 44.]), np.array([75., 59., 60.]), np.array([74., 59., 75.]),
+                 np.array([89., 105., 104.]), np.array([105., 89., 90.]), np.array([89., 75., 90.]),
+                 np.array([89., 74., 75.]), np.array([89., 103., 88.]), np.array([103., 89., 104.]),
+                 np.array([73., 89., 88.]), np.array([89., 73., 74.]), np.array([118., 119., 134.]),
+                 np.array([133., 118., 134.]), np.array([119., 118., 104.]), np.array([118., 103., 104.]),
+                 np.array([117., 118., 132.]), np.array([118., 133., 132.]), np.array([103., 118., 102.]),
+                 np.array([102., 118., 117.]), np.array([91., 106., 90.]), np.array([106., 105., 90.]),
+                 np.array([106., 121., 120.]), np.array([105., 106., 120.]), np.array([121., 122., 136.]),
+                 np.array([136., 122., 137.]), np.array([106., 122., 121.]), np.array([122., 106., 107.]),
+                 np.array([35., 49., 48.]), np.array([35., 48., 34.]), np.array([45., 31., 46.]),
+                 np.array([31., 32., 46.]), np.array([97., 113., 112.]), np.array([98., 113., 97.]),
+                 np.array([101., 85., 86.]), np.array([85., 101., 100.]), np.array([101., 116., 115.]),
+                 np.array([101., 115., 100.]), np.array([69., 55., 70.]), np.array([55., 69., 54.]),
+                 np.array([85., 69., 70.]), np.array([84., 69., 85.]), np.array([82., 97., 96.]),
+                 np.array([82., 96., 81.]), np.array([67., 82., 66.]), np.array([66., 82., 81.]),
+                 np.array([37., 23., 24.]), np.array([37., 36., 23.]), np.array([51., 37., 52.]),
+                 np.array([37., 51., 36.]), np.array([25., 37., 24.]), np.array([37., 25., 38.]),
+                 np.array([37., 53., 52.]), np.array([37., 38., 53.]), np.array([79., 63., 64.]),
+                 np.array([79., 78., 63.]), np.array([65., 79., 64.]), np.array([80., 79., 65.]),
+                 np.array([5., 6., 15.]), np.array([14., 5., 15.]), np.array([4., 5., 13.]), np.array([13., 5., 14.]),
+                 np.array([26., 14., 15.]), np.array([26., 25., 14.]), np.array([123., 124., 139.]),
+                 np.array([138., 123., 139.]), np.array([122., 123., 137.]), np.array([123., 138., 137.]),
+                 np.array([9., 1., 10.]), np.array([9., 0., 1.]), np.array([21., 9., 10.]), np.array([9., 21., 20.]),
+                 np.array([33., 21., 34.]), np.array([20., 21., 33.]), np.array([78., 92., 77.]),
+                 np.array([93., 92., 78.]), np.array([92., 91., 76.]), np.array([77., 92., 76.]),
+                 np.array([92., 106., 91.]), np.array([106., 92., 107.]), np.array([129., 130., 145.]),
+                 np.array([144., 129., 145.]), np.array([99., 85., 100.]), np.array([99., 84., 85.]),
+                 np.array([68., 67., 52.]), np.array([53., 68., 52.]), np.array([69., 68., 54.]),
+                 np.array([68., 53., 54.]), np.array([79., 94., 78.]), np.array([94., 93., 78.]),
+                 np.array([110., 94., 95.]), np.array([94., 110., 109.]), np.array([94., 80., 95.]),
+                 np.array([94., 79., 80.]), np.array([16., 27., 15.]), np.array([27., 26., 15.]),
+                 np.array([17., 27., 16.]), np.array([27., 17., 28.]), np.array([40., 27., 41.]),
+                 np.array([27., 28., 41.]), np.array([38., 39., 53.]), np.array([53., 39., 54.]),
+                 np.array([25., 39., 38.]), np.array([26., 39., 25.]), np.array([39., 40., 55.]),
+                 np.array([39., 55., 54.]), np.array([27., 39., 26.]), np.array([39., 27., 40.]),
+                 np.array([108., 92., 93.]), np.array([92., 108., 107.]), np.array([108., 122., 107.]),
+                 np.array([108., 123., 122.]), np.array([94., 108., 93.]), np.array([108., 94., 109.]),
+                 np.array([124., 108., 109.]), np.array([123., 108., 124.]), np.array([11., 22., 10.]),
+                 np.array([22., 21., 10.]), np.array([22., 35., 34.]), np.array([21., 22., 34.]),
+                 np.array([32., 19., 33.]), np.array([19., 20., 33.]), np.array([128., 129., 144.]),
+                 np.array([128., 144., 143.]), np.array([127., 128., 142.]), np.array([142., 128., 143.]),
+                 np.array([128., 127., 112.]), np.array([113., 128., 112.]), np.array([128., 114., 129.]),
+                 np.array([114., 128., 113.]), np.array([114., 113., 98.]), np.array([99., 114., 98.]),
+                 np.array([130., 114., 115.]), np.array([129., 114., 130.]), np.array([115., 114., 100.]),
+                 np.array([114., 99., 100.]), np.array([99., 83., 84.]), np.array([83., 99., 98.]),
+                 np.array([83., 69., 84.]), np.array([83., 68., 69.]), np.array([83., 98., 97.]),
+                 np.array([82., 83., 97.]), np.array([83., 82., 67.]), np.array([68., 83., 67.])])
+
+        return nodes, triangulation
 
 
 if __name__ == '__main__':
