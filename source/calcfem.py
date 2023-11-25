@@ -259,11 +259,7 @@ class CalcFEM:
                     bc_std_g = 0  # only impedance
                 for e0, e1 in zip(bc_nodes[:-1], bc_nodes[1:]):
                     self.boundaries_incidence_matrix.append([e0[0], e1[0]])
-                    if self.ffp == 2:
-                        boundary_element_matrix, force_vector_matrix = ElementMatrices.boundary_element_p2(
-                                [e0[1], e1[1]], bc_std_a, bc_std_b, bc_std_g)
-                    else:
-                        boundary_element_matrix, force_vector_matrix = ElementMatrices.boundary_element_p1([e0[1], e1[1]], bc_std_a, bc_std_b, bc_std_g)
+                    boundary_element_matrix, force_vector_matrix = ElementMatrices.boundary_element_p1([e0[1], e1[1]], bc_std_a, bc_std_b, bc_std_g)
                     self.all_boundary_elements.append(boundary_element_matrix)
                     if bc_type == 'Robin':
                         #self.allboundary_elements_forcevektor.append([[e0[0], e1[0]], force_vector_matrix])
