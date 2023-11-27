@@ -1329,16 +1329,14 @@ class GUI(tk.Tk):
         self.node_parameters = node_parameters
         self.calculation_parameters = calculation_parameters
 
-    def init_information_text_field(self):
+    def init_information_text_field_new(self):
         """
         Initializes the information text field with the geometry provided
         :return:
         """
-        self.text_information_str = f"Regions:\n" + ''.join(text_regions) \
-                                    + '\nBoundaries:\n' + ''.join(text_boundaries) \
-                                    + '\n\nNodes:\n' + ''.join(text_nodes)
+        ...
 
-    def init_information_text_field_OLD(self):
+    def init_information_text_field(self):
         """
         Initializes the information text field with the geometry provided
         :return:
