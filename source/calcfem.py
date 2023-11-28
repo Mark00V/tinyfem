@@ -26,8 +26,8 @@ File performs FEM calculations.
 
 from scipy.interpolate import griddata
 import numpy as np
-from source.celements import ElementMatrices  # little bit of improvement (10%)
-#from source.elements import ElementMatrices
+#from source.celements import ElementMatrices  # little bit of improvement (10%)
+from source.elements import ElementMatrices
 import matplotlib.tri as tri
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -40,8 +40,9 @@ import matplotlib  # delete later, only used for development in matplotlib.use('
 import time
 import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve
+from scipy.sparse.linalg import cg # todo, try this
 from scipy.sparse import csc_matrix
-from source.get_quad_triangulation import get_triangulation_quad_init
+#from source.get_quad_triangulation import get_triangulation_quad_init
 
 time_it_dict = dict()
 
@@ -98,7 +99,7 @@ class CalcFEM:
         self.ffp = 1  # Das muss f+r p>1 schon bei Netzerstellung gemacht werden..:TODO
 
         # development
-        self.file_path_dev = r'K:/OneDrive/Science/PyCharmProjects/tinyfem/testing/output_gui_4_calcfem_' + '14' + '.txt'
+        self.file_path_dev = r'../testing/output_gui_4_calcfem_' + '11' + '.txt'
 
     @timing_decorator
     def calc_fem(self):
@@ -113,12 +114,13 @@ class CalcFEM:
 
         ########################################################################
         # change triangulationa and nodes according to order of formfunctions
-        if self.ffp == 2:
-            triangulation_quad, nodes_quad = get_triangulation_quad_init(self.triangulation, self.nodes_mesh_gen)
-            self.nodes_mesh_gen = nodes_quad
-            self.triangulation = triangulation_quad
-        else:
-            ...
+        # TODO in later versions...
+        # if self.ffp == 2:
+        #     triangulation_quad, nodes_quad = get_triangulation_quad_init(self.triangulation, self.nodes_mesh_gen)
+        #     self.nodes_mesh_gen = nodes_quad
+        #     self.triangulation = triangulation_quad
+        # else:
+        #     ...
         ########################################################################
 
 
@@ -399,11 +401,14 @@ class CalcFEM:
         :return:
         """
         print(f"Solving system...")
+        def callback(xk):
+            print(f"Current residual norm: {np.linalg.norm(forcevec - sysmat.dot(xk))}")
         sysmat = sp.csr_matrix(self.sysmatrix_diri)
         forcevec = self.force_vector_diri
         # self.solution = pypardiso.spsolve(sysmat, forcevec)  # does not support complex values yet..
         # removed from imports
         self.solution = spsolve(sysmat, forcevec)
+        #self.solution, info = cg(sysmat, forcevec, callback=callback)
 
     @timing_decorator
     def create_force_vector(self):
