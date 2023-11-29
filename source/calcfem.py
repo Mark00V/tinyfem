@@ -95,6 +95,9 @@ class CalcFEM:
         self.all_boundary_elements = None  # list contains all boundary element matrices
         self.sysboundaries = None  # Boundary matrix e.g. impedance matrix for system
 
+        # Other
+        self.calc_info = {'step': 'None', 'n': 'None', 'other': 'None'}
+
         # formfunction order
         self.ffp = 1  # Das muss f+r p>1 schon bei Netzerstellung gemacht werden..:TODO
 
@@ -102,7 +105,7 @@ class CalcFEM:
         self.file_path_dev = r'../testing/output_gui_4_calcfem_' + '11' + '.txt'
 
     @timing_decorator
-    def calc_fem(self):
+    def calc_fem(self, callback=None):
         """
         main method for calculation, calculates elementmatrices, assembly of system matrices,
         implements boundary conditions, solves linear system
@@ -127,12 +130,27 @@ class CalcFEM:
         ########################################################################
         # Raw System matrix and force vector (without any boundary conditions)
         # calculate element matrices
-        self.calc_elementmatrices()
+        if callback:
+            self.calc_info['step'] = 'Calculating elements'
+            self.calc_info['n'] = '0'
+            self.calc_info['other'] = str(len(self.triangulation))
+            callback(self.calc_info)
+        self.calc_elementmatrices(callback=callback)
 
         # initialize force vector
+        if callback:
+            self.calc_info['step'] = 'Initialize force vector'
+            self.calc_info['n'] = ''
+            self.calc_info['other'] = ''
+            callback(self.calc_info)
         self.create_force_vector()
 
         # assembly system matrices
+        if callback:
+            self.calc_info['step'] = 'Assembly system matrices'
+            self.calc_info['n'] = ''
+            self.calc_info['other'] = ''
+            callback(self.calc_info)
         self.calc_system_matrices_init()
 
         # -> self.force_vector | self.syssteifarray | self.sysmassarray
@@ -140,9 +158,19 @@ class CalcFEM:
 
         ########################################################################
         # calculate boundary elements for system matrix and frore vector
+        if callback:
+            self.calc_info['step'] = 'Calculate boundary elements'
+            self.calc_info['n'] = ''
+            self.calc_info['other'] = ''
+            callback(self.calc_info)
         self.calc_boundary_elements()
 
         # assembly boundary system matrix
+        if callback:
+            self.calc_info['step'] = 'Assembly boundary matrix'
+            self.calc_info['n'] = ''
+            self.calc_info['other'] = ''
+            callback(self.calc_info)
         self.assembly_system_matrix_boundaries()
 
         # -> self.sysboundaries                         system boundary matrix with Neumann/Robin BCs
@@ -152,14 +180,29 @@ class CalcFEM:
         ########################################################################
         # Systemmatrix and force vector with added Neumann/Robin BCs
         # implement Neumann/robin into raw system matrix
+        if callback:
+            self.calc_info['step'] = 'Implement Neumann/Robin BC matrix'
+            self.calc_info['n'] = ''
+            self.calc_info['other'] = ''
+            callback(self.calc_info)
         self.calc_system_matrices_robin_neumann_bc()
 
         # # implement acoustic sources if helmholtz equation
         if self.equation =='HH':
+            if callback:
+                self.calc_info['step'] = 'Calculate acoustic sources'
+                self.calc_info['n'] = ''
+                self.calc_info['other'] = ''
+                callback(self.calc_info)
             self.calculate_acoustic_sources()
             self.implement_acoustic_sources()
 
         # # implement robin boundary condition in force vector
+        if callback:
+            self.calc_info['step'] = 'Implement Neumann/Robin BC force vector'
+            self.calc_info['n'] = ''
+            self.calc_info['other'] = ''
+            callback(self.calc_info)
         self.implement_robin_force_vector()
 
         # -> self.sysarray_neumann_robin        System matrix with implemented neumann /robin BCs
@@ -168,6 +211,11 @@ class CalcFEM:
 
         ########################################################################
         # implement dirichlet boundary conditions
+        if callback:
+            self.calc_info['step'] = 'Implement Dirichlet BC'
+            self.calc_info['n'] = ''
+            self.calc_info['other'] = ''
+            callback(self.calc_info)
         self.implement_dirichlet_boundary_conditions()
 
         # -> self.sysmatrix_diri | self.force_vector_diri
@@ -177,6 +225,11 @@ class CalcFEM:
         # solve system
         #self.develop_print_input()
         #self.print_matrix(self.sysmatrix_diri)
+        if callback:
+            self.calc_info['step'] = f"Solving linear system for {len(self.nodes_mesh_gen)} variables"
+            self.calc_info['n'] = ''
+            self.calc_info['other'] = ''
+            callback(self.calc_info)
         self.solve_linear_system()
 
         ########################################################################
@@ -401,8 +454,8 @@ class CalcFEM:
         :return:
         """
         print(f"Solving system...")
-        def callback(xk):
-            print(f"Current residual norm: {np.linalg.norm(forcevec - sysmat.dot(xk))}")
+        #def callback(xk):
+        #    print(f"Current residual norm: {np.linalg.norm(forcevec - sysmat.dot(xk))}")
         sysmat = sp.csr_matrix(self.sysmatrix_diri)
         forcevec = self.force_vector_diri
         # self.solution = pypardiso.spsolve(sysmat, forcevec)  # does not support complex values yet..
@@ -439,7 +492,7 @@ class CalcFEM:
                     self.sysmassarray[zta, ztb] = self.sysmassarray[zta, ztb] + elemassmat[a, b]
 
     @timing_decorator
-    def calc_elementmatrices(self):
+    def calc_elementmatrices(self, callback=None):
         """
 
         :return:
@@ -468,7 +521,10 @@ class CalcFEM:
         elemmass = None
         print(f"Calculating element matrices...")
         for idx, triangle in enumerate(self.triangulation):
-            print(f"{idx} / {len(self.triangulation)}", end='\r')  # This does not show in pycharm, only via cmd / .exe
+            self.calc_info['n'] = idx
+            if callback:
+                callback(self.calc_info)
+            #print(f"{idx} / {len(self.triangulation)}", end='\r')  # This does not show in pycharm, only via cmd / .exe
             b_region = get_region_number(idx)
             materials = self.region_parameters[b_region]['material']
             k = float(materials['k'])

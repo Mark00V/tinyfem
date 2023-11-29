@@ -95,6 +95,7 @@ class GUI(tk.Tk):
         self.triangulation_region_dict = None
         # Other
         GUIStatics.CANVAS_SCALE_FACTOR = 100
+        self.elemcounter = 0  # Callbackvariable for parsing elements calculated from class CalcFEM to class GUI
 
         # some output for user
         self.text_information_str = ''
@@ -348,7 +349,7 @@ class GUI(tk.Tk):
                         self.calculation_parameters)
                 try:
                     calcfem = CalcFEM(params_mesh, params_boundaries_materials)
-                    self.solution = calcfem.calc_fem()
+                    self.solution = calcfem.calc_fem(callback=self.callback_calcfem)
                 except np.linalg.LinAlgError:
                     err_message = ('Singular Matrix encountered!\n'
                                    'Check Boundary Conditions \n'
@@ -401,9 +402,10 @@ class GUI(tk.Tk):
                 while thread_mesh.is_alive():
                     if wait_text == '.....':
                         wait_text = ''
-                    wait_text += '.'
+                    #wait_text += '.'
+                    wait_text = f"Element: {self.elemcounter} / {len(self.triangulation)}"
                     window_solve_system_wait_label.config(text=wait_text)
-                    time.sleep(0.5)
+                    time.sleep(0.1)
                 window_solve_system_wait.destroy()
 
             update_thread = threading.Thread(target=update_wait_label)
@@ -1241,6 +1243,12 @@ class GUI(tk.Tk):
         button_accept = tk.Button(window_bcs, text="ACCEPT BCs", command=accept_bcs,
                                   width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
         button_accept.place(relx=widgets_x_start + 0.05, rely=0.895)
+
+    def callback_calcfem(self, calc_info):
+        """
+        callback for parsing calculation e.g. element matrices to GUI
+        """
+        print(f"Current Step: {calc_info['step']}    {calc_info['n']} {calc_info['other']}", end='\r')
 
     def create_BC_params(self):
         """

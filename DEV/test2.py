@@ -1,33 +1,18 @@
-# use in fa:
-# 1: walrus
-# squares = [square for x in range(10) if (square := x ** 2) > 5]
-# print(squares)
+# file A
+class TestA:
 
-# other examp
-# def my_function(a, b):
-#     return a * b
-#
-# result = my_function((x := 10), x * 2)
-# print(x)
-# print(result)
+    def main(self):
+        for n in range(100):
 
-# 2: gen exp
-# ge = (i for i in range(10))
-# for _ in range(10):
-#     print(next(ge))
+            print(n)
 
-# 3: callback
-# def process_data(data, callback):
-#     # Perform some data processing
-#     processed_data = data + 10
-#
-#     # Call the callback function with the processed data
-#     callback(processed_data)
-#
-# # Define a callback function
-# def print_result(result):
-#     print(f"Processed result: {result}")
-#
-# # Call the process_data function with the callback
-# data_to_process = 5
-# process_data(data_to_process, print_result)
+
+# file B
+class TestB:
+    def get_n(self, fun):
+        return fun
+
+    def main(self):
+        testa = TestA()
+        testa.main()
+        print()
