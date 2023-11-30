@@ -95,7 +95,7 @@ class GUI(tk.Tk):
         self.triangulation_region_dict = None
         # Other
         GUIStatics.CANVAS_SCALE_FACTOR = 100
-        self.elemcounter = 0  # Callbackvariable for parsing elements calculated from class CalcFEM to class GUI
+        self.calc_info = {'step': None, 'n': None, 'other': None}  # Callbackvariable for parsing elements calculated from class CalcFEM to class GUI
 
         # some output for user
         self.text_information_str = ''
@@ -267,7 +267,7 @@ class GUI(tk.Tk):
                 try:
                     mesh = CreateMesh(self.region_parameters, self.boundary_parameters,
                                       self.node_parameters, self.calculation_parameters)
-                    mesh_generator_output = mesh.create_mesh()
+                    mesh_generator_output = mesh.create_mesh(callback=self.callback_calc)
                     self.nodes_mesh_gen = mesh_generator_output[0]
                     self.single_nodes_dict = mesh_generator_output[1]
                     self.boundary_nodes_dict = mesh_generator_output[2]
@@ -280,15 +280,15 @@ class GUI(tk.Tk):
 
             window_create_mesh_wait = tk.Toplevel(self)
             window_create_mesh_wait.title('CREATING MESH')
-            window_create_mesh_wait.geometry(f"{200}x{150}")
+            window_create_mesh_wait.geometry(f"{300}x{150}")
             window_create_mesh_wait.resizable(False, False)
             icon_image = ImageTk.PhotoImage(data=GUIStatics.return_icon_bytestring())
             window_create_mesh_wait.tk.call('wm', 'iconphoto', window_create_mesh_wait._w, icon_image)
-            tk.Label(window_create_mesh_wait, text="Creating Mesh...\nPlease Wait",
+            tk.Label(window_create_mesh_wait, text="Creating Mesh...Please Wait",
                      font=GUIStatics.STANDARD_FONT_MID_BOLD).place(relx=0.15, rely=0.1)
             window_create_mesh_wait_label = tk.Label(window_create_mesh_wait, text="",
-                                                     font=GUIStatics.STANDARD_FONT_MID_BOLD)
-            window_create_mesh_wait_label.place(relx=0.35, rely=0.6)
+                                                     font=GUIStatics.STANDARD_FONT_SMALL_BOLD, anchor="sw", justify="left")
+            window_create_mesh_wait_label.place(relx=0.05, rely=0.3)
             thread_mesh = threading.Thread(target=thread_create_mesh)
             thread_mesh.start()
 
@@ -301,11 +301,11 @@ class GUI(tk.Tk):
                 """
                 wait_text = ''
                 while thread_mesh.is_alive():
-                    if wait_text == '.....':
-                        wait_text = ''
-                    wait_text += '.'
+                    wait_text = (f"Current Step: \n"
+                                 f"{self.calc_info['step']}\n"
+                                 f"{self.calc_info['n']}   {self.calc_info['other']}")
                     window_create_mesh_wait_label.config(text=wait_text)
-                    time.sleep(0.5)
+                    time.sleep(0.05)
                 window_create_mesh_wait.destroy()
 
             update_thread = threading.Thread(target=update_wait_label)
@@ -349,7 +349,7 @@ class GUI(tk.Tk):
                         self.calculation_parameters)
                 try:
                     calcfem = CalcFEM(params_mesh, params_boundaries_materials)
-                    self.solution = calcfem.calc_fem(callback=self.callback_calcfem)
+                    self.solution = calcfem.calc_fem(callback=self.callback_calc)
                 except np.linalg.LinAlgError:
                     err_message = ('Singular Matrix encountered!\n'
                                    'Check Boundary Conditions \n'
@@ -381,15 +381,15 @@ class GUI(tk.Tk):
 
             window_solve_system_wait = tk.Toplevel(self)
             window_solve_system_wait.title('SOLVING')
-            window_solve_system_wait.geometry(f"{200}x{150}")
+            window_solve_system_wait.geometry(f"{300}x{150}")
             window_solve_system_wait.resizable(False, False)
             icon_image = ImageTk.PhotoImage(data=GUIStatics.return_icon_bytestring())
             window_solve_system_wait.tk.call('wm', 'iconphoto', window_solve_system_wait._w, icon_image)
-            tk.Label(window_solve_system_wait, text="Solving System...\nPlease Wait",
-                     font=GUIStatics.STANDARD_FONT_MID_BOLD).place(relx=0.15, rely=0.1)
+            tk.Label(window_solve_system_wait, text="Solving System...Please Wait",
+                     font=GUIStatics.STANDARD_FONT_MID_BOLD, ).place(relx=0.15, rely=0.1)
             window_solve_system_wait_label = tk.Label(window_solve_system_wait, text="",
-                                                     font=GUIStatics.STANDARD_FONT_MID_BOLD)
-            window_solve_system_wait_label.place(relx=0.35, rely=0.6)
+                                                     font=GUIStatics.STANDARD_FONT_SMALL_BOLD, anchor="sw", justify="left")
+            window_solve_system_wait_label.place(relx=0.05, rely=0.3)
             thread_mesh = threading.Thread(target=thread_solve_system)
             thread_mesh.start()
 
@@ -400,12 +400,12 @@ class GUI(tk.Tk):
                 """
                 wait_text = ''
                 while thread_mesh.is_alive():
-                    if wait_text == '.....':
-                        wait_text = ''
-                    #wait_text += '.'
-                    wait_text = f"Element: {self.elemcounter} / {len(self.triangulation)}"
+                    wait_text = (f"Current Step: \n"
+                                 f"{self.calc_info['step']}\n"
+                                 f"{self.calc_info['n']}   {self.calc_info['other']}")
+
                     window_solve_system_wait_label.config(text=wait_text)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
                 window_solve_system_wait.destroy()
 
             update_thread = threading.Thread(target=update_wait_label)
@@ -1244,11 +1244,11 @@ class GUI(tk.Tk):
                                   width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
         button_accept.place(relx=widgets_x_start + 0.05, rely=0.895)
 
-    def callback_calcfem(self, calc_info):
+    def callback_calc(self, calc_info):
         """
         callback for parsing calculation e.g. element matrices to GUI
         """
-        print(f"Current Step: {calc_info['step']}    {calc_info['n']} {calc_info['other']}", end='\r')
+        self.calc_info = calc_info
 
     def create_BC_params(self):
         """

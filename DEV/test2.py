@@ -1,18 +1,12 @@
-# file A
-class TestA:
+import tkinter as tk
 
-    def main(self):
-        for n in range(100):
+# Create the main window
+root = tk.Tk()
+root.geometry("300x200")
 
-            print(n)
+# Create a Label widget with text
+label = tk.Label(root, text="This is a left-anchored label\nTest next line\nTest third line", anchor="w", justify="left")
+label.place(relx=0.01, rely=0.01)
 
-
-# file B
-class TestB:
-    def get_n(self, fun):
-        return fun
-
-    def main(self):
-        testa = TestA()
-        testa.main()
-        print()
+# Start the Tkinter main loop
+root.mainloop()

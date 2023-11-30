@@ -74,18 +74,24 @@ class CreateMesh:
         self.triangulation = None
         self.triangulation_region_dict = None
 
+        # Other
+        self.calc_info = {'step': 'None', 'n': 'None', 'other': 'None'}
+
         # Develop
-        self.file_path_dev = r'K:/OneDrive/Science/PyCharmProjects/tinyfem/testing/output_gui_4_calcfem_' + '14' + '.txt'
+        self.file_path_dev = r'K:/OneDrive/Science/PyCharmProjects/tinyfem/testing/output_gui_4_calcfem_' + '11' + '.txt'
 
     @timing_decorator
-    def create_mesh(self):
+    def create_mesh(self, callback=None):
         self.boundary_nodes = list()
         self.normalize_density()
         self.get_negative_areas()
         self.adjust_density()
-        self.triangulate_regions()
+        self.triangulate_regions(callback=callback)
+        if callback:
+            self.calc_info['step'] = 'Finishing mesh'
+            callback(self.calc_info)
         self.get_single_nodes_pos()
-        self.get_boundary_nodes_pos()
+        self.get_boundary_nodes_pos(callback=callback)
 
 
         return self.nodes, self.single_nodes_dict, self.boundary_nodes_dict, self.triangulation, self.triangulation_region_dict
@@ -346,7 +352,7 @@ class CreateMesh:
                 self.negative_areas.append(reg)
 
     @timing_decorator
-    def seed_region(self, region, region_nbr):
+    def seed_region(self, region, region_nbr, callback=None):
         """
         Creates seed points for region
         :return:
@@ -384,6 +390,10 @@ class CreateMesh:
 
             keep_points = []
             for idn, point in enumerate(rect_seed_points):  # point is np.array
+                if callback:
+                    self.calc_info['n'] = f"{idn} / {len(rect_seed_points)}"
+                    self.calc_info['other'] = f"Checking node"
+                    callback(self.calc_info)
                 point_in_any_negative_area = False
 
                 for negative_area in self.negative_areas:
@@ -446,14 +456,14 @@ class CreateMesh:
         return outline_vertices
 
     @timing_decorator
-    def triangulate_region(self, region, region_nbr):
+    def triangulate_region(self, region, region_nbr, callback=None):
         """
         Creates seed points for all regions
         :return:
         """
 
 
-        seed_points_area = self.seed_region(region, region_nbr)
+        seed_points_area = self.seed_region(region, region_nbr, callback=callback)
         #CreateMesh.plot_polygon_points(seed_points_area, self.positive_regions, self.negative_regions)  # dev
         seed_points_boundary = self.seed_boundary(region, region_nbr)
         #CreateMesh.plot_polygon_points(seed_points_boundary, self.positive_regions, self.negative_regions)  # dev
@@ -496,6 +506,10 @@ class CreateMesh:
         # Remove triangulation outside of polygon and inside of negative area
         keep_triangles = []
         for idt, triangle in enumerate(triangles):
+            if callback:
+                self.calc_info['n'] = f"{idt} / {len(triangles)}"
+                self.calc_info['other'] = f"Checking Triangulation"
+                callback(self.calc_info)
             triangle_in_region = False
             triangle_in_negative_region = False
             triangle_points = np.array([[seed_points[triangle[0]][0], seed_points[triangle[0]][1]],
@@ -525,7 +539,8 @@ class CreateMesh:
         # develop
         # check if nodes in region contains duplicates
         # CreateMesh.plot_triangles(seed_points, triangles_filtered, self.positive_regions, self.negative_regions)
-        CreateMesh.check_for_duplicate_nodes_np(seed_points)
+        if CreateMesh.DEV:
+            CreateMesh.check_for_duplicate_nodes_np(seed_points)
         #CreateMesh.plot_polygon_points(seed_points, self.positive_regions, self.negative_regions)  # dev
         ###########
 
@@ -567,7 +582,7 @@ class CreateMesh:
         return keep_nodes_this, triangles_new
 
     @timing_decorator
-    def triangulate_regions(self):
+    def triangulate_regions(self, callback=None):
         """
 
         :return:
@@ -584,11 +599,14 @@ class CreateMesh:
         triangle_counter = 0
         triangle_region_dict = dict()
         c_pos = True
-        print('Triangulation of regions...')
+
         for region_nbr, region in self.region_parameters.items():
-            print(f"Region {int(region_nbr) + 1} / {len(self.region_parameters.items())}", end='\r')  # This does not show in pycharm, only via cmd / .exe
+            if callback:
+                self.calc_info['step'] = f"Triangulation of region {int(region_nbr) + 1} / {len(self.region_parameters.items())}"
+                callback(self.calc_info)
+            #print(f"Region {int(region_nbr) + 1} / {len(self.region_parameters.items())}", end='\r')  # This does not show in pycharm, only via cmd / .exe
             if region['area_neg_pos'] == 'Positive':
-                nodes_region, triangles_region = self.triangulate_region(region, region_nbr)  # todo besserer algo für boundaries
+                nodes_region, triangles_region = self.triangulate_region(region, region_nbr, callback=callback)  # todo besserer algo für boundaries
                 if c_pos:
                     nodes_all = np.append(nodes_all, nodes_region, axis=0)
                     triangles_all = np.append(triangles_all, triangles_region, axis=0)
@@ -602,8 +620,9 @@ class CreateMesh:
                     triangle_region_dict[region_nbr] = range(triangle_counter, triangle_counter + len(triangles_region))
                     triangle_counter += len(triangles_region)
 
-        CreateMesh.check_for_duplicate_nodes_np(nodes_all)
-        CreateMesh.check_for_duplicate_triangles(triangles_all)
+        if CreateMesh.DEV:
+            CreateMesh.check_for_duplicate_nodes_np(nodes_all)
+            CreateMesh.check_for_duplicate_triangles(triangles_all)
         # dev
         #CreateMesh.plot_polygon_points(nodes_all, self.positive_regions, self.negative_regions)
         #CreateMesh.plot_triangles(nodes_all, triangles_all, self.positive_regions, self.negative_regions)
@@ -628,7 +647,7 @@ class CreateMesh:
         self.single_nodes_dict = node_dict
 
     @timing_decorator
-    def get_boundary_nodes_pos(self):
+    def get_boundary_nodes_pos(self, callback=None):
 
         all_nodes_complex = [node[0] + 1j * node[1] for node in self.nodes]
 
@@ -638,6 +657,10 @@ class CreateMesh:
 
         # new
         for n, boundary in enumerate(all_boundary_nodes):
+            if callback:
+                self.calc_info['n'] = f"{n} /  {len(all_boundary_nodes)}"
+                self.calc_info['other'] = 'Checking'
+                callback(self.calc_info)
             fn_c = boundary[0][0] + 1j * boundary[0][1]
             ln_c = boundary[-1][0] + 1j * boundary[-1][1]
             for nbr, boundary_param in self.boundary_parameters.items():
@@ -650,6 +673,10 @@ class CreateMesh:
                         boundary_number_dict[nbr] = boundary
 
         for nbr, bnodes in boundary_number_dict.items():
+            if callback:
+                self.calc_info['n'] = f"{nbr} /  {len(boundary_number_dict.items())}"
+                self.calc_info['other'] = 'Checking'
+                callback(self.calc_info)
             for b_node in bnodes:
                 b_node_complex = b_node[0] + 1j * b_node[1]
                 pos_in_all_nodes = np.where(all_nodes_complex == b_node_complex)[0]

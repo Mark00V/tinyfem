@@ -31,6 +31,7 @@ import json
 from source.guistatics import GUIStatics
 import copy
 from PIL import ImageTk
+from shapely.geometry import Polygon
 
 class Geometry(tk.Toplevel):
     """
@@ -682,7 +683,6 @@ class Geometry(tk.Toplevel):
 
         ##################################################
         # clear all button
-        ##################################################
         def clear_all():
             """
             Button action, clears all input
@@ -715,6 +715,17 @@ class Geometry(tk.Toplevel):
                                      font=GUIStatics.STANDARD_FONT_BUTTON_MID, width=10, height=1)
         button_clear_all.place(relx=widgets_x_start + 0.25, rely=0.02)
 
+        # Check geometry button
+        def check_geometry_on_button():
+            """
+
+            :return:
+            """
+            self.check_geometry_detail()
+
+        button_check_geometry = tk.Button(self, text="Check Geometry", command=check_geometry_on_button,
+                                     font=GUIStatics.STANDARD_FONT_BUTTON_MID, width=16, height=1)
+        button_check_geometry.place(relx=widgets_x_start + 0.35, rely=0.02)
         ##################################################
         # Add canvas for system visualization - DYNAMIC
         self.canvas = tk.Canvas(self, width=GUIStatics.CANVAS_SIZE_X, height=GUIStatics.CANVAS_SIZE_Y,
@@ -823,7 +834,7 @@ class Geometry(tk.Toplevel):
             :return:
             """
 
-            if check_geometry():
+            if self.check_geometry_detail():
                 self.return_geometry()
             else:
                 check_geometry_error_window()
@@ -858,6 +869,59 @@ class Geometry(tk.Toplevel):
         ##################################################
 
         self.update_graphics()  # if Geometry class is loaded with input self.geometry_input, see init
+
+    def check_geometry_detail(self):
+        """
+        Detailed check for geometry
+        :return:
+        """
+        check_passed = True
+
+        check_fail_str = ''
+        check_failed_list = []
+        for ip1, poly1 in enumerate(self.polygons.values()):
+            poly1_shapely = Polygon([(node[0], node[1]) for node in poly1['coordinates']])
+            for ip2, poly2 in enumerate(list(self.polygons.values())[ip1 + 1:], start=ip1+1):
+                poly2_shapely = Polygon([(node[0], node[1]) for node in poly2['coordinates']])
+                # check if positive polygons overlap
+                if poly1['area_neg_pos'] == 'Positive' and poly2['area_neg_pos'] == 'Positive':
+                    if poly1_shapely.overlaps(poly2_shapely):
+                        check_fail_str = f"Geometryerror: Positive Polygon {ip1} and Positive Polygon {ip2} overlap"
+                        check_failed_list.append(check_fail_str)
+                # check if negative polygons overlap
+                if poly1['area_neg_pos'] == 'Negative' and poly2['area_neg_pos'] == 'Negative':
+                    if poly1_shapely.overlaps(poly2_shapely):
+                        check_fail_str = f"Geometryerror: Negative Polygon {ip1} and Negative Polygon {ip2} overlap"
+                        check_failed_list.append(check_fail_str)
+                # check if negative polygon inside positive polygon
+                if poly1['area_neg_pos'] == 'Positive' and poly2['area_neg_pos'] == 'Negative':
+                        if poly1_shapely.intersects(poly2_shapely):
+                            if not poly1_shapely.contains(poly2_shapely):
+                                check_fail_str = f"Geometryerror: Positive Polygon {ip1} and Negative Polygon {ip2} intersect"
+                                check_failed_list.append(check_fail_str)
+                if poly1['area_neg_pos'] == 'Negative' and poly2['area_neg_pos'] == 'Positive':
+                        if poly1_shapely.intersects(poly2_shapely):
+                            if not poly2_shapely.contains(poly1_shapely):
+                                check_fail_str = f"Geometryerror: Negative Polygon {ip1} and Positive Polygon {ip2} intersect"
+                                check_failed_list.append(check_fail_str)
+
+
+
+                # # Check if negative polygon intersects with positive polygon (boundary crossed/shared)
+                # if poly1['area_neg_pos'] == 'Positive' and poly2['area_neg_pos'] == 'Negative':
+                #     if poly1_shapely.intersects(poly2_shapely) and not poly1_shapely.contains(poly2_shapely):
+                #         check_fail_str = f"Geometryerror: Positive Polygon {ip1} and Negative Polygon {ip2} intersect"
+                #         check_failed_list.append(check_fail_str)
+                # if poly1['area_neg_pos'] == 'Negative' and poly2['area_neg_pos'] == 'Positive':
+                #     if poly1_shapely.intersects(poly2_shapely) and not poly2_shapely.contains(poly1_shapely):
+                #         check_fail_str = f"Geometryerror: Negative Polygon {ip1} and Positive Polygon {ip2} intersect"
+                #         check_failed_list.append(check_fail_str)
+
+        for elem in check_failed_list:
+            print(elem)
+
+
+        return check_passed
 
     def update_graphics(self):
         """
