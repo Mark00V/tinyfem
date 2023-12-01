@@ -63,10 +63,16 @@ class Geometry(tk.Toplevel):
         self.polygon_nodes = [0]  # needed for update for select polygon dropdown (numbers for polygons in list)
         # self.points = {'0': [0, 1], '1': [2, 3], '2': [-2, 3]}  # testing
 
+        # other and highlight for node/point selection
         self.other = 'None'  # json dump does not support None
         self.highlight_element = None  # highlighting nodes
         self.highlight_element_point = None  # highlighting points
         self.highlight_node_coords = None
+
+        # Graphical input
+        self.firstclick_canvas = True
+        self.clicks_canvas = []
+
         super().__init__()
         self.set_icon(self)
         self.main_window()
@@ -720,7 +726,7 @@ class Geometry(tk.Toplevel):
 
         button_clear_all = tk.Button(self, text="CLEAR ALL", command=clear_all,
                                      font=GUIStatics.STANDARD_FONT_BUTTON_MID, width=10, height=1)
-        button_clear_all.place(relx=widgets_x_start + 0.25, rely=0.02)
+        button_clear_all.place(relx=widgets_x_start + 0.22, rely=0.02)
 
         # Check geometry button
         def check_geometry_on_button():
@@ -734,8 +740,8 @@ class Geometry(tk.Toplevel):
             else:
                 check_geometry_error_window(quit=False)
 
-        button_check_geometry = tk.Button(self, text="Check Geometry", command=check_geometry_on_button,
-                                     font=GUIStatics.STANDARD_FONT_BUTTON_MID, width=16, height=1)
+        button_check_geometry = tk.Button(self, text="Check\nGeometry", command=check_geometry_on_button,
+                                     font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER, width=9, height=2)
         button_check_geometry.place(relx=widgets_x_start + 0.35, rely=0.02)
         ##################################################
         # Add canvas for system visualization - DYNAMIC
@@ -743,17 +749,36 @@ class Geometry(tk.Toplevel):
                                 bg=GUIStatics.CANVAS_BG)
         self.canvas.place(relx=canvas_x + 0.0075, rely=canvas_y)
         GUIStatics.add_canvas_static_elements(self.canvas)
+        self.canvas.bind("<Button-1>", self.on_canvas_click)
         ##################################################
 
         ##################################################
         # Update graphics
         GUIStatics.create_divider(self, widgets_x_start, 0.87, 230)
-        button_update_graphics = tk.Button(self, text="UPDATE GRAPHICS", command=self.update_graphics,
-                                           width=25, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID)
-        button_update_graphics.place(relx=0.025, rely=0.885)
+        button_update_graphics = tk.Button(self, text="UPDATE\nGRAPHICS", command=self.update_graphics,
+                                           width=9, height=2, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
+        button_update_graphics.place(relx=widgets_x_start + 0.42, rely=0.02)
 
         ##################################################
+        # Graphical input
+        def button_polygon_graph():
+            ...
 
+        def button_point_graph():
+            ...
+
+        def button_clear_graph():
+            ...
+
+        button_add_poly_graph = tk.Button(self, text="ADD CANVAS\nPOLYGON", command=button_polygon_graph,
+                                           width=9, height=2, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
+        button_add_poly_graph.place(relx=0.54, rely=0.02)
+        button_add_point_graph = tk.Button(self, text="ADD CANVAS\nPOINT", command=button_point_graph,
+                                           width=9, height=2, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
+        button_add_point_graph.place(relx=0.61, rely=0.02)
+        button_clear_graph = tk.Button(self, text="CLEAR\nINPUT", command=button_clear_graph,
+                                           width=9, height=2, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
+        button_clear_graph.place(relx=0.68, rely=0.02)
         ##################################################
         # Accept button and checks
         def check_geometry():
@@ -870,6 +895,8 @@ class Geometry(tk.Toplevel):
                 check_geometry_error_window(quit=True)
 
         # Accept Geometry button - returns value for geometry input and destroys window
+
+
         button_accept = tk.Button(self, text="ACCEPT GEOMETRY", command=check_and_accept,
                                   width=16, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_BIG_BOLD)
         button_accept.place(relx=0.025, rely=0.935)
@@ -1143,13 +1170,10 @@ class Geometry(tk.Toplevel):
                                         outline='#1F1F1F', width=1)
                 self.canvas.create_text(node[0], node[1] - 10, text=text, fill='#1F1F1F', font=("Helvetica", 7))
 
-        # redraw nodes to prevent overlap
-        # if self.highlight_node_coords and self.polygon_node_var.get() != 'None':
-        #     node = self.highlight_node_coords
-        #     self.canvas.create_oval(node[0] - 10, node[1] - 10, node[0] + 10, node[1] + 10,
-        #                                                      width=3, outline=GUIStatics.CANVAS_HIGHLIGHT_ELEMENT,
-        #                                                      dash=(2, 1), fill='', tags='highlight_element')
-        #
+    def on_canvas_click(self, event: tk.Canvas.bind):   # todo: correct?
+        """
+        todo
+        """
 
 
     def return_geometry(self):
