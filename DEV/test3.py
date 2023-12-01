@@ -1,10 +1,14 @@
 from shapely.geometry import Polygon
 
 # Define two polygons
-polygon1 = Polygon([(0, 0), (2, 0), (2, 2), (0, 2)])
-polygon2 = Polygon([(0, 0), (2, 0), (3, 2), (1, 2)])
+polygon1 = Polygon([(0, 0), (1, 0), (1, 1), (0, 1)])
+polygon2 = Polygon([(1, 0), (2, 0), (2, 1) ])
 
-# Check if they share part of the boundary
-share_boundary = polygon1.intersects(polygon2) and polygon1.touches(polygon2) and not (polygon1.contains(polygon2) or polygon2.contains(polygon1))
+# Perform the union operation
+union_polygon = polygon1.union(polygon2)
 
-print("Do the polygons share part of the boundary? ", share_boundary)
+# Print the result
+print(union_polygon, union_polygon.is_valid)
+
+for elem in union_polygon:
+    print(elem)

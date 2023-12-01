@@ -31,7 +31,9 @@ import json
 from source.guistatics import GUIStatics
 import copy
 from PIL import ImageTk
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, Point, MultiPolygon
+from shapely.ops import unary_union
+import numpy as np
 
 class Geometry(tk.Toplevel):
     """
@@ -875,48 +877,103 @@ class Geometry(tk.Toplevel):
         Detailed check for geometry
         :return:
         """
+        # TODO: this needs a lot of bugfixing. detects problems for good geometry...
         check_passed = True
-
         check_fail_str = ''
         check_failed_list = []
+
         for ip1, poly1 in enumerate(self.polygons.values()):
             poly1_shapely = Polygon([(node[0], node[1]) for node in poly1['coordinates']])
+
+            # check polygon shape
+            # check if > 1 node have same position
+            nodes_polygon = np.array(poly1['coordinates'])
+            nodes_polygon_complex = [node[0] + 1j * node[1] for node in nodes_polygon]
+            if len(set(nodes_polygon_complex)) != len(nodes_polygon):
+                check_fail_str = f"Geometry error: At least two nodes of polygon {ip1} are identical"
+                check_failed_list.append(check_fail_str)
+            # check if polygon is valid (lines not crossing, area > 0)
+            if not poly1_shapely.is_valid:
+                check_fail_str = f"Geometry error: Polygon {ip1} invalid (Segments crossing/Zero Area)"
+                check_failed_list.append(check_fail_str)
+
+            # check single points
+            if self.points and self.points != {'None'}:
+                for sp, point in enumerate(self.points.values()):
+                    p_in_pos_poly = False
+                    if poly1_shapely.touches(Point(point[0], point[1])):
+                        check_fail_str = f"Geometry error: Point {sp} on boundary of Polygon {ip1}"
+                        check_failed_list.append(check_fail_str)
+                    if poly1_shapely.contains(Point(point[0], point[1])):
+                        p_in_pos_poly = True
+                        if poly1['area_neg_pos'] == 'Negative':
+                            p_in_pos_poly = False
+                            check_fail_str = f"Geometry error: Point {sp} inside of negative Polygon {ip1}"
+                            check_failed_list.append(check_fail_str)
+                    if not p_in_pos_poly:
+                        check_fail_str = f"Geometry error: Point {sp} not inside of any positive Polygon"
+                        check_failed_list.append(check_fail_str)
+            # check two polygons
             for ip2, poly2 in enumerate(list(self.polygons.values())[ip1 + 1:], start=ip1+1):
                 poly2_shapely = Polygon([(node[0], node[1]) for node in poly2['coordinates']])
+
                 # check if positive polygons overlap
                 if poly1['area_neg_pos'] == 'Positive' and poly2['area_neg_pos'] == 'Positive':
                     if poly1_shapely.overlaps(poly2_shapely):
-                        check_fail_str = f"Geometryerror: Positive Polygon {ip1} and Positive Polygon {ip2} overlap"
+                        check_fail_str = f"Geometry error: Positive Polygon {ip1} and Positive Polygon {ip2} overlap"
                         check_failed_list.append(check_fail_str)
                 # check if negative polygons overlap
                 if poly1['area_neg_pos'] == 'Negative' and poly2['area_neg_pos'] == 'Negative':
                     if poly1_shapely.overlaps(poly2_shapely):
-                        check_fail_str = f"Geometryerror: Negative Polygon {ip1} and Negative Polygon {ip2} overlap"
+                        check_fail_str = f"Geometry error: Negative Polygon {ip1} and Negative Polygon {ip2} overlap"
+                        check_failed_list.append(check_fail_str)
+                    if poly1_shapely.touches(poly2_shapely):
+                        check_fail_str = f"Geometry error: Negative Polygon {ip1} and Negative Polygon {ip2} intersect/touch at least once"
                         check_failed_list.append(check_fail_str)
                 # check if negative polygon inside positive polygon
                 if poly1['area_neg_pos'] == 'Positive' and poly2['area_neg_pos'] == 'Negative':
-                        if poly1_shapely.intersects(poly2_shapely):
-                            if not poly1_shapely.contains(poly2_shapely):
-                                check_fail_str = f"Geometryerror: Positive Polygon {ip1} and Negative Polygon {ip2} intersect"
+                    if poly1_shapely.contains(poly2_shapely):
+                        for node in poly2['coordinates']:
+                            if poly1_shapely.touches(Point(node[0], node[1])):
+                                check_fail_str = f"Geometry error: Positive Polygon {ip1} and Negative Polygon {ip2} overlap (on boundary)"
                                 check_failed_list.append(check_fail_str)
+                                break
                 if poly1['area_neg_pos'] == 'Negative' and poly2['area_neg_pos'] == 'Positive':
-                        if poly1_shapely.intersects(poly2_shapely):
-                            if not poly2_shapely.contains(poly1_shapely):
-                                check_fail_str = f"Geometryerror: Negative Polygon {ip1} and Positive Polygon {ip2} intersect"
+                    if poly2_shapely.contains(poly1_shapely):
+                        for node in poly1['coordinates']:
+                            if poly2_shapely.touches(Point(node[0], node[1])):
+                                check_fail_str = f"Geometry error: Negative Polygon {ip1} and Positive Polygon {ip2} overlap (on boundary)"
                                 check_failed_list.append(check_fail_str)
+                                break
+                # check if two adjacent positive polygons share the same nodes
+                if poly1['area_neg_pos'] == 'Positive' and poly2['area_neg_pos'] == 'Positive':
+                    shared_boundary = poly1_shapely.intersection(poly2_shapely)
+                    if shared_boundary.geom_type == 'LineString':
+                        coords = list(shared_boundary.coords)
+                    elif shared_boundary.geom_type == 'MultiLineString':
+                        coords = [list(line.coords) for line in shared_boundary]
+                    elif shared_boundary.geom_type == 'Point':
+                        check_fail_str = f"Geometry error: Polygon {ip1} and Polygon {ip2} share only one node"
+                        check_failed_list.append(check_fail_str)
+                    else:
+                        coords = []
+                    poly1nodes_complex = [node[0] + 1j * node[1] for node in np.array(poly1['coordinates'])]
+                    poly2nodes_complex = [node[0] + 1j * node[1] for node in np.array(poly2['coordinates'])]
+                    shared_nodes_complex = [node[0] + 1j * node[1] for node in coords]
+                    in_poly1 = len(set(poly1nodes_complex).intersection(set(shared_nodes_complex)))
+                    in_poly2 = len(set(poly2nodes_complex).intersection(set(shared_nodes_complex)))
+                    if in_poly1 != in_poly2:
+                        check_fail_str = f"Geometry error: Polygon {ip1} and Polygon {ip2} do not share same nodes on common boundary"
+                        check_failed_list.append(check_fail_str)
 
+        # check if all positive polygons are connected
+        all_pos_polygons = [Polygon(poly['coordinates']) for poly in self.polygons.values() if poly['area_neg_pos'] == 'Positive']
+        unioned_polygons = unary_union(all_pos_polygons)
+        if isinstance(unioned_polygons, MultiPolygon):
+            check_fail_str = f"Geometry error: Positive Polygons are not connected properly"
+            check_failed_list.append(check_fail_str)
 
-
-                # # Check if negative polygon intersects with positive polygon (boundary crossed/shared)
-                # if poly1['area_neg_pos'] == 'Positive' and poly2['area_neg_pos'] == 'Negative':
-                #     if poly1_shapely.intersects(poly2_shapely) and not poly1_shapely.contains(poly2_shapely):
-                #         check_fail_str = f"Geometryerror: Positive Polygon {ip1} and Negative Polygon {ip2} intersect"
-                #         check_failed_list.append(check_fail_str)
-                # if poly1['area_neg_pos'] == 'Negative' and poly2['area_neg_pos'] == 'Positive':
-                #     if poly1_shapely.intersects(poly2_shapely) and not poly2_shapely.contains(poly1_shapely):
-                #         check_fail_str = f"Geometryerror: Negative Polygon {ip1} and Positive Polygon {ip2} intersect"
-                #         check_failed_list.append(check_fail_str)
-
+        check_failed_list = list(set(check_failed_list))
         for elem in check_failed_list:
             print(elem)
 
