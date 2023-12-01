@@ -25,7 +25,7 @@ Supporting methods for GUI and other
 
 import tkinter as tk
 import zlib
-
+from PIL import ImageTk
 import numpy as np
 
 
@@ -282,11 +282,20 @@ class GUIStatics:
         :return:
         """
 
+        def set_icon(root):
+            """
+            Creates Icon from raw byte data to not need external files for creating .exe
+            :return:
+            """
+            icon_image = ImageTk.PhotoImage(data=GUIStatics.return_icon_bytestring())
+            root.tk.call('wm', 'iconphoto', root._w, icon_image)
+
         window_error = tk.Toplevel(root)
-        window_error.title('ERROR')
+        window_error.title('INFO')
         window_error.geometry(f"{300}x{300}")
         window_error.resizable(False, False)
         GUIStatics.create_divider(window_error, 0.025, 0.05, 275)
+        set_icon(window_error)
 
         # error message
         tk.Label(window_error, text=error_message, font=GUIStatics.STANDARD_FONT_BUTTON_MID) \

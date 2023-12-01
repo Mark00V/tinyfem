@@ -307,10 +307,20 @@ class GUI(tk.Tk):
                     window_create_mesh_wait_label.config(text=wait_text)
                     time.sleep(0.05)
                 window_create_mesh_wait.destroy()
+                self.create_info_field_str()
+                if len(self.triangulation) < 1000:
+                    self.draw_mesh_from_mesh_output()
+                lm_info = (f"\nNote: \nLarge meshs are not shown automatically!\n"
+                           f"Click on 'SHOW MESH'!")
+                info = (f"Mesh successfully created!\n"
+                        f"Elements: {len(self.triangulation)}\n"
+                        f"{lm_info if  len(self.triangulation) > 1000 else ''}")
+                GUIStatics.window_error(self, info)
 
             update_thread = threading.Thread(target=update_wait_label)
             update_thread.start()
             button_show_mesh.config(state='normal')
+
 
         def show_mesh():
             """
@@ -406,6 +416,7 @@ class GUI(tk.Tk):
 
                     window_solve_system_wait_label.config(text=wait_text)
                     time.sleep(0.05)
+                self.create_info_field_str()
                 window_solve_system_wait.destroy()
 
             update_thread = threading.Thread(target=update_wait_label)
@@ -567,22 +578,24 @@ class GUI(tk.Tk):
             equation_selected = var_equations.get()
             equation_dict = {'Heat Equation': 'HE', 'Helmholtz Equation': 'HH'}
             self.equation = equation_dict[equation_selected]
+            self.create_info_field_str()
 
         tk.Label(self, text="Equation: ", font=GUIStatics.STANDARD_FONT_MID) \
             .place(relx=widgets_x_start, rely=0.22)
         equations = ['Heat Equation', 'Helmholtz Equation']
         var_equations = tk.StringVar()
         var_equations.set(equations[0])  # default value m
-        dropdown_equation_select = tk.OptionMenu(self, var_equations, *equations)
-        dropdown_equation_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=15, height=1)
-        dropdown_equation_select.place(relx=widgets_x_start + 0.065, rely=0.215)
+        self.dropdown_equation_select = tk.OptionMenu(self, var_equations, *equations)
+        self.dropdown_equation_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=15, height=1)
+        self.dropdown_equation_select.place(relx=widgets_x_start + 0.065, rely=0.215)
+        self.dropdown_equation_select.config(state='disabled')
         var_equations.trace('w', trace_equation)
         tooltip_text_dropdown_equation_select = 'None'
         if self.equation == 'HE':
             tooltip_text_dropdown_equation_select = (f" Solves the stationary Heat Equation ")
         elif self.equation == 'HH':
             tooltip_text_dropdown_equation_select = (f" Solves the Helmholtz Equation ")
-        Tooltip(dropdown_equation_select, tooltip_text_dropdown_equation_select)
+        Tooltip(self.dropdown_equation_select, tooltip_text_dropdown_equation_select)
 
 
         # Button Assign Boundary Conditions /Material Parameters / Calculation Parameters
@@ -623,6 +636,7 @@ class GUI(tk.Tk):
             window_info.resizable(False, False)
             self.set_icon(window_info)
 
+            self.create_info_field_str()
             region_parameters = self.region_parameters
             boundary_parameters = self.boundary_parameters
             node_parameters = self.node_parameters
@@ -771,6 +785,7 @@ class GUI(tk.Tk):
             """
             if self.equation == 'HH':
                 self.calculation_parameters['freq'] = entry_freq_var.get()
+                self.create_info_field_str()
 
         window_calc_params = tk.Toplevel(self)
         window_calc_params.title('ASSIGN CALCULATION PARAMETERS')
@@ -818,6 +833,7 @@ class GUI(tk.Tk):
             window_calc_params.destroy()  # closes top window
             self.button_create_mesh.config(state="normal")
             self.calculation_parameters['equation'] = self.equation
+            self.create_info_field_str()
 
         button_accept = tk.Button(window_calc_params, text="ACCEPT PARAMETERs", command=accept_calcparams,
                                   width=19, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
@@ -866,6 +882,7 @@ class GUI(tk.Tk):
                 except ValueError:
                     entry_k = 1.0
                 self.region_parameters[region_nbr]['material']['k'] = entry_k
+                self.create_info_field_str()
             elif self.equation == 'HH':
                 entry_c = entry_material_c_value.get()
                 entry_rho = entry_material_rho_value.get()
@@ -879,6 +896,7 @@ class GUI(tk.Tk):
                     entry_rho = 1.0
                 self.region_parameters[region_nbr]['material']['c'] = entry_c
                 self.region_parameters[region_nbr]['material']['rho'] = entry_rho
+                self.create_info_field_str()
 
         window_bcs = tk.Toplevel(self)
         window_bcs.title('ASSIGN MATERIALS PARAMETERS')
@@ -957,7 +975,7 @@ class GUI(tk.Tk):
                 elif self.equation == 'HH':
                     self.text_information_str += f"R-{region_nbr}: c={region_c}, rho={region_rho}; | "
 
-            GUIStatics.update_text_field(self.text_information, self.text_information_str)
+            self.create_info_field_str()
             window_bcs.destroy()  # closes top window
 
         button_accept = tk.Button(window_bcs, text="ACCEPT REGIONs", command=accept_regions,
@@ -990,6 +1008,7 @@ class GUI(tk.Tk):
                 self.boundary_parameters[boundary_nbr]['bc']['value'] = [value, value_B]
             else:
                 self.boundary_parameters[boundary_nbr]['bc']['value'] = value
+            self.create_info_field_str()
 
         def set_node_value():
             """
@@ -1002,6 +1021,7 @@ class GUI(tk.Tk):
             except ValueError:
                 value = 0.0
             self.node_parameters[node_number]['bc']['value'] = value
+            self.create_info_field_str()
 
         def trace_boundary(*args):
             """
@@ -1100,6 +1120,8 @@ class GUI(tk.Tk):
                 self.canvas.delete(last_highlight_element)
             node_number = dropdown_node_select_var.get().split('N-')[-1]
             node = self.node_parameters[node_number]['coordinates']
+            value_set = self.node_parameters[node_number]['bc']['value']
+            entry_node_value.set(str(value_set))
             node = GUIStatics.transform_node_to_canvas(node)
             self.highlight_element = self.canvas.create_oval(node[0] - 10, node[1] - 10, node[0] + 10, node[1] + 10,
                                                              width=3, outline='#24D1EA',
@@ -1129,7 +1151,7 @@ class GUI(tk.Tk):
         dropdown_boundary_select.place(relx=widgets_x_start + 0.025, rely=0.18)
         dropdown_boundary_select_var.trace('w', trace_boundary)
 
-        boundary_types = ['Dirichlet', 'Neumann', 'Robin']
+        boundary_types = ['Dirichlet', 'Neumann', 'Robin'] if self.equation == 'HE' else ['Dirichlet', 'Neumann']
         dropdown_boundary_type_var = tk.StringVar()
         dropdown_boundary_type_var.set(boundary_types[0])
         dropdown_boundary_type = tk.OptionMenu(window_bcs, dropdown_boundary_type_var, *boundary_types)
@@ -1237,7 +1259,7 @@ class GUI(tk.Tk):
                 if node_value:
                     self.text_information_str += f"N-{node_nbr}: {node_value}; | "
 
-            GUIStatics.update_text_field(self.text_information, self.text_information_str)
+            self.create_info_field_str()
             window_bcs.destroy()  # closes top window
 
         button_accept = tk.Button(window_bcs, text="ACCEPT BCs", command=accept_bcs,
@@ -1291,6 +1313,7 @@ class GUI(tk.Tk):
         format_for_params = CreateBCParams(self.geometry_input)
         self.regions, self.boundaries, self.nodes = format_for_params.main()
         self.init_parameters()
+        self.create_info_field_str()
         self.button_show_geom.config(state='normal')
 
     def init_parameters(self):
@@ -1304,6 +1327,7 @@ class GUI(tk.Tk):
         self.button_define_bcs.config(state="normal")
         self.button_define_materials.config(state="normal")
         self.button_define_calc_params.config(state="normal")
+        self.dropdown_equation_select.config(state='normal')
 
         # update information field
         self.init_information_text_field()
@@ -1337,12 +1361,6 @@ class GUI(tk.Tk):
         self.node_parameters = node_parameters
         self.calculation_parameters = calculation_parameters
 
-    def init_information_text_field_new(self):
-        """
-        Initializes the information text field with the geometry provided
-        :return:
-        """
-        ...
 
     def init_information_text_field(self):
         """
@@ -1486,6 +1504,89 @@ class GUI(tk.Tk):
                     f"Elements : {len(self.triangulation)}\n"
         self.canvas.create_text(80, 30, text=stat_text, fill='#21090B',
                                 font=('Courier New', 8))
+
+    def create_info_field_str(self):
+        """
+
+        :return:
+        """
+        region_parameters = self.region_parameters
+        boundary_parameters = self.boundary_parameters
+        node_parameters = self.node_parameters
+        calculation_parameters = self.calculation_parameters
+
+        region_parameters_str = 'REGIONS:'
+        if region_parameters:
+            for k, v in region_parameters.items():
+                area_neg_pos = v['area_neg_pos']
+                mat_k = v['material']['k']
+                mat_c = v['material']['c']
+                mat_rho = v['material']['rho']
+                mats = f"k = {mat_k} W/mK" if self.equation == 'HE' else f"c = {mat_c} m/s, rho = {mat_rho} kg/m³"
+                region_parameters_str += f"\nRegion R-{k}: "
+                if area_neg_pos == 'Positive':
+                    region_parameters_str += f"{mats}"
+
+        calculation_parameters_str = 'CALCULATION PARAMETERS:'
+        if calculation_parameters:
+            eq = {'HH': 'Helmholtz Equation',
+                  'HE': 'Heat Equation'}
+            freq_st = ''
+            if calculation_parameters['equation'] == 'HH':
+                freq_st = f", Freq: {calculation_parameters['freq']} Hz"
+            calculation_parameters_str += (f"\nEq: {eq[self.equation]}{freq_st}\n"
+                                           f"Mesh Density: {calculation_parameters['mesh_density']}")
+        if self.triangulation is not None:
+            calculation_parameters_str += f"\n===>MESH CREATED: N={len(self.triangulation)}"
+
+        boundary_parameters_str = 'BOUNDARIES:'
+        try:
+            if boundary_parameters:
+                for k, v in boundary_parameters.items():
+                    bc = v['bc']
+                    bc_str = ''
+                    if self.equation == 'HE':
+                        if bc['type'] == 'Dirichlet':
+                            bc_str = f"{bc['type']}, T = {bc['value']} K"
+                        elif bc['type'] == 'Neumann':
+                            bc_str = f"{bc['type']}, q = {bc['value']} W/m²"
+                        elif bc['type'] == 'Robin':
+                            bc_str = f"{bc['type']}, T_ext = {bc['value'][0]} K, h = {bc['value'][1]} W/m²K"
+                        else:
+                            bc_str = f"No BC specified"
+                    elif self.equation == 'HH':
+                        if bc['type'] == 'Dirichlet':
+                            bc_str = f"{bc['type']}, T = {bc['value']} Pa"
+                        elif bc['type'] == 'Neumann':
+                            bc_str = f"{bc['type']}, T = {bc['value']} Pas/m"
+                        elif bc['type'] == 'Robin':
+                            bc_str = f"No BC specified"
+                        else:
+                            bc_str = f"No BC specified"
+                    if bc['value']:
+                        boundary_parameters_str += f"\nB-{k}: {bc_str}"
+        except KeyError:
+            ...
+        except IndexError:
+            ...
+
+        node_parameters_str = 'NODES:'
+        if node_parameters:
+            for k, v in node_parameters.items():
+                bc = v['bc']['value']
+                if bc:
+                    bc_str = f"Sound source, P = {bc} W/m"
+                    node_parameters_str += f"\nN-{k}: {bc_str}"
+        if self.equation == 'HE':
+            node_parameters_str = ''
+
+        info_str = (f"{calculation_parameters_str}\n"
+                    f"{boundary_parameters_str}\n"
+                    f"{region_parameters_str}\n"
+                    f"{node_parameters_str}")
+        self.text_information_str = info_str
+        GUIStatics.update_text_field(self.text_information, self.text_information_str)
+
 
     def debug(self):
         """
