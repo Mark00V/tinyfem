@@ -25,10 +25,10 @@ Definition for geometry.
 
 import tkinter as tk
 import math
-from typing import Callable, Any
+from typing import Callable, Any, Tuple, List
 from tkinter import filedialog
 import json
-from source.guistatics import GUIStatics
+from source.guistatics import GUIStatics, Tooltip
 import copy
 from PIL import ImageTk
 from shapely.geometry import Polygon, Point, MultiPolygon
@@ -187,11 +187,15 @@ class Geometry(tk.Toplevel):
         button_save_geo = tk.Button(self, text="SAVE", command=save_geometry,
                                     font=GUIStatics.SAVELOAD_FONT, width=10, height=1)
         button_save_geo.place(relx=widgets_x_start, rely=0.02)
+        tooltip_text = (f"Save the Geometry to file")
+        Tooltip(button_save_geo, tooltip_text)
 
         # load geometry button
         button_load_geo = tk.Button(self, text="LOAD", command=load_geometry,
                                     font=GUIStatics.SAVELOAD_FONT, width=10, height=1)
         button_load_geo.place(relx=0.1, rely=0.02)
+        tooltip_text = (f"Load the Geometry from file")
+        Tooltip(button_load_geo, tooltip_text)
 
         ##################################################
 
@@ -255,7 +259,10 @@ class Geometry(tk.Toplevel):
         self.unit_selected = tk.Label(self, text='meter', font=GUIStatics.STANDARD_FONT_SMALL)
         self.unit_selected.place(relx=0.92 - 0.075, rely=0.04)
         unit_var.trace('w', update_unit_text)
-
+        tooltip_text = (f"Select units for Geometry                      \n"
+                        f"This only affects axes description for solution\n"
+                        f"and has no impact on calculation               ")
+        Tooltip(dropdown_unit_select, tooltip_text)
         ##################################################
 
         ##################################################
@@ -474,10 +481,14 @@ class Geometry(tk.Toplevel):
         dropdown_polygon_select.place(relx=widgets_x_start + 0.075, rely=0.13)
         polygon_select_var.trace('w', update_dropdown_polygon_node_select_poly_info)
         self.polygon_selected = polygon_select_var.get()
+        tooltip_text = (f"Select Polygon")
+        Tooltip(dropdown_polygon_select, tooltip_text)
 
         new_poly_button = tk.Button(self, text="NEW", command=new_polygon,
                                     width=7, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
         new_poly_button.place(relx=widgets_x_start + 0.145, rely=0.133)
+        tooltip_text = (f"Create new Polygon without Nodes")
+        Tooltip(new_poly_button, tooltip_text)
 
         polygon_node_select_label = tk.Label(self, text="Select Node:", font=GUIStatics.STANDARD_FONT_SMALL)
         polygon_node_select_label.place(relx=widgets_x_start, rely=0.185)
@@ -488,6 +499,8 @@ class Geometry(tk.Toplevel):
         dropdown_polygon_node_select.place(relx=widgets_x_start + 0.075, rely=0.18)
         dropdown_polygon_node_select["state"] = "disabled"
         self.polygon_node_var.trace('w', update_x_y_entry_polygon_node)
+        tooltip_text = (f"Select the Node from selected Polygon")
+        Tooltip(dropdown_polygon_node_select, tooltip_text)
 
         add_poly_select_label = tk.Label(self, text="Add/Update Node:", font=GUIStatics.STANDARD_FONT_SMALL)
         add_poly_select_label.place(relx=widgets_x_start, rely=0.225)
@@ -510,14 +523,20 @@ class Geometry(tk.Toplevel):
 
         add_poly_node_button = tk.Button(self, text="ADD", command=add_poly_node,
                                          width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
+        tooltip_text = (f"Add a new Node to the selected Polygon")
+        Tooltip(add_poly_node_button, tooltip_text)
         add_poly_node_button.place(relx=widgets_x_start + 0.125, rely=0.258)
         update_poly_node_button = tk.Button(self, text="UPDATE", command=update_poly_node,
                                             width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
         update_poly_node_button.place(relx=widgets_x_start + 0.125, rely=0.289)
+        tooltip_text = (f"Update entered X/Y values for selected Node for selected Polygon  \n"
+                        f"(Also click Update after selecting Positive/Negative Polygon Area)")
+        Tooltip(update_poly_node_button, tooltip_text)
         delete_polygon_node_button = tk.Button(self, text="DELETE", command=delete_poly_node,
                                                width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
         delete_polygon_node_button.place(relx=widgets_x_start + 0.125, rely=0.228)
-
+        tooltip_text = (f"Delete the selected Node from the selected Polygon")
+        Tooltip(delete_polygon_node_button, tooltip_text)
         polygon_nodes_label = tk.Label(self, text="Polygon Nodes:", font=GUIStatics.STANDARD_FONT_SMALL)
         polygon_nodes_label.place(relx=widgets_x_start, rely=0.30)
         polygon_nodes_text = tk.Text(self, height=4, width=35, wrap=tk.WORD,
@@ -534,10 +553,15 @@ class Geometry(tk.Toplevel):
         area_neg_pos_select = tk.OptionMenu(self, area_neg_pos_var, *area_neg_pos)
         area_neg_pos_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=6, height=1)
         area_neg_pos_select.place(relx=widgets_x_start + 0.04, rely=0.415)
+        tooltip_text = (f"Select area Positive/Negative for selected Polygon\n"
+                        f"(Click Update to update selected Polygon)         ")
+        Tooltip(area_neg_pos_select, tooltip_text)
 
         delete_polygon_button = tk.Button(self, text="DELETE POLYGON", command=delete_polygon,
                                           width=16, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
         delete_polygon_button.place(relx=widgets_x_start, rely=0.465)
+        tooltip_text = (f"Delete the selected Polygon")
+        Tooltip(delete_polygon_button, tooltip_text)
 
         ##################################################
 
@@ -648,7 +672,7 @@ class Geometry(tk.Toplevel):
             self.update_graphics()
 
         GUIStatics.create_divider(self, widgets_x_start, 0.535, 230)
-        single_point_def_label = tk.Label(self, text="Define Point", font=GUIStatics.STANDARD_FONT_MID_BOLD)
+        single_point_def_label = tk.Label(self, text="Define Single Points", font=GUIStatics.STANDARD_FONT_MID_BOLD)
         single_point_def_label.place(relx=widgets_x_start, rely=0.55)
         single_point_select_label = tk.Label(self, text="Select Point:", font=GUIStatics.STANDARD_FONT_SMALL)
         single_point_select_label.place(relx=widgets_x_start, rely=0.585)
@@ -658,6 +682,8 @@ class Geometry(tk.Toplevel):
             self.points = {'None'}
         dropdown_single_point_select = tk.OptionMenu(self, single_point_var, *self.points)
         dropdown_single_point_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=4, height=1)
+        tooltip_text = (f"Select a defined single Point")
+        Tooltip(dropdown_single_point_select, tooltip_text)
         dropdown_single_point_select.place(relx=widgets_x_start + 0.075, rely=0.58)
         if not self.points:
             dropdown_single_point_select["state"] = "disabled"
@@ -666,9 +692,12 @@ class Geometry(tk.Toplevel):
         new_point_button = tk.Button(self, text="NEW", command=new_point,
                                      width=7, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
         new_point_button.place(relx=widgets_x_start + 0.145, rely=0.583)
+        tooltip_text = (f"Create a new single Point")
+        Tooltip(new_point_button, tooltip_text)
 
         add_point_select_label = tk.Label(self, text="Update Point:", font=GUIStatics.STANDARD_FONT_SMALL)
         add_point_select_label.place(relx=widgets_x_start, rely=0.63)
+
 
         add_point_x_label = tk.Label(self, text="X:", font=GUIStatics.STANDARD_FONT_SMALL)
         add_point_x_label.place(relx=widgets_x_start, rely=0.665)
@@ -689,11 +718,14 @@ class Geometry(tk.Toplevel):
         add_point_button = tk.Button(self, text="UPDATE", command=update_point,
                                      width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
         add_point_button.place(relx=widgets_x_start + 0.125, rely=0.663)
+        tooltip_text = (f"Update X/Y values for selected Single Point")
+        Tooltip(add_point_button, tooltip_text)
 
         delete_point_button = tk.Button(self, text="DELETE POINT", command=delete_point,
                                         width=14, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
         delete_point_button.place(relx=widgets_x_start, rely=0.71)
-
+        tooltip_text = (f"Delete the selected Single Point")
+        Tooltip(delete_point_button, tooltip_text)
         ##################################################
         # clear all button
         def clear_all():
@@ -724,9 +756,19 @@ class Geometry(tk.Toplevel):
                 self.canvas.delete(elem)
             GUIStatics.add_canvas_static_elements(self.canvas)
 
+            # reset graphical input
+            try:
+                del Geometry.on_canvas_click.prevpoint
+            except AttributeError:
+                ...
+            self.firstclick_canvas = True
+            self.clicks_canvas = []
+
         button_clear_all = tk.Button(self, text="CLEAR ALL", command=clear_all,
                                      font=GUIStatics.STANDARD_FONT_BUTTON_MID, width=10, height=1)
         button_clear_all.place(relx=widgets_x_start + 0.22, rely=0.02)
+        tooltip_text = (f"Clear all Geometry Input")
+        Tooltip(button_clear_all, tooltip_text)
 
         # Check geometry button
         def check_geometry_on_button():
@@ -741,8 +783,11 @@ class Geometry(tk.Toplevel):
                 check_geometry_error_window(quit=False)
 
         button_check_geometry = tk.Button(self, text="Check\nGeometry", command=check_geometry_on_button,
-                                     font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER, width=9, height=2)
+                                     font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER, width=10, height=2)
         button_check_geometry.place(relx=widgets_x_start + 0.35, rely=0.02)
+        tooltip_text = (f"Check Geometry for compatibility                       \n"
+                        f"(Check will also be performed on click ACCEPT GEOMETRY)")
+        Tooltip(button_check_geometry, tooltip_text)
         ##################################################
         # Add canvas for system visualization - DYNAMIC
         self.canvas = tk.Canvas(self, width=GUIStatics.CANVAS_SIZE_X, height=GUIStatics.CANVAS_SIZE_Y,
@@ -756,29 +801,86 @@ class Geometry(tk.Toplevel):
         # Update graphics
         GUIStatics.create_divider(self, widgets_x_start, 0.87, 230)
         button_update_graphics = tk.Button(self, text="UPDATE\nGRAPHICS", command=self.update_graphics,
-                                           width=9, height=2, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
+                                           width=10, height=2, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
         button_update_graphics.place(relx=widgets_x_start + 0.42, rely=0.02)
+        tooltip_text = (f"Updates the graphics in canvas in case update not automatically performed\n"
+                        f"(Usually not necessary)                                                  ")
+        Tooltip(button_update_graphics, tooltip_text)
 
         ##################################################
         # Graphical input
-        def button_polygon_graph():
-            ...
 
-        def button_point_graph():
-            ...
 
         def button_clear_graph():
-            ...
+            clear_gprah()
+
+        def clear_gprah():
+            try:
+                del Geometry.on_canvas_click.prevpoint
+            except AttributeError:
+                ...
+            self.firstclick_canvas = True
+            self.clicks_canvas = []
+            self.update_graphics()
+
+        def button_polygon_graph():
+            if self.clicks_canvas:
+                if len(self.clicks_canvas) < 3:
+                    GUIStatics.window_error(self, 'Define at least 3 Nodes \nfor valid Polygon')
+                    return
+                if self.clicks_canvas[-1] == self.clicks_canvas[0]:
+                    del self.clicks_canvas[-1]
+                canvas_nodes_transformed = [list(GUIStatics.transform_canvas_to_node([float(node[0]), float(node[1])])) for node in self.clicks_canvas]
+                if len(self.polygons) == 1 and not self.polygons['0']['coordinates']:
+                    self.polygons['0'] = {'coordinates': canvas_nodes_transformed, 'area_neg_pos': 'Positive'}
+                else:
+                    self.polygons[str(len(self.polygons))] = {'coordinates': canvas_nodes_transformed, 'area_neg_pos': 'Positive'}
+                polygon_select_var.set(str(len(self.polygons) - 1))
+                clear_gprah()
+            else:
+                GUIStatics.window_error(self, 'Click on Canvas below to \ndefine Nodes for Polygon')
+
+        def button_point_graph():
+            if self.clicks_canvas:
+                node = self.clicks_canvas[-1]
+                canvas_nodes_transformed = GUIStatics.transform_canvas_to_node([float(node[0]), float(node[1])])
+                if self.points == {'None'} or not self.points:
+                    self.points = {'0': list(canvas_nodes_transformed)}
+                else:
+                    self.points[str(len(self.points))] = list(canvas_nodes_transformed)
+                update_point_select_dropdown()
+                selected_point = str(int(max(list(self.points.keys()))))
+                single_point_var.set(selected_point)
+                clear_gprah()
+            else:
+                GUIStatics.window_error(self, 'Click on Canvas below to \ndefine Nodes for Polygon\n'
+                                              'Last Node will be entered as new Single Point')
+
+
 
         button_add_poly_graph = tk.Button(self, text="ADD CANVAS\nPOLYGON", command=button_polygon_graph,
-                                           width=9, height=2, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
+                                           width=10, height=2, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
         button_add_poly_graph.place(relx=0.54, rely=0.02)
         button_add_point_graph = tk.Button(self, text="ADD CANVAS\nPOINT", command=button_point_graph,
-                                           width=9, height=2, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
+                                           width=10, height=2, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
         button_add_point_graph.place(relx=0.61, rely=0.02)
         button_clear_graph = tk.Button(self, text="CLEAR\nINPUT", command=button_clear_graph,
-                                           width=9, height=2, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
+                                           width=10, height=2, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
         button_clear_graph.place(relx=0.68, rely=0.02)
+        tooltip_text = (f"Add in canvas defined Polygon                        \n"
+                        f"(Alternative way to define Polygons)                 \n"
+                        f"1) Click on Canvas to add Polygon Nodes              \n"
+                        f"   (Click inside Grid -> Node locks to 'NW' Position)\n"
+                        f"2) Click this Button to add Polygon to List          ")
+        Tooltip(button_add_poly_graph, tooltip_text)
+
+        tooltip_text = (f"Add in canvas defined Point             \n"
+                        f"(Alternative way to define Single Points\n"
+                        f"First Node on Canvas will be added      ")
+        Tooltip(button_add_point_graph, tooltip_text)
+
+        tooltip_text = (f"Clear all clicks on Canvas")
+        Tooltip(button_clear_graph, tooltip_text)
         ##################################################
         # Accept button and checks
         def check_geometry():
@@ -900,6 +1002,8 @@ class Geometry(tk.Toplevel):
         button_accept = tk.Button(self, text="ACCEPT GEOMETRY", command=check_and_accept,
                                   width=16, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_BIG_BOLD)
         button_accept.place(relx=0.025, rely=0.935)
+        tooltip_text = (f"Accept defined Geometry and return to Main Window")
+        Tooltip(button_accept, tooltip_text)
 
         ##################################################
 
@@ -1170,10 +1274,56 @@ class Geometry(tk.Toplevel):
                                         outline='#1F1F1F', width=1)
                 self.canvas.create_text(node[0], node[1] - 10, text=text, fill='#1F1F1F', font=("Helvetica", 7))
 
+    def find_grid(self, coord_x: int, coord_y: int) -> Tuple[int, int]:
+        """
+        Locks mouse click on canvas for polygon creation to the closest grid point
+        :param coord_x: int
+        :param coord_y: int
+        :return: Tuple[int, int]
+        """
+
+        grid_x = range(0, GUIStatics.CANVAS_SIZE_X + GUIStatics.GRID_SPACE, GUIStatics.GRID_SPACE)
+        grid_y = range(0, GUIStatics.CANVAS_SIZE_Y + GUIStatics.GRID_SPACE, GUIStatics.GRID_SPACE)
+
+        div_x = math.floor(coord_x / GUIStatics.GRID_SPACE)
+        mod_x = coord_x % GUIStatics.GRID_SPACE
+        div_y = math.floor(coord_y / GUIStatics.GRID_SPACE)
+        mod_y = coord_y % GUIStatics.GRID_SPACE
+        if mod_x <= 12:
+            new_x = grid_x[div_x]
+        else:
+            new_x = grid_x[div_x + 1]
+        if mod_y <= 12:
+            new_y = grid_y[div_y]
+        else:
+            new_y = grid_y[div_y + 1]
+
+        return new_x, new_y
+
+
+
     def on_canvas_click(self, event: tk.Canvas.bind):   # todo: correct?
         """
         todo
         """
+
+        # Get coordinates of right click
+        x, y = event.x, event.y
+
+        # lock coordinates to grid
+        x, y = self.find_grid(x, y)
+        self.clicks_canvas.append([x, y])  # todo: Transform
+
+        # create lines between points
+        if self.firstclick_canvas == True:
+            self.firstclick_canvas = False
+        if 'prevpoint' in Geometry.on_canvas_click.__dict__ and not self.firstclick_canvas:
+            self.canvas.create_line(Geometry.on_canvas_click.prevpoint[0], Geometry.on_canvas_click.prevpoint[1], x, y,
+                                    fill="black", width=1)
+
+        Geometry.on_canvas_click.prevpoint = (x, y)
+        # create point at click
+        self.canvas.create_oval(x - 3, y - 3, x + 3, y + 3, outline="black", fill="#851d1f")
 
 
     def return_geometry(self):
@@ -1184,7 +1334,9 @@ class Geometry(tk.Toplevel):
         # WIP: check if geometry is valid e.g. polgones have to be connects,
         #  only one polygon can be subtracted, points have to be in valid area, etc.
         self.geometry_input = {'polygons': self.polygons, 'points': self.points, 'units': self.units, 'other': None}
-
+        if len(self.polygons) == 1 and not self.polygons['0']['coordinates']:
+            GUIStatics.window_error(self, 'Create valid Geometry first!')
+            return
         self.callback_geometry(self.geometry_input)
         self.destroy()  # closes top window
 

@@ -427,6 +427,8 @@ class GUI(tk.Tk):
             .place(relx=widgets_x_start, rely=0.08)
         button_define_geometry = tk.Button(self, text="GEOMETRY", command=self.define_geometry, width=12,
                                            font=GUIStatics.STANDARD_FONT_BUTTON_BIG_BOLD, height=1)
+        tooltip_text = (f"Define the Geometry")
+        Tooltip(button_define_geometry, tooltip_text)
         button_define_geometry.place(relx=widgets_x_start, rely=0.1)
 
         def show_help():
@@ -518,9 +520,13 @@ class GUI(tk.Tk):
         # Button show Mesh and show Geometry
         button_show_mesh = tk.Button(self, text="SHOW MESH", command=show_mesh, width=12,
                                      font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1, state='disabled')
+        tooltip_text = (f"Show Mesh (if created)")
+        Tooltip(button_show_mesh, tooltip_text)
         button_show_mesh.place(relx=0.23, rely=0.035)
         self.button_show_geom = tk.Button(self, text="SHOW GEOMETRY", command=show_geometry, width=12,
                                           font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1, state='disabled')
+        tooltip_text = (f"Show Geometry (if created)")
+        Tooltip(self.button_show_geom, tooltip_text)
         self.button_show_geom.place(relx=0.34, rely=0.035)
 
         # Zoom in and out
@@ -551,18 +557,40 @@ class GUI(tk.Tk):
                 GUIStatics.CO_Y += 20
                 self.draw_geometry_from_definebcs()
 
-        tk.Button(self, text="-", command=zoom_out, width=1,
-                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1).place(relx=0.46, rely=0.025)
-        tk.Button(self, text="+", command=zoom_in, width=1,
-                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1).place(relx=0.58, rely=0.025)
-        tk.Button(self, text="L", command=shift_left, width=1,
-                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1).place(relx=0.49, rely=0.025)
-        tk.Button(self, text="U", command=shift_up, width=1,
-                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1).place(relx=0.52, rely=0.01)
-        tk.Button(self, text="D", command=shift_down, width=1,
-                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1).place(relx=0.52, rely=0.04)
-        tk.Button(self, text="R", command=shift_right, width=1,
-                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1).place(relx=0.55, rely=0.025)
+        zbm = tk.Button(self, text="-", command=zoom_out, width=1,
+                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1)
+        zbm.place(relx=0.46, rely=0.025)
+        zbp = tk.Button(self, text="+", command=zoom_in, width=1,
+                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1)
+        zbp.place(relx=0.58, rely=0.025)
+        zbl = tk.Button(self, text="L", command=shift_left, width=1,
+                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1)
+        zbl.place(relx=0.49, rely=0.025)
+        zbu = tk.Button(self, text="U", command=shift_up, width=1,
+                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1)
+        zbu.place(relx=0.52, rely=0.01)
+        zbd = tk.Button(self, text="D", command=shift_down, width=1,
+                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1)
+        zbd.place(relx=0.52, rely=0.04)
+        zbr = tk.Button(self, text="R", command=shift_right, width=1,
+                                          font=GUIStatics.STANDARD_FONT_SMALLEST, height=1)
+        zbr.place(relx=0.55, rely=0.025)
+
+        tooltip_text = (f"Zoom out Geometry")
+        Tooltip(zbm, tooltip_text)
+        tooltip_text = (f"Zoom in Geometry")
+        Tooltip(zbp, tooltip_text)
+        tooltip_text = (f"Leftshift Geometry")
+        Tooltip(zbl, tooltip_text)
+        tooltip_text = (f"Upshift Geometry")
+        Tooltip(zbu, tooltip_text)
+        tooltip_text = (f"Downshift Geometry")
+        Tooltip(zbd, tooltip_text)
+        tooltip_text = (f"Rightshift Geometry (Create first)")
+        Tooltip(zbr, tooltip_text)
+
+
+
         # FEM Parameters
         GUIStatics.create_divider(self, widgets_x_start, 0.17, 230)
         tk.Label(self, text="FEM PARAMETERS", font=GUIStatics.STANDARD_FONT_MID_BOLD) \
@@ -592,22 +620,29 @@ class GUI(tk.Tk):
         var_equations.trace('w', trace_equation)
         tooltip_text_dropdown_equation_select = 'None'
         if self.equation == 'HE':
-            tooltip_text_dropdown_equation_select = (f" Solves the stationary Heat Equation ")
+            tooltip_text_dropdown_equation_select = (f"Select Equation: Solves the stationary Heat Equation ")
         elif self.equation == 'HH':
-            tooltip_text_dropdown_equation_select = (f" Solves the Helmholtz Equation ")
+            tooltip_text_dropdown_equation_select = (f"Select Equation: Solves the Helmholtz Equation ")
         Tooltip(self.dropdown_equation_select, tooltip_text_dropdown_equation_select)
 
 
         # Button Assign Boundary Conditions /Material Parameters / Calculation Parameters
         self.button_define_bcs = tk.Button(self, text="BOUNDARY CONDITIONS", command=assign_BCs, width=25,
                                            font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1)
+        tooltip_text = (f"Set Boundary Conditions")
+        Tooltip(self.button_define_bcs, tooltip_text)
         self.button_define_bcs.place(relx=widgets_x_start, rely=0.27)
         self.button_define_materials = tk.Button(self, text="MATERIAL PARAMETERS", command=assign_materials, width=25,
                                                  font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1)
+
+        tooltip_text = (f"Set Material Parameters")
+        Tooltip(self.button_define_materials, tooltip_text)
         self.button_define_materials.place(relx=widgets_x_start, rely=0.27 + 0.045)
         self.button_define_calc_params = tk.Button(self, text="CALCULATION PARAMETERS", command=assign_calc_params,
                                                    width=25,
                                                    font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1)
+        tooltip_text = (f"Set Calculation Parameters\nMesh Density (and Frequency for Helmholtz Equation)")
+        Tooltip(self.button_define_calc_params, tooltip_text)
         self.button_define_calc_params.place(relx=widgets_x_start, rely=0.27 + 0.09)
         self.button_define_bcs.config(state="disabled")
         self.button_define_materials.config(state="disabled")
@@ -617,9 +652,15 @@ class GUI(tk.Tk):
         GUIStatics.create_divider(self, widgets_x_start, 0.41, 230)
         self.button_create_mesh = tk.Button(self, text="CREATE\nMESH", command=create_mesh, width=10,
                                             font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD, height=2)
+
+        tooltip_text = (f"Create the Mesh")
+        Tooltip(self.button_create_mesh, tooltip_text)
         self.button_create_mesh.place(relx=widgets_x_start, rely=0.41 + 0.012)
-        self.button_solve_system = tk.Button(self, text="SOLVE", command=solve_system, width=10,
+        self.button_solve_system = tk.Button(self, text='SOLVE', command=solve_system, width=10,
                                              font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD, height=2)
+        tooltip_text = (f"Solve the Problem with Parameters\n"
+                        f"from Info Textbox")
+        Tooltip(self.button_solve_system, tooltip_text)
         self.button_solve_system.place(relx=widgets_x_start + 0.1075, rely=0.41 + 0.012)
         self.button_create_mesh.config(state="disabled")
         self.button_solve_system.config(state="disabled")
@@ -747,9 +788,14 @@ class GUI(tk.Tk):
         self.text_information.place(relx=widgets_x_start + 0.005, rely=0.54)
         self.text_information.insert(tk.END, self.text_information_str)
         self.text_information.config(state='disabled')
-        tk.Button(self, text="SHOW INFO", command=show_info, width=12, font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start, rely=0.925)
-        tk.Button(self, text="WRITE INFO", command=write_info, width=12, font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start + 0.1, rely=0.925)
-
+        bshowinfo = tk.Button(self, text="SHOW INFO", command=show_info, width=12, font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1)
+        bshowinfo.place(relx=widgets_x_start, rely=0.925)
+        tooltip_text = (f"Show detailed current Input")
+        Tooltip(bshowinfo, tooltip_text)
+        bwriteinfo = tk.Button(self, text="WRITE INFO", command=write_info, width=12, font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1)
+        bwriteinfo.place(relx=widgets_x_start + 0.1, rely=0.925)
+        tooltip_text = (f"Write detailed current Input to disk (root path)")
+        Tooltip(bwriteinfo, tooltip_text)
         # Debug
         # Reformat Boundaryconditions via CreateBCParams, only needed for development
         # button_create_bc = tk.Button(self, text="FORM BCS", command=self.create_BC_params, width=10,
@@ -804,6 +850,15 @@ class GUI(tk.Tk):
         density_slider = tk.Scale(window_calc_params, from_=1, to=5, orient=tk.HORIZONTAL,
                                   label="", font=GUIStatics.STANDARD_FONT_SMALL)
         density_slider.place(relx=widgets_x_start + 0.325, rely=0.125)
+        tooltip_text = (f"Select the Mesh Density:                      \n"
+                        f"1: Very coarse - 2 elements per unit  (e.g. 2/m) \n"
+                        f"2: Coarse      - 4 elements per unit  (e.g. 4/m) \n"
+                        f"3: Medium      - 10 elements per unit (e.g. 10/m)\n"
+                        f"4: Fine        - 30 elements per unit (e.g. 30/m)\n"
+                        f"5: Very Fine   - 80 elements per unit (e.g. 80/m)\n"
+                        f"Warning: Fine/Very Fine requires  some time      \n"
+                        f"Warning: Very Fine needs a lot ot RAM            ")
+        Tooltip(density_slider, tooltip_text)
 
         if self.equation == 'HH':
             GUIStatics.create_divider(window_calc_params, widgets_x_start, 0.3, 335)
@@ -817,6 +872,8 @@ class GUI(tk.Tk):
             button_freq_set = tk.Button(window_calc_params, text="SET VALUE", command=set_freq,
                                         width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
             button_freq_set.place(relx=widgets_x_start + 0.6, rely=0.325)
+            tooltip_text = (f"Set the Frequency for Helmholtz Equation")
+            Tooltip(button_freq_set, tooltip_text)
 
         def accept_calcparams():
             """
@@ -837,6 +894,8 @@ class GUI(tk.Tk):
 
         button_accept = tk.Button(window_calc_params, text="ACCEPT PARAMETERs", command=accept_calcparams,
                                   width=19, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
+        tooltip_text = (f"Accept entered Calculation Conditions")
+        Tooltip(button_accept, tooltip_text)
         button_accept.place(relx=widgets_x_start + 0.05, rely=0.895)
 
     def window_assign_region_conditions(self):
@@ -918,6 +977,9 @@ class GUI(tk.Tk):
         dropdown_region_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=8, height=1)
         dropdown_region_select.place(relx=widgets_x_start + 0.025, rely=0.18)
         dropdown_region_select_var.trace('w', trace_region)
+        tooltip_text = (f"Select Region for Materials        \n"
+                        f"(Standard values set automatically)")
+        Tooltip(dropdown_region_select, tooltip_text)
 
         tk.Label(window_bcs, text="Material Parameters:", font=GUIStatics.STANDARD_FONT_SMALL) \
             .place(relx=widgets_x_start + 0.025, rely=0.27)
@@ -954,6 +1016,8 @@ class GUI(tk.Tk):
                                                  width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
         entry_materials_values_button.place(relx=widgets_x_start + 0.025, rely=pos_y_set_button + 0.075)
         entry_materials_values_button.config(state='disabled')
+        tooltip_text = (f"Set the entered Materials for selected Region")
+        Tooltip(entry_materials_values_button, tooltip_text)
 
         def accept_regions():
             """
@@ -980,6 +1044,8 @@ class GUI(tk.Tk):
 
         button_accept = tk.Button(window_bcs, text="ACCEPT REGIONs", command=accept_regions,
                                   width=14, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
+        tooltip_text = (f"Accept all entered Region Materials")
+        Tooltip(button_accept, tooltip_text)
         button_accept.place(relx=widgets_x_start + 0.05, rely=0.895)
 
     def window_assign_boundary_conditions(self):
@@ -1150,6 +1216,8 @@ class GUI(tk.Tk):
         dropdown_boundary_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=8, height=1)
         dropdown_boundary_select.place(relx=widgets_x_start + 0.025, rely=0.18)
         dropdown_boundary_select_var.trace('w', trace_boundary)
+        tooltip_text = (f"Select Boundary for Conditions")
+        Tooltip(dropdown_boundary_select, tooltip_text)
 
         boundary_types = ['Dirichlet', 'Neumann', 'Robin'] if self.equation == 'HE' else ['Dirichlet', 'Neumann']
         dropdown_boundary_type_var = tk.StringVar()
@@ -1160,11 +1228,13 @@ class GUI(tk.Tk):
         dropdown_boundary_type_var.trace('w', trace_boundary_type)
         tooltip_text_dropdown_boundary_type = 'None'
         if self.equation == 'HE':
-            tooltip_text_dropdown_boundary_type = (f" Dirichlet: Constant Temperature \n"
+            tooltip_text_dropdown_boundary_type = (f"Select Boundary Type:            \n"
+                                                   f" Dirichlet: Constant Temperature \n"
                                                    f" Neumann: Heat Flux              \n"
                                                    f" Robin: Convective Heat Flux     ")
         elif self.equation == 'HH':
-            tooltip_text_dropdown_boundary_type = (f" Dirichlet: Constant Pressure          \n"
+            tooltip_text_dropdown_boundary_type = (f"Select Boundary Type:                  \n"
+                                                   f" Dirichlet: Constant Pressure          \n"
                                                    f" Neumann: Impedance Boundary Condition \n"
                                                    f" Robin: Not implemented                ")
         Tooltip(dropdown_boundary_type, tooltip_text_dropdown_boundary_type)
@@ -1204,6 +1274,9 @@ class GUI(tk.Tk):
         button_boundary_value_set = tk.Button(window_bcs, text="SET VALUE", command=set_boundary_value,
                                               width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
         button_boundary_value_set.place(relx=widgets_x_start + 0.6, rely=0.29)
+        tooltip_text = (f"Set the entered values for selected boundary type\n"
+                        f"(Standard value 'None' set automatically)        ")
+        Tooltip(button_boundary_value_set, tooltip_text)
         button_boundary_value_set.config(state='disabled')
 
         if equation_set == 'HH':
@@ -1264,6 +1337,8 @@ class GUI(tk.Tk):
 
         button_accept = tk.Button(window_bcs, text="ACCEPT BCs", command=accept_bcs,
                                   width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
+        tooltip_text = (f"Accept all entered Boundary Conditions")
+        Tooltip(button_accept, tooltip_text)
         button_accept.place(relx=widgets_x_start + 0.05, rely=0.895)
 
     def callback_calc(self, calc_info):

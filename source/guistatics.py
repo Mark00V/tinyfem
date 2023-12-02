@@ -156,6 +156,24 @@ class GUIStatics:
         return node_new_x, node_new_y
 
     @staticmethod
+    def transform_canvas_to_node(canvas_node: list):
+        """
+        Transforms the coordinates of canvas_node from canvas coord system to natural coord system
+        e.g. [300, 200] -> [1.0, 2.0]
+        :param canvas_node: [x, y] in canvas coordinates
+        :return:
+        """
+
+        scale_factor = GUIStatics.CANVAS_SCALE_FACTOR
+        canvas_node_x = canvas_node[0]
+        canvas_node_y = canvas_node[1]
+
+        node_x = (canvas_node_x - GUIStatics.CO_X - GUIStatics.CANVAS_SIZE_X / 2) / scale_factor
+        node_y = -(canvas_node_y - GUIStatics.CO_Y - GUIStatics.CANVAS_SIZE_Y / 2) / scale_factor
+
+        return node_x, node_y
+
+    @staticmethod
     def update_text_field(widget: tk.Text, new_text):
         widget.config(state='normal')
         widget.delete('0.0', 'end')
