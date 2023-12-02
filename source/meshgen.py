@@ -323,7 +323,7 @@ class CreateMesh:
         5: 80 nodes pro Einheitsunit
         :return:
         """
-        density_dict = {1: 1/2, 2: 1/4, 3: 1/10, 4: 1/30, 5: 1/80}
+        density_dict = {1: 1/2, 2: 1/4, 3: 1/11, 4: 1/31, 5: 1/81}
         self.density = density_dict[self.calculation_parameters['mesh_density']]
 
     @timing_decorator

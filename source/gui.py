@@ -730,9 +730,9 @@ class GUI(tk.Tk):
                                 bc_str = f"No BC specified"
                         elif self.equation == 'HH':
                             if bc['type'] == 'Dirichlet':
-                                bc_str = f"{bc['type']}, T = {bc['value']} Pa"
+                                bc_str = f"{bc['type']}, P = {bc['value']} Pa"
                             elif bc['type'] == 'Neumann':
-                                bc_str = f"{bc['type']}, T = {bc['value']} Pas/m"
+                                bc_str = f"{bc['type']}, Z = {bc['value']} Pas/m"
                             elif bc['type'] == 'Robin':
                                 bc_str = f"No BC specified"
                             else:
@@ -1631,9 +1631,9 @@ class GUI(tk.Tk):
                             bc_str = f"No BC specified"
                     elif self.equation == 'HH':
                         if bc['type'] == 'Dirichlet':
-                            bc_str = f"{bc['type']}, T = {bc['value']} Pa"
+                            bc_str = f"{bc['type']}, P = {bc['value']} Pa"
                         elif bc['type'] == 'Neumann':
-                            bc_str = f"{bc['type']}, T = {bc['value']} Pas/m"
+                            bc_str = f"{bc['type']}, Z = {bc['value']} Pas/m"
                         elif bc['type'] == 'Robin':
                             bc_str = f"No BC specified"
                         else:
