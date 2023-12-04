@@ -11,7 +11,7 @@ A tiny FEM software with graphical interface to define geometry and solve the he
 ### Capabilities
 - All-In-One package for solving the stationary heat equation and Helmholtz equation.
 - Graphical interface: Just run main.py.
-- Including geometry creation.
+- Including geometry creation: Define geometry by either graphical input or by entering vertice positions.
 - Including definition of boundary conditions (Heat equation: Dirichlet, Neumann and Robin BC for most practical cases, Helmholtz equation: Dirichlet and Neumann BC for most practical cases).
 - Including solver and graphical representation of solution.
 - Please refer to [EXAMPLES](examples/Examples_TinyFEM.pdf) for capabilities demonstration.
@@ -29,7 +29,6 @@ However, the technical correctness has been verified by comparing it with other 
 ## Running TinyFEM
 ### Workflow
 - Please refer to the [QUICK DOCUMENTATION](Supp/Quick_Documentation_TinyFEM.pdf) for the workflow.
-- Warning: Definition of geometry is tricky. Follow guidelines in the documentation.
 - Warning: If you want to define geometry much smaller than the geometry pane, scale the problem. This has no effect on the solution. Otherwise, definition of boundary conditions will be difficult.
 - While saving the geometry is possible, saving boundary definition is not (WIP).
 ### Dependencies
@@ -38,6 +37,7 @@ The following non-standard libraries are needed to run TinyFEM:
 - numpy: https://numpy.org/ -> pip install numpy
 - PIL: https://python-pillow.org/ -> pip install Pillow
 - scipy: https://scipy.org/ -> pip install scipy
+- shapely: https://shapely.readthedocs.io/ -> pip install shapely
 
 ## Examples
 ### Solving the heat equation with different materials and boundary conditions

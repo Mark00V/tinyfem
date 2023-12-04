@@ -285,7 +285,7 @@ class GUI(tk.Tk):
             window_create_mesh_wait.resizable(False, False)
             icon_image = ImageTk.PhotoImage(data=GUIStatics.return_icon_bytestring())
             window_create_mesh_wait.tk.call('wm', 'iconphoto', window_create_mesh_wait._w, icon_image)
-            tk.Label(window_create_mesh_wait, text="Creating Mesh...Please Wait",
+            tk.Label(window_create_mesh_wait, text="Creating mesh...Please Wait",
                      font=GUIStatics.STANDARD_FONT_MID_BOLD).place(relx=0.15, rely=0.1)
             window_create_mesh_wait_label = tk.Label(window_create_mesh_wait, text="",
                                                      font=GUIStatics.STANDARD_FONT_SMALL_BOLD, anchor="sw", justify="left")
@@ -340,7 +340,6 @@ class GUI(tk.Tk):
         def solve_system():
             """
             Button action to start FEM calculation and show window for displaying solution
-            TODO: threading during waittime
             :return:
             """
 
@@ -362,8 +361,8 @@ class GUI(tk.Tk):
                     calcfem = CalcFEM(params_mesh, params_boundaries_materials)
                     self.solution = calcfem.calc_fem(callback=self.callback_calc)
                 except np.linalg.LinAlgError:
-                    err_message = ('Singular Matrix encountered!\n'
-                                   'Check Boundary Conditions \n'
+                    err_message = ('Singular matrix encountered!\n'
+                                   'Check boundary conditions \n'
                                    'and/or \n'
                                    'try lower/higher mesh density.')
                     GUIStatics.window_error(self, err_message)
@@ -380,8 +379,8 @@ class GUI(tk.Tk):
                     return None
 
                 if np.isnan(self.solution[0]):
-                    err_message = ('Singular Matrix encountered!\n'
-                                   'Check Boundary Conditions \n'
+                    err_message = ('Singular matrix encountered!\n'
+                                   'Check boundary conditions \n'
                                    'and/or \n'
                                    'try lower/higher mesh density.')
                     GUIStatics.window_error(self, err_message)
@@ -396,7 +395,7 @@ class GUI(tk.Tk):
             window_solve_system_wait.resizable(False, False)
             icon_image = ImageTk.PhotoImage(data=GUIStatics.return_icon_bytestring())
             window_solve_system_wait.tk.call('wm', 'iconphoto', window_solve_system_wait._w, icon_image)
-            tk.Label(window_solve_system_wait, text="Solving System...Please Wait",
+            tk.Label(window_solve_system_wait, text="Solving system...Please wait",
                      font=GUIStatics.STANDARD_FONT_MID_BOLD, ).place(relx=0.15, rely=0.1)
             window_solve_system_wait_label = tk.Label(window_solve_system_wait, text="",
                                                      font=GUIStatics.STANDARD_FONT_SMALL_BOLD, anchor="sw", justify="left")
@@ -428,7 +427,7 @@ class GUI(tk.Tk):
             .place(relx=widgets_x_start, rely=0.08)
         button_define_geometry = tk.Button(self, text="GEOMETRY", command=self.define_geometry, width=12,
                                            font=GUIStatics.STANDARD_FONT_BUTTON_BIG_BOLD, height=1)
-        tooltip_text = (f"Define the Geometry")
+        tooltip_text = (f"Define the geometry")
         Tooltip(button_define_geometry, tooltip_text)
         button_define_geometry.place(relx=widgets_x_start, rely=0.1)
 
@@ -446,25 +445,23 @@ class GUI(tk.Tk):
             help_txt_t = f"Welcome to TinyFEM"
             help_txt_author_version = (f"Authors: {AUTHOR}\n"
                                        f"Version: {VERSION_MAJOR}.{VERSION_MINOR}.{VERSION_PATCH}")
-            help_txt_inst = (f"1) Click Button GEOMETRY to define geometry in GEOMETRY EDITOR\n\n"
+            help_txt_inst = (f"1) Click button GEOMETRY to define geometry in GEOMETRY EDITOR\n\n"
                              f"2) After defining geometry select equation to solve\n"
-                             f"   Heat Equation: Solves the stationary coupled heat equation -> T = d^2(T)/d(T^2)\n"
-                             f"   Helmholtz Equation: Solves the coupled Helmholtz equation -> d^2(P)/d(P^2) = -k^2 P\n\n"
-                             f"3) Select Boundary by clicking Button BOUNDARY CONDITIONS\n"
-                             f"   Select Boundary and Boundary Condition -> Dirichlet: Static values on Boundary\n"
-                             f"                               -> Neumann:   Flux on Boundary (WIP, not implemented yet)\n"
-                             f"   Input value and click SET VALUE\n"
-                             f"   Click ACCEPT BCs when finished\n\n"
-                             f"4) Select Material Parameters by clicking Button MATERIAL PARAMETERS\n"
-                             f"   Select region, input value and click SET VALUE\n"
-                             f"   Click ACCEPT REGIONs when finished\n\n"
-                             f"5) Set Calculation Parameters by clicking Button CALCULATION PARAMETERS\n"
-                             f"   Select Mesh Density (1: very coarse, 2: coarse, 3: medium, 4: fine, 5: very fine\n"
-                             f"   If Helmholtz Equation is selected, set frequency\n"
-                             f"   Click ACCEPT CALCULATION PARAMETERS when finished\n\n"
+                             f"   - Heat equation for heat transfer problems / Helmholtz equation for acoustic problems\n\n"
+                             f"3) Select boundary by clicking button BOUNDARY CONDITIONS\n"
+                             f"   - Select boundary and boundary type, enter values and click SET VALUE\n"
+                             f"   - Use -/+ buttons in main window to zoom and L/U/D/R buttons to shift geometry\n"
+                             f"   - Click ACCEPT BCs when finished\n\n"
+                             f"4) Select material parameters by clicking button MATERIAL PARAMETERS\n"
+                             f"   - Select region, enter value and click SET VALUE\n"
+                             f"   - Click ACCEPT REGIONs when finished\n\n"
+                             f"5) Set calculation parameters by clicking button CALCULATION PARAMETERS\n"
+                             f"   - Select mesh density (and frequency for Helmholtz equation, click SET VALUE)\n"
+                             f"   - Click ACCEPT CALCULATION PARAMETERS when finished\n\n"
                              f"6) Click CREATE MESH\n"
-                             f"   Click SHOW MESH to display mesh\n\n"
-                             f"7) Click SOLVE to start FEM-Solver and open solution window\n")
+                             f"   - Click SHOW MESH to display mesh and SHOW GEOMETRY to display geometry again\n\n"
+                             f"7) Click SOLVE to start FEM-Solver and open solution window\n"
+                             f"   - Current solver inputs are shown in information window (also click SHOW INFO for details)\n")
 
             tk.Label(window_help, text=help_txt_t, font=GUIStatics.STANDARD_FONT_BIGGER_BOLD, anchor="center",
                      justify="center") \
@@ -475,9 +472,10 @@ class GUI(tk.Tk):
             tk.Label(window_help, text='Instructions', font=GUIStatics.STANDARD_FONT_BIG_BOLD, anchor="w",
                      justify="left") \
                 .place(relx=0.1, rely=0.155)
-            tk.Label(window_help, text=help_txt_inst, font=GUIStatics.STANDARD_FONT_MID, anchor="w", justify="left") \
+            tk.Label(window_help, text=help_txt_inst, font=GUIStatics.STANDARD_FONT_SMALL, anchor="w", justify="left") \
                 .place(relx=0.1, rely=0.21)
-            lic_text = ("TinyFEM is licensed under the GNU GENERAL PUBLIC LICENSE Version 3\n"
+            lic_text = ("LICENSE:\n"
+                        "TinyFEM is licensed under the GNU GENERAL PUBLIC LICENSE Version 3\n"
                         "No warranty of any kind is given for accuracy and correctness of the results.\n"
                         "Any use is solely at the user's discretion. Commercial use is not recommended.")
 
@@ -521,12 +519,12 @@ class GUI(tk.Tk):
         # Button show Mesh and show Geometry
         button_show_mesh = tk.Button(self, text="SHOW MESH", command=show_mesh, width=12,
                                      font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1, state='disabled')
-        tooltip_text = (f"Show Mesh (if created)")
+        tooltip_text = (f"Show mesh (if created)")
         Tooltip(button_show_mesh, tooltip_text)
         button_show_mesh.place(relx=0.23, rely=0.035)
         self.button_show_geom = tk.Button(self, text="SHOW GEOMETRY", command=show_geometry, width=12,
                                           font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1, state='disabled')
-        tooltip_text = (f"Show Geometry (if created)")
+        tooltip_text = (f"Show geometry (if created)")
         Tooltip(self.button_show_geom, tooltip_text)
         self.button_show_geom.place(relx=0.34, rely=0.035)
 
@@ -577,17 +575,17 @@ class GUI(tk.Tk):
                                           font=GUIStatics.STANDARD_FONT_SMALLEST, height=1)
         zbr.place(relx=0.55, rely=0.025)
 
-        tooltip_text = (f"Zoom out Geometry")
+        tooltip_text = (f"Zoom out geometry")
         Tooltip(zbm, tooltip_text)
-        tooltip_text = (f"Zoom in Geometry")
+        tooltip_text = (f"Zoom in geometry")
         Tooltip(zbp, tooltip_text)
-        tooltip_text = (f"Leftshift Geometry")
+        tooltip_text = (f"Leftshift geometry")
         Tooltip(zbl, tooltip_text)
-        tooltip_text = (f"Upshift Geometry")
+        tooltip_text = (f"Upshift geometry")
         Tooltip(zbu, tooltip_text)
-        tooltip_text = (f"Downshift Geometry")
+        tooltip_text = (f"Downshift geometry")
         Tooltip(zbd, tooltip_text)
-        tooltip_text = (f"Rightshift Geometry (Create first)")
+        tooltip_text = (f"Rightshift geometry")
         Tooltip(zbr, tooltip_text)
 
 
@@ -630,19 +628,19 @@ class GUI(tk.Tk):
         # Button Assign Boundary Conditions /Material Parameters / Calculation Parameters
         self.button_define_bcs = tk.Button(self, text="BOUNDARY CONDITIONS", command=assign_BCs, width=25,
                                            font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1)
-        tooltip_text = (f"Set Boundary Conditions")
+        tooltip_text = (f"Set boundary conditions")
         Tooltip(self.button_define_bcs, tooltip_text)
         self.button_define_bcs.place(relx=widgets_x_start, rely=0.27)
         self.button_define_materials = tk.Button(self, text="MATERIAL PARAMETERS", command=assign_materials, width=25,
                                                  font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1)
 
-        tooltip_text = (f"Set Material Parameters")
+        tooltip_text = (f"Set material parameters")
         Tooltip(self.button_define_materials, tooltip_text)
         self.button_define_materials.place(relx=widgets_x_start, rely=0.27 + 0.045)
         self.button_define_calc_params = tk.Button(self, text="CALCULATION PARAMETERS", command=assign_calc_params,
                                                    width=25,
                                                    font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1)
-        tooltip_text = (f"Set Calculation Parameters\nMesh Density (and Frequency for Helmholtz Equation)")
+        tooltip_text = (f"Set calculation parameters\nmesh density (and frequency for Helmholtz equation)")
         Tooltip(self.button_define_calc_params, tooltip_text)
         self.button_define_calc_params.place(relx=widgets_x_start, rely=0.27 + 0.09)
         self.button_define_bcs.config(state="disabled")
@@ -659,8 +657,8 @@ class GUI(tk.Tk):
         self.button_create_mesh.place(relx=widgets_x_start, rely=0.41 + 0.012)
         self.button_solve_system = tk.Button(self, text='SOLVE', command=solve_system, width=10,
                                              font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD, height=2)
-        tooltip_text = (f"Solve the Problem with Parameters\n"
-                        f"from Info Textbox")
+        tooltip_text = (f"Solve the problem with parameters\n"
+                        f"from Information textbox")
         Tooltip(self.button_solve_system, tooltip_text)
         self.button_solve_system.place(relx=widgets_x_start + 0.1075, rely=0.41 + 0.012)
         self.button_create_mesh.config(state="disabled")
@@ -709,7 +707,7 @@ class GUI(tk.Tk):
                 if calculation_parameters['equation'] == 'HH':
                     freq_st = f"\nFrequency: {calculation_parameters['freq']} Hz"
                 calculation_parameters_str += (f"\nEquation: {eq[calculation_parameters['equation']]}\n"
-                                               f"Mesh Density: {calculation_parameters['mesh_density']}{freq_st}")
+                                               f"Mesh density: {calculation_parameters['mesh_density']}{freq_st}")
             if self.triangulation is not None:
                 calculation_parameters_str += f"\nMesh created with {len(self.triangulation)} elements."
 
@@ -791,11 +789,11 @@ class GUI(tk.Tk):
         self.text_information.config(state='disabled')
         bshowinfo = tk.Button(self, text="SHOW INFO", command=show_info, width=12, font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1)
         bshowinfo.place(relx=widgets_x_start, rely=0.925)
-        tooltip_text = (f"Show detailed current Input")
+        tooltip_text = (f"Show detailed current input")
         Tooltip(bshowinfo, tooltip_text)
         bwriteinfo = tk.Button(self, text="WRITE INFO", command=write_info, width=12, font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1)
         bwriteinfo.place(relx=widgets_x_start + 0.1, rely=0.925)
-        tooltip_text = (f"Write detailed current Input to disk (root path)")
+        tooltip_text = (f"Write detailed current input to disk (root path)")
         Tooltip(bwriteinfo, tooltip_text)
         # Debug
         # Reformat Boundaryconditions via CreateBCParams, only needed for development
@@ -875,7 +873,7 @@ class GUI(tk.Tk):
             button_freq_set = tk.Button(window_calc_params, text="SET VALUE", command=set_freq,
                                         width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
             button_freq_set.place(relx=widgets_x_start + 0.6, rely=0.325)
-            tooltip_text = (f"Set the Frequency for Helmholtz Equation")
+            tooltip_text = (f"Set the frequency for Helmholtz equation")
             Tooltip(button_freq_set, tooltip_text)
 
         def accept_calcparams():
@@ -897,7 +895,7 @@ class GUI(tk.Tk):
 
         button_accept = tk.Button(window_calc_params, text="ACCEPT PARAMETERs", command=accept_calcparams,
                                   width=19, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
-        tooltip_text = (f"Accept entered Calculation Conditions")
+        tooltip_text = (f"Accept entered calculation parameters")
         Tooltip(button_accept, tooltip_text)
         button_accept.place(relx=widgets_x_start + 0.05, rely=0.895)
 
@@ -980,7 +978,7 @@ class GUI(tk.Tk):
         dropdown_region_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=8, height=1)
         dropdown_region_select.place(relx=widgets_x_start + 0.025, rely=0.18)
         dropdown_region_select_var.trace('w', trace_region)
-        tooltip_text = (f"Select Region for Materials        \n"
+        tooltip_text = (f"Select region for materials        \n"
                         f"(Standard values set automatically)")
         Tooltip(dropdown_region_select, tooltip_text)
 
@@ -1019,7 +1017,7 @@ class GUI(tk.Tk):
                                                  width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
         entry_materials_values_button.place(relx=widgets_x_start + 0.025, rely=pos_y_set_button + 0.075)
         entry_materials_values_button.config(state='disabled')
-        tooltip_text = (f"Set the entered Materials for selected Region")
+        tooltip_text = (f"Set the entered materials for selected region")
         Tooltip(entry_materials_values_button, tooltip_text)
 
         def accept_regions():
@@ -1047,7 +1045,7 @@ class GUI(tk.Tk):
 
         button_accept = tk.Button(window_bcs, text="ACCEPT REGIONs", command=accept_regions,
                                   width=14, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
-        tooltip_text = (f"Accept all entered Region Materials")
+        tooltip_text = (f"Accept all entered region materials")
         Tooltip(button_accept, tooltip_text)
         button_accept.place(relx=widgets_x_start + 0.05, rely=0.895)
 
@@ -1231,14 +1229,14 @@ class GUI(tk.Tk):
         dropdown_boundary_type_var.trace('w', trace_boundary_type)
         tooltip_text_dropdown_boundary_type = 'None'
         if self.equation == 'HE':
-            tooltip_text_dropdown_boundary_type = (f"Select Boundary Type:            \n"
-                                                   f" Dirichlet: Constant Temperature \n"
-                                                   f" Neumann: Heat Flux              \n"
-                                                   f" Robin: Convective Heat Flux     ")
+            tooltip_text_dropdown_boundary_type = (f"Select boundary type:            \n"
+                                                   f" Dirichlet: Constant temperature \n"
+                                                   f" Neumann: Heat flux              \n"
+                                                   f" Robin: Convective heat flux     ")
         elif self.equation == 'HH':
-            tooltip_text_dropdown_boundary_type = (f"Select Boundary Type:                  \n"
-                                                   f" Dirichlet: Constant Pressure          \n"
-                                                   f" Neumann: Impedance Boundary Condition \n"
+            tooltip_text_dropdown_boundary_type = (f"Select boundary type:                  \n"
+                                                   f" Dirichlet: Constant pressure          \n"
+                                                   f" Neumann: Impedance boundary condition \n"
                                                    f" Robin: Not implemented                ")
         Tooltip(dropdown_boundary_type, tooltip_text_dropdown_boundary_type)
 
@@ -1340,7 +1338,7 @@ class GUI(tk.Tk):
 
         button_accept = tk.Button(window_bcs, text="ACCEPT BCs", command=accept_bcs,
                                   width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_MID_BOLD)
-        tooltip_text = (f"Accept all entered Boundary Conditions")
+        tooltip_text = (f"Accept all entered boundary conditions")
         Tooltip(button_accept, tooltip_text)
         button_accept.place(relx=widgets_x_start + 0.05, rely=0.895)
 
@@ -1643,7 +1641,7 @@ class GUI(tk.Tk):
                             bc_str = f"No BC specified"
                         else:
                             bc_str = f"No BC specified"
-                    if bc['value']:
+                    if bc['value'] is not None:
                         boundary_parameters_str += f"\nB-{k}: {bc_str}"
         except KeyError:
             ...
@@ -1654,7 +1652,7 @@ class GUI(tk.Tk):
         if node_parameters:
             for k, v in node_parameters.items():
                 bc = v['bc']['value']
-                if bc:
+                if bc is not None:
                     bc_str = f"Sound source, P = {bc} W/m"
                     node_parameters_str += f"\nN-{k}: {bc_str}"
         if self.equation == 'HE':

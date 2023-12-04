@@ -187,14 +187,14 @@ class Geometry(tk.Toplevel):
         button_save_geo = tk.Button(self, text="SAVE", command=save_geometry,
                                     font=GUIStatics.SAVELOAD_FONT, width=10, height=1)
         button_save_geo.place(relx=widgets_x_start, rely=0.02)
-        tooltip_text = (f"Save the Geometry to file")
+        tooltip_text = (f"Save the geometry to file")
         Tooltip(button_save_geo, tooltip_text)
 
         # load geometry button
         button_load_geo = tk.Button(self, text="LOAD", command=load_geometry,
                                     font=GUIStatics.SAVELOAD_FONT, width=10, height=1)
         button_load_geo.place(relx=0.1, rely=0.02)
-        tooltip_text = (f"Load the Geometry from file")
+        tooltip_text = (f"Load the geometry from file")
         Tooltip(button_load_geo, tooltip_text)
 
         ##################################################
@@ -211,15 +211,30 @@ class Geometry(tk.Toplevel):
             self.set_icon(window_help)
 
             help_txt_t = f"GEOMETRY"
-            help_txt_inst = (f"1) SAVE / LOAD to save or load geometry input \n\n"
-                             f"2) Select Polygon from Selector SELECT POLYGON to add/delete/change nodes\n"
-                             f"      - Select Node from Selector SELECT NODE or add new nodes by pressing NEW (select afterwards)\n"
+            help_txt_inst = (f"I) How to add polygons and single points via input (Define Polygon / Define Single Points section):\n"
+                             f"   Polygons:\n"
+                             f"    - Select polygon from selector SELECT POLYGON to add/delete/change nodes\n"
+                             f"      - Select node from selector SELECT NODE or add new nodes by pressing NEW (select afterwards)\n"
                              f"      - Input coordinates in input fields and press UPDATE\n"
                              f"      - Current nodes and coordinates are shown in POLYGON NODES \n"
-                             f"      - Select positive/negative Area from Selector AREA (press UPDATE afterwards)\n\n"
-                             f"3) Select Point from Selector SELECT POINT or ADD new points\n"
+                             f"      - Select positive/negative area from Selector AREA (press UPDATE afterwards)\n\n"
+                             f"   Single points:\n"
+                             f"    - Select point from selector SELECT POINT or ADD new points\n"
                              f"      - Points are mainly used to define acoustic sources (but edge nodes can also be used instead)\n\n"
-                             f"4) Click Button ACCEPT GEOMETRY to finish geometry defintion and exit window\n")
+                             f"II) How to add polygons and single points via mouse clicks:\n"
+                             f"   Polygons:\n"
+                             f"    - Click on canvas to add node for polygon. Click at least 3 times for valid polygon\n"
+                             f"    - Click on button ADD CANVAS POLYGON\n"
+                             f"    - Polygon will be added to polygon list with respective node positions\n"
+                             f"   Single points:\n"
+                             f"    - Click at least once on canvas\n"
+                             f"    - Click on button ADD CANVAS POINT to add latest point to single point list\n"
+                             f"   Other:\n"
+                             f"    - Click on button CLEAR INPUT to delete mouse clicks on canvas\n\n"
+                             f"III) Optional: SAVE / LOAD to save or load geometry input \n\n"
+                             f"IV)  Click Button ACCEPT GEOMETRY to finish geometry definition and exit window\n"
+                             f"    - The geometry will automatically be checked if it is valid for mesh generation\n"
+                             f"    - You can also manually check by clicking button CHECK GEOMETRY ")
 
             tk.Label(window_help, text=help_txt_t, font=GUIStatics.STANDARD_FONT_BIGGER_BOLD, anchor="center",
                      justify="center") \
@@ -227,7 +242,7 @@ class Geometry(tk.Toplevel):
             tk.Label(window_help, text='Instructions', font=GUIStatics.STANDARD_FONT_BIG_BOLD, anchor="w",
                      justify="left") \
                 .place(relx=0.1, rely=0.175)
-            tk.Label(window_help, text=help_txt_inst, font=GUIStatics.STANDARD_FONT_MID, anchor="w", justify="left") \
+            tk.Label(window_help, text=help_txt_inst, font=GUIStatics.STANDARD_FONT_SMALL, anchor="w", justify="left") \
                 .place(relx=0.1, rely=0.225)
 
         # Help Button
@@ -259,7 +274,7 @@ class Geometry(tk.Toplevel):
         self.unit_selected = tk.Label(self, text='meter', font=GUIStatics.STANDARD_FONT_SMALL)
         self.unit_selected.place(relx=0.92 - 0.075, rely=0.04)
         unit_var.trace('w', update_unit_text)
-        tooltip_text = (f"Select units for Geometry                      \n"
+        tooltip_text = (f"Select units for geometry                      \n"
                         f"This only affects axes description for solution\n"
                         f"and has no impact on calculation               ")
         Tooltip(dropdown_unit_select, tooltip_text)
@@ -363,7 +378,7 @@ class Geometry(tk.Toplevel):
                 update_polygon_nodes_info()
                 update_dropdown_polygon_node_select_poly_info()
             else:
-                new_index = str(1 + int(max(self.polygons.keys())))
+                new_index = str(1 + max([int(k) for k in self.polygons.keys()]))
                 self.polygons[new_index] = {'coordinates': [], 'area_neg_pos': 'Positive'}
                 update_dropdown_polygon_node_select_poly_info()
                 polygon_select_var.set(new_index)
@@ -481,13 +496,13 @@ class Geometry(tk.Toplevel):
         dropdown_polygon_select.place(relx=widgets_x_start + 0.075, rely=0.13)
         polygon_select_var.trace('w', update_dropdown_polygon_node_select_poly_info)
         self.polygon_selected = polygon_select_var.get()
-        tooltip_text = (f"Select Polygon")
+        tooltip_text = (f"Select polygon")
         Tooltip(dropdown_polygon_select, tooltip_text)
 
         new_poly_button = tk.Button(self, text="NEW", command=new_polygon,
                                     width=7, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
         new_poly_button.place(relx=widgets_x_start + 0.145, rely=0.133)
-        tooltip_text = (f"Create new Polygon without Nodes")
+        tooltip_text = (f"Create new polygon without nodes")
         Tooltip(new_poly_button, tooltip_text)
 
         polygon_node_select_label = tk.Label(self, text="Select Node:", font=GUIStatics.STANDARD_FONT_SMALL)
@@ -499,7 +514,7 @@ class Geometry(tk.Toplevel):
         dropdown_polygon_node_select.place(relx=widgets_x_start + 0.075, rely=0.18)
         dropdown_polygon_node_select["state"] = "disabled"
         self.polygon_node_var.trace('w', update_x_y_entry_polygon_node)
-        tooltip_text = (f"Select the Node from selected Polygon")
+        tooltip_text = (f"Select the node from selected polygon")
         Tooltip(dropdown_polygon_node_select, tooltip_text)
 
         add_poly_select_label = tk.Label(self, text="Add/Update Node:", font=GUIStatics.STANDARD_FONT_SMALL)
@@ -523,19 +538,19 @@ class Geometry(tk.Toplevel):
 
         add_poly_node_button = tk.Button(self, text="ADD", command=add_poly_node,
                                          width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
-        tooltip_text = (f"Add a new Node to the selected Polygon")
+        tooltip_text = (f"Add a new node to the selected polygon")
         Tooltip(add_poly_node_button, tooltip_text)
         add_poly_node_button.place(relx=widgets_x_start + 0.125, rely=0.258)
         update_poly_node_button = tk.Button(self, text="UPDATE", command=update_poly_node,
                                             width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
         update_poly_node_button.place(relx=widgets_x_start + 0.125, rely=0.289)
-        tooltip_text = (f"Update entered X/Y values for selected Node for selected Polygon  \n"
-                        f"(Also click Update after selecting Positive/Negative Polygon Area)")
+        tooltip_text = (f"Update entered X/Y values for selected node for selected polygon  \n"
+                        f"(Also click UPDATE after selecting positive/negative polygon area)")
         Tooltip(update_poly_node_button, tooltip_text)
         delete_polygon_node_button = tk.Button(self, text="DELETE", command=delete_poly_node,
                                                width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
         delete_polygon_node_button.place(relx=widgets_x_start + 0.125, rely=0.228)
-        tooltip_text = (f"Delete the selected Node from the selected Polygon")
+        tooltip_text = (f"Delete the selected node from the selected polygon")
         Tooltip(delete_polygon_node_button, tooltip_text)
         polygon_nodes_label = tk.Label(self, text="Polygon Nodes:", font=GUIStatics.STANDARD_FONT_SMALL)
         polygon_nodes_label.place(relx=widgets_x_start, rely=0.30)
@@ -553,14 +568,14 @@ class Geometry(tk.Toplevel):
         area_neg_pos_select = tk.OptionMenu(self, area_neg_pos_var, *area_neg_pos)
         area_neg_pos_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=6, height=1)
         area_neg_pos_select.place(relx=widgets_x_start + 0.04, rely=0.415)
-        tooltip_text = (f"Select area Positive/Negative for selected Polygon\n"
-                        f"(Click Update to update selected Polygon)         ")
+        tooltip_text = (f"Select area positive/negative for selected polygon\n"
+                        f"(Click UPDATE to update selected polygon)         ")
         Tooltip(area_neg_pos_select, tooltip_text)
 
         delete_polygon_button = tk.Button(self, text="DELETE POLYGON", command=delete_polygon,
                                           width=16, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
         delete_polygon_button.place(relx=widgets_x_start, rely=0.465)
-        tooltip_text = (f"Delete the selected Polygon")
+        tooltip_text = (f"Delete the selected polygon")
         Tooltip(delete_polygon_button, tooltip_text)
 
         ##################################################
@@ -578,7 +593,7 @@ class Geometry(tk.Toplevel):
                 self.points = {'0': [0, 0]}
                 selected_point = '0'
             else:
-                selected_point = str(int(max(list(self.points.keys()))) + 1)
+                selected_point = str(1 + max([int(k) for k in self.points.keys()]))
                 self.points[selected_point] = [0, 0]
             update_point_select_dropdown()
             single_point_var.set(selected_point)
@@ -682,7 +697,7 @@ class Geometry(tk.Toplevel):
             self.points = {'None'}
         dropdown_single_point_select = tk.OptionMenu(self, single_point_var, *self.points)
         dropdown_single_point_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=4, height=1)
-        tooltip_text = (f"Select a defined single Point")
+        tooltip_text = (f"Select a defined single point")
         Tooltip(dropdown_single_point_select, tooltip_text)
         dropdown_single_point_select.place(relx=widgets_x_start + 0.075, rely=0.58)
         if not self.points:
@@ -692,9 +707,9 @@ class Geometry(tk.Toplevel):
         new_point_button = tk.Button(self, text="NEW", command=new_point,
                                      width=7, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
         new_point_button.place(relx=widgets_x_start + 0.145, rely=0.583)
-        tooltip_text = (f"Create a new single Point     \n"
-                        f"(Single Points can be used as \n"
-                        f"Acoustic Sound Source)        ")
+        tooltip_text = (f"Create a new single point     \n"
+                        f"(Single points can be used as \n"
+                        f"acoustic sound source)        ")
         Tooltip(new_point_button, tooltip_text)
 
         add_point_select_label = tk.Label(self, text="Update Point:", font=GUIStatics.STANDARD_FONT_SMALL)
@@ -720,13 +735,13 @@ class Geometry(tk.Toplevel):
         add_point_button = tk.Button(self, text="UPDATE", command=update_point,
                                      width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
         add_point_button.place(relx=widgets_x_start + 0.125, rely=0.663)
-        tooltip_text = (f"Update X/Y values for selected Single Point")
+        tooltip_text = (f"Update X/Y values for selected single point")
         Tooltip(add_point_button, tooltip_text)
 
         delete_point_button = tk.Button(self, text="DELETE POINT", command=delete_point,
                                         width=14, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
         delete_point_button.place(relx=widgets_x_start, rely=0.71)
-        tooltip_text = (f"Delete the selected Single Point")
+        tooltip_text = (f"Delete the selected single point")
         Tooltip(delete_point_button, tooltip_text)
         ##################################################
         # clear all button
@@ -769,7 +784,7 @@ class Geometry(tk.Toplevel):
         button_clear_all = tk.Button(self, text="CLEAR ALL", command=clear_all,
                                      font=GUIStatics.STANDARD_FONT_BUTTON_MID, width=10, height=1)
         button_clear_all.place(relx=widgets_x_start + 0.22, rely=0.02)
-        tooltip_text = (f"Clear all Geometry Input")
+        tooltip_text = (f"Clear all geometry input")
         Tooltip(button_clear_all, tooltip_text)
 
         # Check geometry button
@@ -784,7 +799,7 @@ class Geometry(tk.Toplevel):
             else:
                 check_geometry_error_window(quit=False)
 
-        button_check_geometry = tk.Button(self, text="Check\nGeometry", command=check_geometry_on_button,
+        button_check_geometry = tk.Button(self, text="CHECK\nGEOMETRY", command=check_geometry_on_button,
                                      font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER, width=10, height=2)
         button_check_geometry.place(relx=widgets_x_start + 0.35, rely=0.02)
         tooltip_text = (f"Check Geometry for compatibility                       \n"
@@ -828,7 +843,8 @@ class Geometry(tk.Toplevel):
         def button_polygon_graph():
             if self.clicks_canvas:
                 if len(self.clicks_canvas) < 3:
-                    GUIStatics.window_error(self, 'Define at least 3 Nodes \nfor valid Polygon')
+                    GUIStatics.window_error(self, 'Define at least 3 nodes\n'
+                                                              'for valid polygon      ')
                     return
                 if self.clicks_canvas[-1] == self.clicks_canvas[0]:
                     del self.clicks_canvas[-1]
@@ -840,7 +856,8 @@ class Geometry(tk.Toplevel):
                 polygon_select_var.set(str(len(self.polygons) - 1))
                 clear_gprah()
             else:
-                GUIStatics.window_error(self, 'Click on Canvas below to \ndefine Nodes for Polygon')
+                GUIStatics.window_error(self, 'Click on canvas below to \n'
+                                                          'define nodes for polygon')
 
         def button_point_graph():
             if self.clicks_canvas:
@@ -855,8 +872,10 @@ class Geometry(tk.Toplevel):
                 single_point_var.set(selected_point)
                 clear_gprah()
             else:
-                GUIStatics.window_error(self, 'Click on Canvas below to \ndefine Nodes for Polygon\n'
-                                              'Last Node will be entered as new Single Point')
+                GUIStatics.window_error(self, 'Click on canvas below to  \n'
+                                                          'define nodes for polygon \n'
+                                                          'Last node will be entered\n'
+                                                          'as new single point      ')
 
 
 
@@ -869,19 +888,19 @@ class Geometry(tk.Toplevel):
         button_clear_graph = tk.Button(self, text="CLEAR\nINPUT", command=button_clear_graph,
                                            width=10, height=2, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
         button_clear_graph.place(relx=0.68, rely=0.02)
-        tooltip_text = (f"Add in canvas defined Polygon                        \n"
-                        f"(Alternative way to define Polygons)                 \n"
-                        f"1) Click on Canvas to add Polygon Nodes              \n"
-                        f"   (Click inside Grid -> Node locks to 'NW' Position)\n"
-                        f"2) Click this Button to add Polygon to List          ")
+        tooltip_text = (f"Add in canvas defined polygon                        \n"
+                        f"(Alternative way to define polygons)                 \n"
+                        f"1) Click on canvas to add polygon nodes              \n"
+                        f"   (Click inside grid -> Node locks to 'NW' position)\n"
+                        f"2) Click this button to add polygon to list          ")
         Tooltip(button_add_poly_graph, tooltip_text)
 
-        tooltip_text = (f"Add in canvas defined Point             \n"
-                        f"(Alternative way to define Single Points\n"
-                        f"First Node on Canvas will be added      ")
+        tooltip_text = (f"Add in canvas defined point             \n"
+                        f"(Alternative way to define single points\n"
+                        f"First node on canvas will be added      ")
         Tooltip(button_add_point_graph, tooltip_text)
 
-        tooltip_text = (f"Clear all clicks on Canvas")
+        tooltip_text = (f"Clear all clicks on canvas")
         Tooltip(button_clear_graph, tooltip_text)
         ##################################################
         # Accept button and checks
@@ -965,11 +984,11 @@ class Geometry(tk.Toplevel):
             lbl_str = ("GEOMETRY NOT COMPATIBLE\n"
                        "It is recommended to fix geometry \n"
                        "before proceeding!")
-            info_str = (f"Compatible Geometry:\n"
-                        f"-Adjacent positive Polygons must share at least two nodes\n"
+            info_str = (f"Compatible geometry:\n"
+                        f"-Adjacent positive polygons must share at least two nodes\n"
                         f" and all nodes on common boundary must have identical nodes\n"
-                        f"-All nodes of negative Polygons\n"
-                        f" must be inside positive Polygons (no node on boundary)\n"
+                        f"-All nodes of negative polygons\n"
+                        f" must be inside positive polygons (no node on boundary)\n"
                         f"-Polygons must have at least 3 nodes and nodes must not duplicate\n"
                         f"-Polygons must not overlap or intersect\n"
                         f"-Points must be inside positive polygons and not on any boundary\n"
@@ -1004,7 +1023,7 @@ class Geometry(tk.Toplevel):
         button_accept = tk.Button(self, text="ACCEPT GEOMETRY", command=check_and_accept,
                                   width=16, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_BIG_BOLD)
         button_accept.place(relx=0.025, rely=0.935)
-        tooltip_text = (f"Accept defined Geometry and return to Main Window")
+        tooltip_text = (f"Accept defined geometry and return to MAIN WINDOW")
         Tooltip(button_accept, tooltip_text)
 
         ##################################################
@@ -1048,7 +1067,7 @@ class Geometry(tk.Toplevel):
                     if poly1_shapely.contains(Point(point[0], point[1])):
                         in_poly = True
                 if not in_poly:
-                    check_fail_str = f"Point {sp} not inside any positive Polygon"
+                    check_fail_str = f"Point {sp} not inside any positive polygon"
                     check_failed_list.append(check_fail_str)
 
         for ip1, poly1 in enumerate(self.polygons.values()):
@@ -1071,13 +1090,13 @@ class Geometry(tk.Toplevel):
                 for sp, point in enumerate(self.points.values()):
                     p_in_pos_poly = False
                     if poly1_shapely.touches(Point(point[0], point[1])):
-                        check_fail_str = f"Point {sp} on boundary of Polygon {ip1}"
+                        check_fail_str = f"Point {sp} on boundary of polygon {ip1}"
                         check_failed_list.append(check_fail_str)
                     if poly1_shapely.contains(Point(point[0], point[1])):
                         p_in_pos_poly = True
                         if poly1['area_neg_pos'] == 'Negative':
                             p_in_pos_poly = False
-                            check_fail_str = f"Point {sp} inside of negative Polygon {ip1}"
+                            check_fail_str = f"Point {sp} inside of negative polygon {ip1}"
                             check_failed_list.append(check_fail_str)
             # check two polygons
             for ip2, poly2 in enumerate(list(self.polygons.values())[ip1 + 1:], start=ip1+1):
@@ -1087,16 +1106,16 @@ class Geometry(tk.Toplevel):
                 if poly1['area_neg_pos'] == 'Positive' and poly2['area_neg_pos'] == 'Positive':
                     if poly1_shapely.intersects(poly2_shapely):
                         if poly1_shapely.overlaps(poly2_shapely):
-                            check_fail_str = f"Positive Polygon {ip1} and Positive Polygon {ip2} overlap"
+                            check_fail_str = f"Positive polygon {ip1} and positive polygon {ip2} overlap"
                             check_failed_list.append(check_fail_str)
                 # check if negative polygons overlap
                 if poly1['area_neg_pos'] == 'Negative' and poly2['area_neg_pos'] == 'Negative':
                     if poly1_shapely.intersects(poly2_shapely):
                         if poly1_shapely.overlaps(poly2_shapely):
-                            check_fail_str = f"Negative Polygon {ip1} and Negative Polygon {ip2} overlap"
+                            check_fail_str = f"Negative polygon {ip1} and negative polygon {ip2} overlap"
                             check_failed_list.append(check_fail_str)
                         if poly1_shapely.touches(poly2_shapely):
-                            check_fail_str = f"Negative Polygon {ip1} and Negative Polygon {ip2} intersect/touch at least once"
+                            check_fail_str = f"Negative polygon {ip1} and negative polygon {ip2} intersect/touch at least once"
                             check_failed_list.append(check_fail_str)
                 # check if negative polygon inside positive polygon
                 if poly1['area_neg_pos'] == 'Positive' and poly2['area_neg_pos'] == 'Negative':
@@ -1104,7 +1123,7 @@ class Geometry(tk.Toplevel):
                         if poly1_shapely.contains(poly2_shapely):
                             for node in poly2['coordinates']:
                                 if poly1_shapely.touches(Point(node[0], node[1])):
-                                    check_fail_str = f"Positive Polygon {ip1} and Negative Polygon {ip2} overlap (on boundary)"
+                                    check_fail_str = f"Positive polygon {ip1} and negative polygon {ip2} overlap (on boundary)"
                                     check_failed_list.append(check_fail_str)
                                     break
                 if poly1['area_neg_pos'] == 'Negative' and poly2['area_neg_pos'] == 'Positive':
@@ -1112,7 +1131,7 @@ class Geometry(tk.Toplevel):
                         if poly2_shapely.contains(poly1_shapely):
                             for node in poly1['coordinates']:
                                 if poly2_shapely.touches(Point(node[0], node[1])):
-                                    check_fail_str = f"Negative Polygon {ip1} and Positive Polygon {ip2} overlap (on boundary)"
+                                    check_fail_str = f"Negative polygon {ip1} and positive polygon {ip2} overlap (on boundary)"
                                     check_failed_list.append(check_fail_str)
                                     break
                 # check if two adjacent positive polygons share the same nodes
@@ -1127,7 +1146,7 @@ class Geometry(tk.Toplevel):
                                 for point in line.coords:
                                     coords.append(point)
                         elif shared_boundary.geom_type == 'Point' and len(self.polygons.values()) == 2:
-                            check_fail_str = f"Polygon {ip1} and Polygon {ip2} share only one node"
+                            check_fail_str = f"Polygon {ip1} and polygon {ip2} share only one node"
                             check_failed_list.append(check_fail_str)
                         else:
                             coords = []
@@ -1137,14 +1156,14 @@ class Geometry(tk.Toplevel):
                         in_poly1 = len(set(poly1nodes_complex).intersection(set(shared_nodes_complex)))
                         in_poly2 = len(set(poly2nodes_complex).intersection(set(shared_nodes_complex)))
                         if in_poly1 != in_poly2 and shared_boundary.geom_type != 'Point':
-                            check_fail_str = f"Polygon {ip1} and Polygon {ip2} do not share same nodes on common boundary"
+                            check_fail_str = f"Polygon {ip1} and polygon {ip2} do not share same nodes on common boundary"
                             check_failed_list.append(check_fail_str)
 
         # check if all positive polygons are connected
         all_pos_polygons = [Polygon(poly['coordinates']) for poly in self.polygons.values() if poly['area_neg_pos'] == 'Positive']
         unioned_polygons = unary_union(all_pos_polygons)
         if isinstance(unioned_polygons, MultiPolygon):
-            check_fail_str = f"Positive Polygons are not connected properly"
+            check_fail_str = f"Positive polygons are not connected properly"
             check_failed_list.append(check_fail_str)
         check_failed_list = list(set(check_failed_list))
 
