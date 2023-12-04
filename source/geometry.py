@@ -692,7 +692,9 @@ class Geometry(tk.Toplevel):
         new_point_button = tk.Button(self, text="NEW", command=new_point,
                                      width=7, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
         new_point_button.place(relx=widgets_x_start + 0.145, rely=0.583)
-        tooltip_text = (f"Create a new single Point")
+        tooltip_text = (f"Create a new single Point     \n"
+                        f"(Single Points can be used as \n"
+                        f"Acoustic Sound Source)        ")
         Tooltip(new_point_button, tooltip_text)
 
         add_point_select_label = tk.Label(self, text="Update Point:", font=GUIStatics.STANDARD_FONT_SMALL)

@@ -1,15 +1,15 @@
 #######################################################################################
 KNOWN BUGS:
--> check_geometry() in Class Geometry: DOes not work for 90° inclined lines
 -> Singular matrix for some meshes...
--> compiled exe: save solution file does not work
+
 
 #######################################################################################
 TODOs:
---> GUI: More infos about mesh, bcs etc.
---> Output solution consecutive filename
+--> Erneute Erstellugn/Modifierung Geometry -> info fenster aktualisiern
+--> Gui: Show mesh: Reduziere gezeigtes Mesh auf...>5000 elements (evtl printe nur linien, keine Punkte?)
 --> Docstrings and typehints
---> Compatibility checks for geometry
+--> Implement Neumann/Robin BC matrix takes lomg -> Callback hier erweitern
+--> Calculation Parameter -> set value for slider (add to toolbox: create mesh again if density changed)
 #######################################################################################
 CODEFLOW:
 

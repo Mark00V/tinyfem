@@ -183,7 +183,7 @@ class CalcFEM:
         if callback:
             self.calc_info['step'] = 'Implement Neumann/Robin BC matrix'
             self.calc_info['n'] = ''
-            self.calc_info['other'] = ''
+            self.calc_info['other'] = 'Takes time for large systems...'
             callback(self.calc_info)
         self.calc_system_matrices_robin_neumann_bc()
 

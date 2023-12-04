@@ -140,6 +140,7 @@ class GUI(tk.Tk):
 
 
         print("Starting...Please wait.")  # Console output when running as .exe
+        print("DO NOT CLOSE THIS WINDOW (except to quit TinyFEM)")
 
         self.title('TinyFEM - MAIN WINDOW')
         self.geometry(f"{GUIStatics.MAIN_WINDOW_SIZE_X}x{GUIStatics.MAIN_WINDOW_SIZE_Y}")
@@ -619,10 +620,10 @@ class GUI(tk.Tk):
         self.dropdown_equation_select.config(state='disabled')
         var_equations.trace('w', trace_equation)
         tooltip_text_dropdown_equation_select = 'None'
-        if self.equation == 'HE':
-            tooltip_text_dropdown_equation_select = (f"Select Equation: Solves the stationary Heat Equation ")
-        elif self.equation == 'HH':
-            tooltip_text_dropdown_equation_select = (f"Select Equation: Solves the Helmholtz Equation ")
+        tooltip_text_dropdown_equation_select = (f"Select Equation:                             \n"
+                                                 f" - Heat Equation: Solve heat transfer problem\n"
+                                                 f" - Helmholtz Equation: Solve acoustic problem\n"
+                                                 f"   in the frequency domain                   ")
         Tooltip(self.dropdown_equation_select, tooltip_text_dropdown_equation_select)
 
 
@@ -850,6 +851,8 @@ class GUI(tk.Tk):
         density_slider = tk.Scale(window_calc_params, from_=1, to=5, orient=tk.HORIZONTAL,
                                   label="", font=GUIStatics.STANDARD_FONT_SMALL)
         density_slider.place(relx=widgets_x_start + 0.325, rely=0.125)
+        if self.calculation_parameters['mesh_density']:
+            density_slider.set(int(self.calculation_parameters['mesh_density']))
         tooltip_text = (f"Select the Mesh Density:                      \n"
                         f"1: Very coarse - 2 elements per unit  (e.g. 2/m) \n"
                         f"2: Coarse      - 4 elements per unit  (e.g. 4/m) \n"
@@ -1601,6 +1604,8 @@ class GUI(tk.Tk):
                 region_parameters_str += f"\nRegion R-{k}: "
                 if area_neg_pos == 'Positive':
                     region_parameters_str += f"{mats}"
+                else:
+                    region_parameters_str += " neg. Region"
 
         calculation_parameters_str = 'CALCULATION PARAMETERS:'
         if calculation_parameters:
