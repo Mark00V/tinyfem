@@ -56,6 +56,9 @@ class ShowSolution(tk.Toplevel):
         self.calculation_parameters = calculation_parameters
         self.solution_orig = solution
 
+        # graphics settings
+        self.levels = 20  # number of contours
+
         super().__init__()
         self.set_icon(self)
         self.main_window_solution()
@@ -181,6 +184,23 @@ class ShowSolution(tk.Toplevel):
                                                font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start, rely=0.35)
         GUIStatics.create_divider(self, widgets_x_start, 0.4, 230)
 
+        # Graphics Setting
+        def redraw(*args):
+            self.levels = int(density_var.get())
+            self.fig, ax = self.create_mpl_fig()
+            canvas_mpl = FigureCanvasTkAgg(self.fig, master=self)
+            self.canvas_mpl_widget = canvas_mpl.get_tk_widget()
+            self.canvas_mpl_widget.place(relx=canvas_x + 0.0075 + 0.003, rely=canvas_y + 0.006)
+
+        tk.Label(self, text="Density:", font=GUIStatics.STANDARD_FONT_SMALL_BOLD).place(relx=widgets_x_start, rely=0.425)
+        dens_selection = [5, 10, 20, 40, 100]
+        density_var = tk.StringVar()
+        density_var.set(20)
+        dropdown_density_select = tk.OptionMenu(self, density_var, *dens_selection)
+        dropdown_density_select.config(font=GUIStatics.STANDARD_FONT_SMALL, width=4, height=1)
+        dropdown_density_select.place(relx=0.075, rely=0.42)
+        density_var.trace('w', redraw)
+
     def convert_solution_to_string(self):
 
         x_values = self.nodes[:, 0]
@@ -246,7 +266,7 @@ class ShowSolution(tk.Toplevel):
         ax.set_ylabel(f'y [{self.calculation_parameters["units"]}]', **label_font_axes)
         ax.set_aspect(aspectxy)
 
-        contour = ax.tricontourf(triang_mpl, values, cmap=cmap, levels=20)
+        contour = ax.tricontourf(triang_mpl, values, cmap=cmap, levels=self.levels)
         ax.set_facecolor('lightgray')  # backgroundcolor of contourmap
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.2)

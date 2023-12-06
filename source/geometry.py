@@ -806,12 +806,32 @@ class Geometry(tk.Toplevel):
                         f"(Check will also be performed on click ACCEPT GEOMETRY)")
         Tooltip(button_check_geometry, tooltip_text)
         ##################################################
+        def snap_canvas(pos):
+            """
+            highlights cursor position (snapped to closest grid point, where node will be created on click)
+            :param pos:
+            :return:
+            """
+            last_snap1 = self.canvas.find_withtag('highlight_snap1')
+            last_snap2 = self.canvas.find_withtag('highlight_snap2')
+            if last_snap1:
+                self.canvas.delete(last_snap1)
+            if last_snap2:
+                self.canvas.delete(last_snap2)
+            x, y = pos.x, pos.y
+            snap_x, snap_y = self.find_grid(x, y)
+            offset = 5
+            self.canvas.create_line((snap_x - offset, snap_y - offset), (snap_x + offset + 1, snap_y + offset + 1), fill='#6A1616', tags='highlight_snap1')
+            self.canvas.create_line((snap_x - offset, snap_y + offset), (snap_x + offset + 1, snap_y - offset - 1), fill='#6A1616',
+                                    tags='highlight_snap2')
+
         # Add canvas for system visualization - DYNAMIC
         self.canvas = tk.Canvas(self, width=GUIStatics.CANVAS_SIZE_X, height=GUIStatics.CANVAS_SIZE_Y,
                                 bg=GUIStatics.CANVAS_BG)
         self.canvas.place(relx=canvas_x + 0.0075, rely=canvas_y)
         GUIStatics.add_canvas_static_elements(self.canvas)
         self.canvas.bind("<Button-1>", self.on_canvas_click)
+        self.canvas.bind('<Motion>', snap_canvas)
         ##################################################
 
         ##################################################
