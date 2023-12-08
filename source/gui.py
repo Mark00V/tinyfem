@@ -823,7 +823,7 @@ class GUI(tk.Tk):
         opens top window to assign calculation parameters
         """
 
-        def set_freq():
+        def set_freq(*args):
             """
             Button action for setting frequency if HH eqution is selected
             :return:
@@ -870,6 +870,7 @@ class GUI(tk.Tk):
             entry_freq_field = tk.Entry(window_calc_params, textvariable=entry_freq_var,
                                         font=GUIStatics.STANDARD_FONT_SMALL, width=8)
             entry_freq_field.place(relx=widgets_x_start + 0.025 + 0.3, rely=0.325)
+            entry_freq_field.bind('<Return>', set_freq)  # Bind Enter
             button_freq_set = tk.Button(window_calc_params, text="SET VALUE", command=set_freq,
                                         width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
             button_freq_set.place(relx=widgets_x_start + 0.6, rely=0.325)
@@ -929,7 +930,7 @@ class GUI(tk.Tk):
                                                              width=6, outline='#24D1EA',
                                                              tags='highlight_element')
 
-        def set_region_values():
+        def set_region_values(*args):
             """
             sets the values for the regions for relevant materials
             :return:
@@ -941,8 +942,11 @@ class GUI(tk.Tk):
                     entry_k = float(entry_k)
                 except ValueError:
                     entry_k = 1.0
-                self.region_parameters[region_nbr]['material']['k'] = entry_k
-                self.create_info_field_str()
+                try:
+                    self.region_parameters[region_nbr]['material']['k'] = entry_k
+                    self.create_info_field_str()
+                except KeyError:  # if None is selected
+                    ...
             elif self.equation == 'HH':
                 entry_c = entry_material_c_value.get()
                 entry_rho = entry_material_rho_value.get()
@@ -954,9 +958,12 @@ class GUI(tk.Tk):
                     entry_rho = float(entry_rho)
                 except ValueError:
                     entry_rho = 1.0
-                self.region_parameters[region_nbr]['material']['c'] = entry_c
-                self.region_parameters[region_nbr]['material']['rho'] = entry_rho
-                self.create_info_field_str()
+                try:
+                    self.region_parameters[region_nbr]['material']['c'] = entry_c
+                    self.region_parameters[region_nbr]['material']['rho'] = entry_rho
+                    self.create_info_field_str()
+                except KeyError:  # if None is selected
+                    ...
 
         window_bcs = tk.Toplevel(self)
         window_bcs.title('ASSIGN MATERIALS PARAMETERS')
@@ -993,6 +1000,7 @@ class GUI(tk.Tk):
             entry_material_k_value_field = tk.Entry(window_bcs, textvariable=entry_material_k_value,
                                                     font=GUIStatics.STANDARD_FONT_SMALL, width=8)
             entry_material_k_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.33)
+            entry_material_k_value_field.bind('<Return>', set_region_values)  # Bind Enter
             pos_y_set_button = 0.33
 
         elif self.equation == 'HH':
@@ -1003,6 +1011,7 @@ class GUI(tk.Tk):
             entry_material_c_value_field = tk.Entry(window_bcs, textvariable=entry_material_c_value,
                                                     font=GUIStatics.STANDARD_FONT_SMALL, width=8)
             entry_material_c_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.33)
+            entry_material_c_value_field.bind('<Return>', set_region_values)  # Bind Enter
 
             tk.Label(window_bcs, text="Density [kg/m³]:", font=GUIStatics.STANDARD_FONT_SMALL) \
                 .place(relx=widgets_x_start + 0.025, rely=0.38)
@@ -1011,6 +1020,7 @@ class GUI(tk.Tk):
             entry_material_rho_value_field = tk.Entry(window_bcs, textvariable=entry_material_rho_value,
                                                       font=GUIStatics.STANDARD_FONT_SMALL, width=8)
             entry_material_rho_value_field.place(relx=widgets_x_start + 0.025 + 0.5, rely=0.38)
+            entry_material_rho_value_field.bind('<Return>', set_region_values)  # Bind Enter
             pos_y_set_button = 0.38
 
         entry_materials_values_button = tk.Button(window_bcs, text="SET VALUE", command=set_region_values,
@@ -1054,7 +1064,7 @@ class GUI(tk.Tk):
         Opens top window to assign boundary conditions
         """
 
-        def set_boundary_value():
+        def set_boundary_value(*args):
             """
             Button action to set boundary values and type
             :return:
@@ -1077,7 +1087,7 @@ class GUI(tk.Tk):
                 self.boundary_parameters[boundary_nbr]['bc']['value'] = value
             self.create_info_field_str()
 
-        def set_node_value():
+        def set_node_value(*args):
             """
             Button action to set value for boundary condition for nodes (eg acoustic source values)
             :return:
@@ -1260,7 +1270,7 @@ class GUI(tk.Tk):
         entry_boundary_value_field = tk.Entry(window_bcs, textvariable=entry_boundary_value,
                                               font=GUIStatics.STANDARD_FONT_SMALL, width=8)
         entry_boundary_value_field.place(relx=widgets_x_start + 0.025 + 0.25, rely=0.27)
-
+        entry_boundary_value_field.bind('<Return>', set_boundary_value)  # Bind Enter
 
         entry_label_b = tk.Label(window_bcs, text="NONE", font=GUIStatics.STANDARD_FONT_SMALL)
         entry_label_b.place(relx=widgets_x_start + 0.025, rely=0.33)
@@ -1271,6 +1281,7 @@ class GUI(tk.Tk):
         entry_boundary_value_B_field = tk.Entry(window_bcs, textvariable=entry_boundary_value_B,
                                                 font=GUIStatics.STANDARD_FONT_SMALL, width=8, state='disabled')
         entry_boundary_value_B_field.place(relx=widgets_x_start + 0.025 + 0.25, rely=0.33)
+        entry_boundary_value_B_field.bind('<Return>', set_boundary_value)  # Bind Enter
 
         button_boundary_value_set = tk.Button(window_bcs, text="SET VALUE", command=set_boundary_value,
                                               width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
@@ -1304,6 +1315,7 @@ class GUI(tk.Tk):
             entry_node_value_field = tk.Entry(window_bcs, textvariable=entry_node_value,
                                               font=GUIStatics.STANDARD_FONT_SMALL, width=8)
             entry_node_value_field.place(relx=widgets_x_start + 0.025 + 0.25, rely=0.635)
+            entry_node_value_field.bind('<Return>', set_node_value)  # Bind Enter
             entry_node_value_set = tk.Button(window_bcs, text="SET VALUE", command=set_node_value,
                                              width=12, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALL)
             entry_node_value_set.place(relx=widgets_x_start + 0.6, rely=0.63)

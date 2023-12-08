@@ -425,7 +425,7 @@ class Geometry(tk.Toplevel):
             update_polygon_nodes_info()
             self.update_graphics()
 
-        def update_poly_node():
+        def update_poly_node(*args):
             """
             When button UPDATE for polygon is pressed
             :return:
@@ -527,6 +527,7 @@ class Geometry(tk.Toplevel):
         add_node_x_entry = tk.Entry(self, textvariable=add_node_x_entry_val,
                                     font=GUIStatics.STANDARD_FONT_SMALL, width=6)
         add_node_x_entry.place(relx=widgets_x_start + 0.02, rely=0.262)
+        add_node_x_entry.bind('<Return>', update_poly_node)  # Bind Enter
 
         add_node_y_label = tk.Label(self, text="Y:", font=GUIStatics.STANDARD_FONT_SMALL)
         add_node_y_label.place(relx=widgets_x_start + 0.06, rely=0.26)
@@ -535,6 +536,7 @@ class Geometry(tk.Toplevel):
         add_node_y_entry = tk.Entry(self, textvariable=add_node_y_entry_val,
                                     font=GUIStatics.STANDARD_FONT_SMALL, width=6)
         add_node_y_entry.place(relx=widgets_x_start + 0.08, rely=0.262)
+        add_node_y_entry.bind('<Return>', update_poly_node)  # Bind Enter
 
         add_poly_node_button = tk.Button(self, text="ADD", command=add_poly_node,
                                          width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
@@ -636,7 +638,7 @@ class Geometry(tk.Toplevel):
                                                              dash=(2, 1), fill='', tags='highlight_element_point')
 
 
-        def update_point():
+        def update_point(*args):
             """
             gets the selected point from dropdown and values from x and y field
             and updates the values for selected point
@@ -723,6 +725,7 @@ class Geometry(tk.Toplevel):
         add_point_x_entry = tk.Entry(self, textvariable=add_point_x_entry_val,
                                      font=GUIStatics.STANDARD_FONT_SMALL, width=6)
         add_point_x_entry.place(relx=widgets_x_start + 0.02, rely=0.667)
+        add_point_x_entry.bind('<Return>', update_point)  # Bind Enter
 
         add_point_y_label = tk.Label(self, text="Y:", font=GUIStatics.STANDARD_FONT_SMALL)
         add_point_y_label.place(relx=widgets_x_start + 0.06, rely=0.665)
@@ -731,6 +734,7 @@ class Geometry(tk.Toplevel):
         add_point_y_entry = tk.Entry(self, textvariable=add_point_y_entry_val,
                                      font=GUIStatics.STANDARD_FONT_SMALL, width=6)
         add_point_y_entry.place(relx=widgets_x_start + 0.08, rely=0.667)
+        add_point_y_entry.bind('<Return>', update_point)  # Bind Enter
 
         add_point_button = tk.Button(self, text="UPDATE", command=update_point,
                                      width=11, height=1, font=GUIStatics.STANDARD_FONT_BUTTON_SMALLER)
