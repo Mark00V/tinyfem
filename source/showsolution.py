@@ -58,6 +58,7 @@ class ShowSolution(tk.Toplevel):
 
         # graphics settings
         self.levels = 20  # number of contours
+        self.show_min_value = None
 
         super().__init__()
         self.set_icon(self)
@@ -122,10 +123,22 @@ class ShowSolution(tk.Toplevel):
             self.fig.savefig(file_path, dpi=200)
 
         def get_min_value():
-            GUIStatics.window_error(self, "Work In Progress...")
+            min_value = min(self.solution)
+            min_value_pos = np.where(self.nodes == min_value)
+            print(min_value, min_value_pos)
+
+            if self.show_min_value is not None:
+                ...
+            elif self.show_min_value is None:
+                ...
+                #
+                # self.show_min = self.canvas_main.create_oval(node[0] - 10, node[1] - 10, node[0] + 10, node[1] + 10,
+                #                                                  width=3, outline=GUIStatics.CANVAS_HIGHLIGHT_ELEMENT,
+                #                                                  dash=(2, 1), fill='', tags='highlight_element')
+                #
 
         def get_max_value():
-            GUIStatics.window_error(self, "Work In Progress...")
+            ...
 
         def show_help():
             window_help = tk.Toplevel(self)
@@ -172,17 +185,17 @@ class ShowSolution(tk.Toplevel):
 
         GUIStatics.create_divider(self, widgets_x_start, 0.21, 230)
         # get min/max value buttons TODO: WIP
-        # tk.Button(self, text="MIN VAL", command=get_min_value, width=8,
-        #                                    font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start, rely=0.23)
-        # tk.Button(self, text="MAX VAL", command=get_max_value, width=8,
-        #                                    font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start + 0.095, rely=0.23)
+        tk.Button(self, text="MIN VAL", command=get_min_value, width=8,
+                                           font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start, rely=0.23)
+        tk.Button(self, text="MAX VAL", command=get_max_value, width=8,
+                                           font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start + 0.095, rely=0.23)
 
         if self.calculation_parameters['equation'] == 'HH':
             tk.Button(self, text="SOUND PRESSURE LEVEL", command=show_spl, width=24,
-                                               font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start, rely=0.3)
+                                               font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start, rely=0.32)
             tk.Button(self, text="PRESSURE", command=show_pressure, width=24,
-                                               font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start, rely=0.35)
-        GUIStatics.create_divider(self, widgets_x_start, 0.4, 230)
+                                               font=GUIStatics.STANDARD_FONT_BUTTON_MID, height=1).place(relx=widgets_x_start, rely=0.36)
+        GUIStatics.create_divider(self, widgets_x_start, 0.40, 230)
 
         # Graphics Setting
         def redraw(*args):
